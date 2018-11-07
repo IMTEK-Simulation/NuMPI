@@ -12,9 +12,27 @@ def getLogfile():
     return savelog
     raise BlockingIOError
 
+def steepest_descent_wolfe2(x0,f,fprime):
+    """
+    For first Iteration there is no history. We make a steepest descent satisfying strong Wolfe Condition
+    :return:
+    """
+
+    # x_old.shape=(-1,1)
+    grad0 = fprime(x0)
+
+    # line search
+    alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
+        lambda alpha: f(x0 - grad0 * alpha),
+        lambda alpha: np.dot(fprime(x0 - grad0 * alpha).T, -grad0),)
+    assert derphi is not None, "Line Search in first steepest descent failed"
+    x = x0 - grad0 * alpha
+
+    return x, fprime(x) , x0, grad0
 
 
-def LBFGS(fun,fprime,x,x_old,m=5,grad2tol= 1e-6,MAXITER = 10,store_iterates = "iterate",printdb = getLogfile()):
+
+def LBFGS(fun,fprime,x,x_old=None,m=5,grad2tol= 1e-6,MAXITER = 10,store_iterates = "iterate",printdb = donothing):
     """
     This implementation follows
 
@@ -31,6 +49,11 @@ def LBFGS(fun,fprime,x,x_old,m=5,grad2tol= 1e-6,MAXITER = 10,store_iterates = "i
     :param printdb: function accepting log messages.
     :return:
     """
+    if x_old is None:
+        x_old = x.copy()
+
+        x,grad,x_old,grad_old = steepest_descent_wolfe2(x_old,fun,fprime)
+
     iterates = list()
     k=1
 
@@ -212,20 +235,20 @@ def LBFGS(fun,fprime,x,x_old,m=5,grad2tol= 1e-6,MAXITER = 10,store_iterates = "i
 
         assert derphi is not None, "scalar line-search did not converge"
         #assert new_fval is not None, "Line-search didn't converge"
-        print("x: {}".format(x))
+        #printdb("x: {}".format(x))
         x_old[:] = x
-        print("x_old: {}".format(x_old))
+        #printdb("x_old: {}".format(x_old))
         x = x - Hgrad * alpha
-        print("x: {}".format(x))
-        print("x_old: {}".format(x_old))
-        printdb("x = {}".format(x))
+        #printdb("x: {}".format(x))
+        #printdb("x_old: {}".format(x_old))
+        #printdb("x = {}".format(x))
         assert phi < phi0, "f(x) >= f(x_old) ! "
         grad_old[:] = grad
         grad = fprime(x)
         assert fun(x) <= fun(x_old) + 1e-4 * alpha * grad_old.T.dot(-Hgrad), "First Wolfe Condition not fullfilled"
         assert grad.T.dot(-Hgrad) >= 0.9 * grad_old.T.dot(-Hgrad), "second Wolfe Condition not fullfilled"
-        print("dx * -Hgrad:{}".format((x-x_old).T.dot(-Hgrad)))
-        print(alpha)
+        #printdb("dx * -Hgrad:{}".format((x-x_old).T.dot(-Hgrad)))
+        #printdb(alpha)
         assert (grad - grad_old).T.dot(x - x_old) > 0, "msg derphi = {}".format(derphi)
         if store_iterates == 'iterate':
             iterate = scipy.optimize.OptimizeResult(
