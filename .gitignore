@@ -1,2 +1,4 @@
 */.ipnyb_checkpoints
 *.log
+tests/.pytest_cache
+
