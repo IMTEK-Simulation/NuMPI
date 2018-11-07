@@ -263,59 +263,6 @@ class test_simple_LBFGS(unittest.TestCase):
             ax.annotate(i, it.x)
         plt.show(block=True)
 
-    def test_cosinusoidal_nd(self):
-        import matplotlib
-        matplotlib.use("MACOSX")
-        import matplotlib.pyplot as plt
-
-        def ex_fun(x):
-            x.shape = (-1, 1)
-            return np.prod(np.cos(x))
-
-        def ex_jac(x):
-            x.shape = (-1, 1)
-            return np.array([[x[0, 0] + np.cos(x[1, 0])],
-                             [-x[0, 0] * np.sin(x[1, 0])]])
-
-
-        ## plot
-        fig, ax = plt.subplots()
-        xg, yg = np.linspace(-5, 5, 51), np.linspace(-6, 6, 51)
-
-        def mat_fun(xg, yg):
-            Z = np.zeros((xg.size, yg.size))
-            for i in range(Z.shape[0]):
-                for j in range(Z.shape[1]):
-                    Z[j, i] = ex_fun(np.array([xg[i], yg[j]]))
-            return Z
-
-        X, Y = np.meshgrid(xg, yg)
-        plt.colorbar(ax.contour(X, Y, mat_fun(xg, yg)))
-        fig.show()
-        #plt.show(block=True)
-        ######
-        # Initial history:
-        x_old = np.array([[4], [-4]],dtype=float)
-        grad_old = ex_jac(x_old)
-
-        # line search
-        alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
-            lambda alpha: ex_fun(x_old - grad_old * alpha),
-            lambda alpha: np.dot(ex_jac(x_old - grad_old * alpha).T, -grad_old))
-        assert derphi is not None
-        x = x_old - grad_old * alpha
-        assert ex_fun(x) < ex_fun(x_old)
-        grad = ex_jac(x)
-
-        k = 1
-
-        res = LBFGS(ex_fun, ex_jac, x, x_old, m=5, MAXITER=10)
-        print("nit {}".format(res.nit))
-
-        for it, i in zip(res['iterates'], range(len(res['iterates']))):
-            ax.plot(it.x[0], it.x[1], '+k')
-            ax.annotate(i, it.x)
-        plt.show(block=True)
 
 if __name__ == '__main__':
     unittest.main()
