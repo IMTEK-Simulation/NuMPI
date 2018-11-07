@@ -2,23 +2,16 @@
 import numpy as np
 
 """
+These are Testfunctions extracted from
 
+Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained Optimization Software. 25 (1981).
+
+In future I may use Scipy's example functions, see 
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.rosen.html#scipy.optimize.rosen
 """
 
 
-# Extended Rosenbrock Function
 
-
-
-def rosen_ref(n):
-    """
-    It's not the only minimum
-    :param n: number of Dimensions
-    :return:
-    """
-    assert n%2 == 0, "number of dimention should be even"
-
-    return np.array()
 import abc
 class ObjectiveFunction(object,metaclass=abc.ABCMeta):
 
@@ -76,9 +69,6 @@ class ObjectiveFunction(object,metaclass=abc.ABCMeta):
         plt.show(block=True)
 
 
-
-
-
 class Trigonometric(ObjectiveFunction):
     """
     all values of n are allowed
@@ -88,16 +78,15 @@ class Trigonometric(ObjectiveFunction):
     """
     bounds=(-np.pi,np.pi)
     @staticmethod
-    def f_grad(x):
-        n = x.size
-
-        x.shape=(-1,1)
+    def f_grad(x_):
+        n = x_.size
+        old_shape = x_.shape
+        x=np.reshape(x_,(-1,1))
         idxVector = np.reshape(np.arange(1, n + 1), (-1, 1))
         f = n - np.sum(np.cos(x)) +  idxVector * (1 - np.cos(x)) - np.sin(x)
 
         jac = np.reshape(np.sin(x),(1,-1)) + np.diag((-np.cos(x) + idxVector * np.sin(x)).flat)
-
-        return np.sum(f**2), 2*jac.T@f
+        return np.asscalar(np.sum(f**2)), np.reshape(2*jac.T@f,old_shape)
 
     @staticmethod
     def startpoint(n):
@@ -109,9 +98,7 @@ class Trigonometric(ObjectiveFunction):
 
         return np.reshape(np.ones(n)/n,(-1,1))
 
-    @staticmethod
-    def minVal(*args):
-        return 0
+
 
     @staticmethod
     def plot_2D():
@@ -170,7 +157,6 @@ class Extended_Rosenbrock(ObjectiveFunction):
     def f_grad(x):
         n = x.size
 
-        x.shape=(-1,1)
 
         sumf2  = np.sum(100 * (x[1::2] - x[:-1:2]**2)**2 + (1 - x[:-1:2])**2 )
 
@@ -178,22 +164,40 @@ class Extended_Rosenbrock(ObjectiveFunction):
         grad[1::2]  = 200 * (x[1::2] - x[:-1:2]**2)
         grad[:-1:2] = -400 * x[:-1:2] * (x[1::2] - x[:-1:2]**2) - 2 * (1-x[:-1:2]) # # d / dx2l-1
 
-        return sumf2, grad
+        return sumf2,grad
 
     @staticmethod
     def startpoint(n):
         """
         standard starting point
-        :param x:
-        :return:
+        :param n:
+        :return: array of shape (1,n)
         """
+        x0 = np.zeros( n,dtype = float)
+        x0.shape = (-1,1)
+        x0[:-1:2] = -1.2
+        x0[1::2] = 1
 
-        return np.reshape(np.ones(n)/n,(-1,1))
+        return x0
 
     @staticmethod
     def minVal(*args):
         return 0
 
+    @staticmethod
+    def xmin(n):
+        """
+        Location of minimum according to
+
+        Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained Optimization Software. 25 (1981).
+
+        This function not necessarily have only one Minimum in higher dimensional Space: see e.g. 10.1162/evco.2006.14.1.119
+
+        :param n: number of DOF
+        :return: array of size n
+        """
+
+        return np.ones((n,1),dtype = float)
 
 if __name__=="__main__":
     Extended_Rosenbrock.plot_2D()
