@@ -1,9 +1,9 @@
 
 import numpy as np
 import scipy.optimize
-from LBFGS_Matrix_H import LBFGS
+from PyLBGFS.LBFGS_Matrix_H import LBFGS
 
-from Wolfe import second_wolfe_condition,first_wolfe_condition
+from PyLBGFS.Wolfe import second_wolfe_condition,first_wolfe_condition
 import pytest
 
 def test_3D():
@@ -76,7 +76,6 @@ def test_3D():
     res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=10)
     print("nit {}".format(res.nit))
 
-    from mpl_toolkits.mplot3d import Axes3D
     fig3d = plt.figure()
     ax3d = fig3d.add_subplot(111, projection='3d')
 
@@ -135,7 +134,6 @@ def test_quadratic_nD():
     res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=100,g2tol=1e-10)
     print("nit {}".format(res.nit))
 
-    from mpl_toolkits.mplot3d import Axes3D
     fig3d = plt.figure()
     ax3d = fig3d.add_subplot(111, projection='3d')
 
@@ -181,7 +179,6 @@ def test_gaussian_nD(n):
     res = LBFGS(ex_fun, x, jac=ex_jac, maxcor=2, g2tol=1e-5, maxiter=100)
     print("nit {}".format(res.nit))
 
-    from mpl_toolkits.mplot3d import Axes3D
     fig3d = plt.figure()
     ax3d = fig3d.add_subplot(111, projection='3d')
 
@@ -246,7 +243,3 @@ def test_x2_xcosy():
         ax.plot(it.x[0], it.x[1], '+k')
         ax.annotate(i, it.x)
     plt.show(block=True)
-
-
-if __name__ == '__main__':
-    unittest.main()

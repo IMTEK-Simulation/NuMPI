@@ -98,8 +98,6 @@ class Trigonometric(ObjectiveFunction):
 
         return np.reshape(np.ones(n)/n,(-1,1))
 
-
-
     @staticmethod
     def plot_2D():
         import matplotlib.pyplot as plt

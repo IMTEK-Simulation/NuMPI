@@ -1,10 +1,9 @@
 
 import numpy as np
 import scipy.optimize
-from LBFGS_Matrix_H import LBFGS
 import pytest
 
-from helpers import minimization_problems as mp
+import tests.minimization_problems as mp
 
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock])
 @pytest.mark.parametrize("n",[10])

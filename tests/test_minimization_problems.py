@@ -1,4 +1,4 @@
-from helpers import minimization_problems as mp
+import tests.minimization_problems as mp
 import numpy as np
 import scipy.optimize
 

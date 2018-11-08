@@ -1,8 +1,7 @@
-import unittest
 import numpy as np
 import scipy.optimize
-from LBFGS_Matrix_H import LBFGS
-from helpers import minimization_problems as mp
+from PyLBGFS.LBFGS_Matrix_H import LBFGS
+import tests.minimization_problems as mp
 
 import pytest
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock]) # Only these where Solution is analytically known
