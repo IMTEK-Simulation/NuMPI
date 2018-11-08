@@ -158,7 +158,7 @@ class Extended_Rosenbrock(ObjectiveFunction):
         n = x.size
 
 
-        sumf2  = np.sum(100 * (x[1::2] - x[:-1:2]**2)**2 + (1 - x[:-1:2])**2 )
+        sumf2  = np.asscalar(np.sum(100 * (x[1::2] - x[:-1:2]**2)**2 + (1 - x[:-1:2])**2 ))
 
         grad = np.zeros_like(x)
         grad[1::2]  = 200 * (x[1::2] - x[:-1:2]**2)
