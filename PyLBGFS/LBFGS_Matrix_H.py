@@ -194,7 +194,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
             # D[-1,-1] = np.dot(Y[:,-1],Y[:,-1])# yk-1Tyk-1 # TOOPTIMIZE
             D[-1, -1] = R[-1,-1]
         else:
-            D = np.diag(np.einsum("ik,ik -> k", S, Y))
+            #D = np.diag(np.einsum("ik,ik -> k", S, Y))
+            D=np.diag(R.diagonal())
 
         assert D[-1,-1] >0, "k = {}: ".format(k)  # Assumption of Theorem 2.2
         #np.testing.assert_allclose(np.diag(D), np.diag(R))
