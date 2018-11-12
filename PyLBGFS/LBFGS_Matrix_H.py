@@ -12,7 +12,7 @@ def getLogfile():
     return savelog
     raise BlockingIOError
 
-def steepest_descent_wolfe2(x0,f,fprime):
+def steepest_descent_wolfe2(x0,f,fprime,**kwargs):
     """
     For first Iteration there is no history. We make a steepest descent satisfying strong Wolfe Condition
     :return:
@@ -24,7 +24,7 @@ def steepest_descent_wolfe2(x0,f,fprime):
     # line search
     alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
         lambda alpha: f(x0 - grad0 * alpha),
-        lambda alpha: np.dot(fprime(x0 - grad0 * alpha).T, -grad0),)
+        lambda alpha: np.dot(fprime(x0 - grad0 * alpha).T, -grad0),**kwargs)
     assert derphi is not None, "Line Search in first steepest descent failed"
     x = x0 - grad0 * alpha
 
@@ -33,7 +33,7 @@ def steepest_descent_wolfe2(x0,f,fprime):
 
 
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-10, maxiter=10000,
-          maxls=20, store_iterates="iterate", printdb=donothing):
+          maxls=20, store_iterates="iterate", printdb=donothing,linesearch_options = {}):
     """
         This implementation follows
 
@@ -61,9 +61,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
     if x_old is None:
         x_old = x.copy()
 
-        x,grad,x_old,grad_old = steepest_descent_wolfe2(x_old, fun, jac)
+        x,grad,x_old,grad_old = steepest_descent_wolfe2(x_old, fun, jac,**linesearch_options)
 
-    iterates = list()
+
     k=1
 
     n = x.size # Dimension of x
@@ -86,6 +86,21 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
 
     # Start loop
 
+    iterates = list()
+    if store_iterates == 'iterate':
+        iterate = scipy.optimize.OptimizeResult(
+            {'x': x_old.copy(),
+             'fun': fun(x_old),
+             'jac': grad_old.copy()})
+        iterates.append(iterate)
+
+        iterate = scipy.optimize.OptimizeResult(
+            {'x': x.copy(),
+             'fun': fun(x),
+             'jac': grad})
+        iterates.append(iterate)
+
+
     while True:
         #printdb(k)
         #printdb("grads")
@@ -107,7 +122,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
 
         # 2.
         grad2prev = grad2.copy()
-        grad2 = np.sum(np.asarray(grad) ** 2)  # ok
+        grad2 = np.sum(grad ** 2)  # ok
 
 
         # check if job is done
@@ -225,8 +240,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
         #printdb("assert descent direction")
         #assert fun(x - Hgrad * 0.001) - fun(x) < 0
         #printdb(fun(x - Hgrad * 0.001) - fun(x))
-
-        alpha,phi,phi0,derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: fun(x - Hgrad * alpha), lambda alpha: np.dot(jac(x - Hgrad * alpha).T, -Hgrad), c1=1e-4, c2=0.9,maxiter = maxls)
+        
+        alpha,phi,phi0,derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: fun(x - Hgrad * alpha), lambda alpha: np.dot(jac(x - Hgrad * alpha).T, -Hgrad),maxiter = maxls,**linesearch_options)
 
         if derphi is None:
             import matplotlib.pyplot as plt
