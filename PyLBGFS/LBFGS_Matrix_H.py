@@ -124,7 +124,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
         grad2prev = grad2.copy()
         grad2 = np.sum(grad ** 2)  # ok
 
-
         # check if job is done
         if  ((grad2 < g2tol if g2tol is not None else True) and
             (np.max(np.abs(grad)) < gtol if gtol is not None else True)):
@@ -156,7 +155,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
         #printdb("STgrad : {}".format(STgrad))
         #printdb("YTgrad: {}".format(YTgrad))
 
-        if False and k > maxcor:
+        if k > maxcor:
             w = np.vstack([STgrad_prev, gamma * YTgrad_prev])
             S_now_T_grad_prev = np.roll(STgrad_prev,-1)
             S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * w.T.dot(p)
