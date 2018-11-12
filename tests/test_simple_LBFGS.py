@@ -88,9 +88,7 @@ def test_3D():
     np.testing.assert_almost_equal(res.x,np.zeros(res.x.shape),decimal = 5)
 
 def test_quadratic_nD():
-    import matplotlib
-    matplotlib.use("MACOSX")
-    import matplotlib.pyplot as plt
+
 
     # quadratic
     n = 50;
@@ -134,14 +132,19 @@ def test_quadratic_nD():
     res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=100,g2tol=1e-10)
     print("nit {}".format(res.nit))
 
-    fig3d = plt.figure()
-    ax3d = fig3d.add_subplot(111, projection='3d')
+    if False:
+        import matplotlib
+        matplotlib.use("MACOSX")
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        fig3d = plt.figure()
+        ax3d = fig3d.add_subplot(111, projection='3d')
 
-    for it, i in zip(res['iterates'], range(len(res['iterates']))):
-        ax3d.plot(it.x[0], it.x[1], it.x[2], '+k')
-        # ax3d.annotate(i, it.x)
-    fig3d.show()
-    plt.show(block=True)
+        for it, i in zip(res['iterates'], range(len(res['iterates']))):
+            ax3d.plot(it.x[0], it.x[1], it.x[2], '+k')
+            # ax3d.annotate(i, it.x)
+        fig3d.show()
+        plt.show(block=True)
 
     np.testing.assert_almost_equal(res.x, np.zeros((n,1)), decimal=4)
 
