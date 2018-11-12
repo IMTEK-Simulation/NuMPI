@@ -28,7 +28,7 @@ def test_directional_derivative(Objective,n) :
         assert abs(der_numerical- der_analytical)/der_analytical < 1e-3, "(der_numerical- der_analytical)/der_analytical = {}".format(abs(der_numerical- der_analytical)/der_analytical)
 
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock,mp.Trigonometric])
-@pytest.mark.parametrize("n",[2,10,20])
+@pytest.mark.parametrize("n",[2,4,10,20])
 def test_Gradient(Objective,n) :
     """
     Asserts the numerical Gradient converges with order of the step to the analyitical one.
