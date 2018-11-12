@@ -38,10 +38,9 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         #helps to select the data that has odd or even index in the global array
         self._sl_odd  = slice(self.subdomain_location%2,None,2)
         self._sl_even = slice((self.subdomain_location+1)%2,None,2)
-
         self.pnp = pnp
-    def f_grad(self,x):
 
+    def f_grad(self,x):
         x_odd = x[self._sl_odd]
         x_even = x[self._sl_even]
 
@@ -55,7 +54,6 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
 
     def f(self, x):
         return self.f_grad(x)[0]
-
 
     def grad(self, x):
         return self.f_grad(x)[1]
@@ -141,5 +139,5 @@ class MPI_Objective_Interface():
         return self.Objective.startpoint(self.domain_resolution)[self.subdomain_slice]
 
     def xmin(self):
-        return self.Objective.xmin[self.subdomain_slice]
+        return self.Objective.xmin(self.domain_resolution)[self.subdomain_slice]
 
