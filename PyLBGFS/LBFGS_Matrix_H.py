@@ -219,8 +219,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
         gamma = D[-1, -1] / YTY[-1,-1]  # n.b. D[-1,-1] = sk-1T yk-1 = yk-1T sk-1
 
         #%% 6.
-        #Rinv = np.linalg.inv(R)  # TODO: profitiert das davon dass R eine Dreiecksmatrix ist ?
-
+        #Rinv = np.linalg.inv(R)
         Rinv = scipy.linalg.solve_triangular(R,np.eye(min(k,maxcor)))
 
         RiSg = Rinv.dot(STgrad)
@@ -280,10 +279,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
             iterates.append(iterate)
 
         k = k + 1
-
-
-#TODO: I'm still wondering why this doesn't work
-
 
 #alpha = np.linspace(0, 2)
 #plt.plot(alpha, [test_fun(x_old - grad_old * a) for a in alpha])
