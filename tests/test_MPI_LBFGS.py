@@ -9,7 +9,7 @@ import scipy.optimize
 
 import tests.minimization_problems as mp
 
-from PyLBGFS.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2
+from PyLBGFS.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
 
 
 def test_linesearch():
@@ -67,40 +67,30 @@ def test_MPI_steepest_descent_wolfe2(comm):
 
 #@pytest.mark.parametrize("PObjective",[mp.Extended_Rosenbrock]) # Objective should support parallelization !
 #@pytest.mark.parametrize("n",[10,20])
-#@MPITest([1, 2, 3, 4])
-@pytest.mark.xfail
+@MPITest([1, 2,3,4,8,10,11])
 def test_analytical_min(comm):
     """
     Compares the result with the analyticaly known posistion of the minimum
     :return:
     """
-    #comm= MPI.COMM_WORLD
-    raise NotImplementedError
-    n = 10
 
-    nprocs = comm.Get_size()
-    rank = comm.Get_rank()
+    def printMPI(msg):
+        for i in range(comm.Get_size()):
+            comm.barrier()
+            if comm.Get_rank() == i:
+                print("Proc {}: {}".format(i, msg))
 
-    step = n // nprocs
+    n = 50
 
-    if rank == nprocs - 1:
-        sl = slice(rank * step, None)
-    else:
-        sl = slice(rank * step, (rank + 1) * step)
+    Objective = mp.Extended_Rosenbrock
 
-    x0 = PObjective.startpoint(n)[sl]
+    PObjective=MPI_Objective_Interface(Objective, domain_resolution=n, comm=comm)
+
+    x0 = PObjective.startpoint()
+
+    res = LBFGS(PObjective.f, x0,jac=PObjective.grad, maxcor=5, maxiter=100, gtol=1e-12,pnp= ParallelNumpy(comm))
+
+    np.testing.assert_allclose(res.x,PObjective.xmin(),atol=1e-16,rtol = 1e-5)
 
 
-    res = LBFGS(PObjective.f, PObjective.grad, x0, m=5, MAXITER=100, grad2tol=1e-11,comm = comm)
-
-
-    np.testing.assert_allclose(res.x,PObjective.xmin(n)[sl])
-
-    recvbuf = None
-    if rank == 0:
-        recvbuf = np.empty(1,dtype=x0.dtype)
-    MPI.COMM_WORLD.Gather(a, recvbuf, root=0)
-
-    assert np.abs(res.fun-PObjective.minVal(n))< 1e-7
-
-    np.testing.assert_almost_equal( res.x,PObjective.xmin(n))
+    assert np.abs(res.fun-Objective.minVal(n))< 1e-7
