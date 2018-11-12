@@ -21,7 +21,7 @@ def test_3D():
         return np.sum(np.dot((x ** 2).flat,np.array([1,4,9])),axis=0)
 
     def ex_jac(x):
-        return 2 * np.array((1* x[0],2* x[1],3 * x[2]))
+        return 2 * np.array((1* x[0],4* x[1],9 * x[2]))
 
 
     ## plot
@@ -73,7 +73,7 @@ def test_3D():
     resscipy = scipy.optimize.minimize(ex_fun,x,jac = ex_jac)
     print("schipy success: {}".format(resscipy.success))
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=10)
+    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=3, maxiter=10)
     print("nit {}".format(res.nit))
 
     fig3d = plt.figure()
@@ -147,9 +147,6 @@ def test_quadratic_nD():
 
 @pytest.mark.parametrize("n", [3,5,10,20])  # This has Problems with Linesearch at high number of points
 def test_gaussian_nD(n):
-    import matplotlib
-    matplotlib.use("MACOSX")
-    import matplotlib.pyplot as plt
 
 
     factors = np.random.random(n)+0.5
@@ -176,70 +173,75 @@ def test_gaussian_nD(n):
     #print("schipy success: {}".format(resscipy.success))
 
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, maxcor=2, g2tol=1e-5, maxiter=100)
+    res = LBFGS(ex_fun, x, jac=ex_jac, maxcor=2, gtol=1e-5, maxiter=10000)
     print("nit {}".format(res.nit))
 
-    fig3d = plt.figure()
-    ax3d = fig3d.add_subplot(111, projection='3d')
+    if False:
+        import matplotlib
+        matplotlib.use("MACOSX")
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        fig3d = plt.figure()
+        ax3d = fig3d.add_subplot(111, projection='3d')
 
-    for it, i in zip(res['iterates'], range(len(res['iterates']))):
-        ax3d.plot(it.x[0], it.x[1], it.x[2], '+k')
-        # ax3d.annotate(i, it.x)
-    fig3d.show()
-    plt.show(block=True)
+        for it, i in zip(res['iterates'], range(len(res['iterates']))):
+            ax3d.plot(it.x[0], it.x[1], it.x[2], '+k')
+            # ax3d.annotate(i, it.x)
+        fig3d.show()
+        plt.show(block=True)
 
     np.testing.assert_allclose(res.x, shift, atol = 1e-3)
 
 def test_x2_xcosy():
-    import matplotlib
-    matplotlib.use("MACOSX")
-    import matplotlib.pyplot as plt
 
-    def ex_fun(x):
-        x.shape = (-1, 1)
+
+    def ex_fun(x_):
+        x=x_.reshape((-1,1))
         return .5 * x[0, 0] ** 2 + x[0, 0] * np.cos(x[1, 0])
 
-    def ex_jac(x):
-        x.shape = (-1, 1)
+    def ex_jac(x_):
+        x = x_.reshape((-1, 1))
         return np.array([[x[0, 0] + np.cos(x[1, 0])],
                          [-x[0, 0] * np.sin(x[1, 0])]])
-
-
     ## plot
-    fig, ax = plt.subplots()
-    xg, yg = np.linspace(-5, 5, 51), np.linspace(-6, 6, 51)
 
-    def mat_fun(xg, yg):
-        Z = np.zeros((xg.size, yg.size))
-        for i in range(Z.shape[0]):
-            for j in range(Z.shape[1]):
-                Z[j, i] = ex_fun(np.array([xg[i], yg[j]]))
-        return Z
 
-    X, Y = np.meshgrid(xg, yg)
-    plt.colorbar(ax.contour(X, Y, mat_fun(xg, yg)))
-    fig.show()
     #plt.show(block=True)
     ######
     # Initial history:
-    x_old = np.array([[4], [-4]],dtype=float)
-    grad_old = ex_jac(x_old)
-
-    # line search
-    alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
-        lambda alpha: ex_fun(x_old - grad_old * alpha),
-        lambda alpha: np.dot(ex_jac(x_old - grad_old * alpha).T, -grad_old))
-    assert derphi is not None
-    x = x_old - grad_old * alpha
-    assert ex_fun(x) < ex_fun(x_old)
-    grad = ex_jac(x)
+    x = np.array([[3], [-4]],dtype=float)
 
     k = 1
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=10)
+    res = LBFGS(ex_fun, x, jac=ex_jac, gtol = 1e-5 ,maxcor=5, maxiter=10000,linesearch_options=dict(c1 = 1e-4,c2 = 0.999))
     print("nit {}".format(res.nit))
 
-    for it, i in zip(res['iterates'], range(len(res['iterates']))):
-        ax.plot(it.x[0], it.x[1], '+k')
-        ax.annotate(i, it.x)
-    plt.show(block=True)
+    ref = scipy.optimize.minimize(ex_fun, x.reshape(-1), jac=lambda x: ex_jac(x).reshape(-1))
+
+    assert ref.success
+
+    if False:
+        import matplotlib
+        matplotlib.use("MACOSX")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        xg, yg = np.linspace(-5, 5, 51), np.linspace(-6, 6, 51)
+
+        def mat_fun(xg, yg):
+            Z = np.zeros((xg.size, yg.size))
+            for i in range(Z.shape[0]):
+                for j in range(Z.shape[1]):
+                    Z[j, i] = ex_fun(np.array([xg[i], yg[j]]))
+            return Z
+
+        X, Y = np.meshgrid(xg, yg)
+        plt.colorbar(ax.contour(X, Y, mat_fun(xg, yg)))
+        fig.show()
+        for it, i in zip(res['iterates'], range(len(res['iterates']))):
+            ax.plot(it.x[0], it.x[1], '+k')
+            ax.annotate(i, it.x)
+        plt.show(block=True)
+
+    np.testing.assert_allclose(res.x.reshape(-1),ref.x,atol = 1e-16,rtol = 1e-5)
+
+
