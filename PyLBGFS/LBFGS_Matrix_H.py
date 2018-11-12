@@ -63,7 +63,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
 
         x,grad,x_old,grad_old = steepest_descent_wolfe2(x_old, fun, jac,**linesearch_options)
 
-
     k=1
 
     n = x.size # Dimension of x
@@ -203,8 +202,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
         # YTY = np.dot(Y.T,Y) #TOPTIMIZED
         if k > maxcor:
             YTY = np.roll(YTY, (-1, -1), axis=(0, 1))
-            printdb(YTgrad)
-            printdb(YTgrad_prev)
+            #printdb(YTgrad)
+            #printdb(YTgrad_prev)
             YTY[-1, :-1] = YTY[:-1, -1] = (YTgrad[:-1] - YTgrad_prev[1:]).flat
             YTY[-1, -1] = grad2prev - grad2 + 2 * YTgrad[-1]
         else:
@@ -220,7 +219,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
         gamma = D[-1, -1] / YTY[-1,-1]  # n.b. D[-1,-1] = sk-1T yk-1 = yk-1T sk-1
 
         #%% 6.
-        Rinv = np.linalg.inv(R)  # TODO: profitiert das davon dass R eine Dreiecksmatrix ist ?
+        #Rinv = np.linalg.inv(R)  # TODO: profitiert das davon dass R eine Dreiecksmatrix ist ?
+
+        Rinv = scipy.linalg.solve_triangular(R,np.eye(min(k,maxcor)))
 
         RiSg = Rinv.dot(STgrad)
 
