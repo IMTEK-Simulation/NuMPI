@@ -74,8 +74,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
     R = np.zeros((0, 0))
     STgrad = np.array((1, maxcor))
     YTgrad = np.array((1, maxcor))
-    STgrad_prev = np.array((1, maxcor))
-    YTgrad_prev = np.array((1, maxcor))
 
     grad = np.asarray(jac(x))
     grad2 = np.sum(grad**2)
