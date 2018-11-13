@@ -24,17 +24,19 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,**kwargs):
     assert derphi is not None, "Line Search in first steepest descent failed"
     x = x0 - grad0 * alpha
 
-    return x, fprime(x) , x0, grad0
+    return x, fprime(x) , x0, grad0, phi,phi0
 
-def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-10, maxiter=10000,
+def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=None, ftol= None,maxiter=10000,
           maxls=20,linesearch_options={}, pnp = ParallelNumpy(MPI.COMM_WORLD),store_iterates="iterate",printdb=donothing):
 
     if x_old is None:
         x_old = x.copy()
 
-        x,grad,x_old,grad_old = steepest_descent_wolfe2(x_old, fun, jac,pnp=pnp)
+        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, fun, jac,pnp=pnp)
     else:
         grad_old = np.asarray(jac(x_old))
+        phi_old = fun(x_old)
+        phi = fun(x)
     iterates = list()
     k = 1
 
@@ -54,7 +56,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
     alpha = 0
 
     # Start loop
-    printdb(k)
+    #printdb(k)
     while True:
         # Update Sk,Yk
         if k > maxcor:
@@ -73,14 +75,14 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
 
         # check if job is done
         if ((grad2 < g2tol if g2tol is not None else True) and
-                (pnp.max(np.abs(grad)) < gtol if gtol is not None else True)):
+                (pnp.max(np.abs(grad)) < gtol if gtol is not None else True) and
+                ((phi - phi_old) / max((1,abs(phi),abs(phi_old))) <= ftol if ftol is not None else True)):
             result = scipy.optimize.OptimizeResult({'success': True,
                                                     'x': x,
                                                     'fun':phi,
                                                     'jac':grad,
                                                     'nit': k,
                                                     'iterates': iterates})
-
             # if iterates:
             #    result['iterates'] = iterates
             return result
@@ -146,7 +148,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-
 
         Hgrad = gamma * grad + np.hstack([S, gamma * Y]).dot(p)
 
-        printdb("Linesearch: ")
+        phi_old = float(phi)
+        #printdb("Linesearch: ")
         alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: fun(x - Hgrad * alpha),
                                                                                   lambda alpha: pnp.dot(
                                                                                       jac(x - Hgrad * alpha).T, -Hgrad),
