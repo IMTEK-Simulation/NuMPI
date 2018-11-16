@@ -29,6 +29,8 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,**kwargs):
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=None, ftol= None,maxiter=10000,
           maxls=20,linesearch_options={}, pnp = ParallelNumpy(MPI.COMM_WORLD),store_iterates="iterate",printdb=donothing):
 
+    x = x.reshape((-1,1))
+
     if x_old is None:
         x_old = x.copy()
 
