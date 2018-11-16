@@ -132,14 +132,14 @@ class MPI_Quadratic():
             self._startpoint = np.random.normal(size= self.subdomain_resolution)
 
     def f_grad(self,x):
-        return self.pnp.sum(np.dot((x ** 2).flat, self.factors**2), axis=0),\
-               2 * self.factors.reshape(x.shape) * x
+        factdotx = self.factors.reshape(x.shape) * x
+        return self.pnp.sum(factdotx**2,axis = 0), 2 * factdotx
 
     def f(self, x):
-        return self.f_grad(x)[0]
+        return self.pnp.sum(np.dot((x ** 2).flat, self.factors**2), axis=0)
 
     def grad(self, x):
-        return self.f_grad(x)[1]
+        return 2 * self.factors.reshape(x.shape) * x
 
     def startpoint(self):
         """
