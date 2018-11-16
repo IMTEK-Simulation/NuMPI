@@ -7,13 +7,11 @@ from PyLBGFS.Wolfe import second_wolfe_condition,first_wolfe_condition
 import pytest
 
 def test_3D():
-    import matplotlib
-    matplotlib.use("MACOSX")
-    import matplotlib.pyplot as plt
-
     # Gaussian Potential
 
     # quadratic
+    toPlot = False
+
 
     def ex_fun(x):
         "x should be an np array"
@@ -24,8 +22,7 @@ def test_3D():
         return 2 * np.array((1* x[0],4* x[1],9 * x[2]))
 
 
-    ## plot
-    fig, ax = plt.subplots()
+
     xg, yg = np.linspace(-5, 5, 51), np.linspace(-6, 6, 51)
 
     def mat_fun(x_g, x_):
@@ -36,20 +33,27 @@ def test_3D():
                 Z[j, i] = ex_fun(np.array([xg[i], yg[j], 0]))
         return Z
 
-    X, Y = np.meshgrid(xg, yg)
-    ax.contour(X, Y, mat_fun(xg, yg))
-    fig.show()
+    ## plot
+    if toPlot:
+        import matplotlib
+        #matplotlib.use("MACOSX")
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        fig, ax = plt.subplots()
+        X, Y = np.meshgrid(xg, yg)
+        ax.contour(X, Y, mat_fun(xg, yg))
+        fig.show()
 
-    print(ex_fun(np.array((0, 0, 0))))
-    fig2, ax2 = plt.subplots()
-    for z in [0]:
-        for y in [0, 1, 2]:
-            ax2.plot(xg, [ex_fun(np.array((x, y, z))) for x in xg])
-            ax2.plot(xg, [ex_jac(np.array((x, y, z)))[0]for x in xg],'--')
-    #plt.show(block = True)
-    ######11
+        print(ex_fun(np.array((0, 0, 0))))
+        fig2, ax2 = plt.subplots()
+        for z in [0]:
+            for y in [0, 1, 2]:
+                ax2.plot(xg, [ex_fun(np.array((x, y, z))) for x in xg])
+                ax2.plot(xg, [ex_jac(np.array((x, y, z)))[0]for x in xg],'--')
+        #plt.show(block = True)
+        ######11
     # Initial history:
-    x_old = np.array([2,1,-1])
+    x_old = np.array([2.,1.,-1.],dtype=float)
     x_old.shape = (-1,1)
     #x_old.shape=(-1,1)
     grad_old = ex_jac(x_old)
@@ -76,14 +80,19 @@ def test_3D():
     res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=3, maxiter=10)
     print("nit {}".format(res.nit))
 
-    fig3d = plt.figure()
-    ax3d = fig3d.add_subplot(111, projection='3d')
+    if toPlot:
+        import matplotlib
+        #matplotlib.use("MACOSX")
+        import matplotlib.pyplot as plt
+        from mpl_toolkits.mplot3d import Axes3D
+        fig3d = plt.figure()
+        ax3d = fig3d.add_subplot(111, projection='3d')
 
-    for it, i in zip(res['iterates'], range(len(res['iterates']))):
-        ax3d.plot(it.x[0], it.x[1],it.x[2], '+k')
-        #ax3d.annotate(i, it.x)
-    fig3d.show()
-    plt.show(block=True)
+        for it, i in zip(res['iterates'], range(len(res['iterates']))):
+            ax3d.plot(it.x[0], it.x[1],it.x[2], '+k')
+            #ax3d.annotate(i, it.x)
+        fig3d.show()
+        plt.show(block=True)
 
     np.testing.assert_almost_equal(res.x,np.zeros(res.x.shape),decimal = 5)
 
