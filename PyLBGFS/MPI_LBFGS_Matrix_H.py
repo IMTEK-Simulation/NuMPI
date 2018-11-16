@@ -27,16 +27,16 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,**kwargs):
     return x, fprime(x) , x0, grad0, phi,phi0
 
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=None, ftol= None,maxiter=10000,
-          maxls=20,linesearch_options={}, pnp = ParallelNumpy(MPI.COMM_WORLD),store_iterates="iterate",printdb=donothing):
+          maxls=20,linesearch_options={}, pnp = ParallelNumpy(MPI.COMM_WORLD),store_iterates="iterate",printdb=donothing,**options):
 
     x = x.reshape((-1,1))
-
+    _jac = lambda x: jac(x).reshape((-1,1))
     if x_old is None:
         x_old = x.copy()
 
-        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, fun, jac,pnp=pnp)
+        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, fun, _jac,pnp=pnp)
     else:
-        grad_old = np.asarray(jac(x_old))
+        grad_old = np.asarray(_jac(x_old))
         phi_old = fun(x_old)
         phi = fun(x)
     iterates = list()
@@ -52,7 +52,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
     STgrad = np.array((1, maxcor))
     YTgrad = np.array((1, maxcor))
 
-    grad = np.asarray(jac(x))
+    grad = np.asarray(_jac(x))
     grad2 = pnp.sum(grad ** 2)
 
     alpha = 0
@@ -154,7 +154,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
         #printdb("Linesearch: ")
         alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: fun(x - Hgrad * alpha),
                                                                                   lambda alpha: pnp.dot(
-                                                                                      jac(x - Hgrad * alpha).T, -Hgrad),
+                                                                                      _jac(x - Hgrad * alpha).T, -Hgrad),
                                                                                   maxiter=maxls, **linesearch_options)
         printdb("derphi: {}".format(derphi))
         assert derphi is not None, "line-search did not converge"
@@ -163,7 +163,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
         x = x - Hgrad * alpha
 
         grad_old[:] = grad
-        grad = jac(x)
+        grad = _jac(x)
 
         if store_iterates == 'iterate':
             iterate = scipy.optimize.OptimizeResult(
