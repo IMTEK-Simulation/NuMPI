@@ -22,7 +22,7 @@ class ParallelNumpy :
     def __init__(self,comm=MPI.COMM_WORLD):
         self.comm = comm
 
-    def sum(self,arr):
+    def sum(self,arr,*args,**kwargs):
         """
         take care that the input arrays have the same datatype on all Processors !
 
@@ -36,7 +36,7 @@ class ParallelNumpy :
         """
 
         result = np.asarray(0,dtype=arr.dtype)
-        self.comm.Allreduce(np.sum(arr),result,op = MPI.SUM)
+        self.comm.Allreduce(np.sum(arr,*args,**kwargs),result,op = MPI.SUM)
         return result
 
     #def array(self,*args,**kwargs):
