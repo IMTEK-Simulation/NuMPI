@@ -19,6 +19,8 @@ def test_minimize_call(Objective,n):
     assert result.success, ""
     np.testing.assert_allclose(np.reshape(result.x, (-1,)), np.reshape(Objective.xmin(n), (-1,)), rtol=1e-7)
 
+# TODO: test when jac is Bool
+
 def test_multiple_tol():
     pass
 
