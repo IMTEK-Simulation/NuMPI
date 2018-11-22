@@ -1,7 +1,7 @@
 
 import unittest
 import numpy as np
-from Tools.ParallelNumpy import ParallelNumpy
+from PyLBGFS.Tools import ParallelNumpy
 from mpi4py import MPI
 
 class test_ParallelNumpy(unittest.TestCase):

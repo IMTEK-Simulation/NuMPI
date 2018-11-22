@@ -1,8 +1,7 @@
 import pytest
 
 import numpy as np
-from mpi4py import MPI
-from Tools.ParallelNumpy import  ParallelNumpy
+from PyLBGFS.Tools import  ParallelNumpy
 from runtests.mpi import MPITest
 from tests.MPI_minimization_problems import MPI_Objective_Interface
 import scipy.optimize

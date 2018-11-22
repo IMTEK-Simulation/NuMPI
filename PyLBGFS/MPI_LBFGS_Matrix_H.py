@@ -2,13 +2,13 @@
 import numpy as np
 import scipy.optimize
 
-from Tools.ParallelNumpy import ParallelNumpy
+from PyLBGFS.Tools import ParallelNumpy
 from mpi4py import MPI
 
 def donothing(*args,**kwargs):
     pass
 
-def steepest_descent_wolfe2(x0,f,fprime, pnp = None,**kwargs):
+def steepest_descent_wolfe2(x0,f,fprime, pnp = None,maxiter=10,**kwargs):
     """
     For first Iteration there is no history. We make a steepest descent satisfying strong Wolfe Condition
     :return:
@@ -17,33 +17,48 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,**kwargs):
     # x_old.shape=(-1,1)
     grad0 = fprime(x0)
 
-    # line search
+    def _fun(alpha):
+        val = f(x0 - grad0 * alpha)
+        return val
+
+    def _fprime(alpha):
+        val=np.asscalar(pnp.dot(fprime(x0 - grad0 * alpha).T, -grad0))
+        return val
+
     alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
-        lambda alpha: f(x0 - grad0 * alpha),
-        lambda alpha: pnp.dot(fprime(x0 - grad0 * alpha).T, -grad0),**kwargs)
+        _fun,
+        _fprime, maxiter=maxiter, **kwargs)
+
     assert derphi is not None, "Line Search in first steepest descent failed"
     x = x0 - grad0 * alpha
 
     return x, fprime(x) , x0, grad0, phi,phi0
 
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=None, ftol= None,maxiter=10000,
-          maxls=20,linesearch_options={}, pnp = ParallelNumpy(MPI.COMM_WORLD),store_iterates="iterate",printdb=donothing,**options):
+          maxls=20,linesearch_options={}, pnp=ParallelNumpy(MPI.COMM_WORLD),store_iterates="iterate",printdb=donothing,**options):
+    #print("jac = {}, type = {}".format(jac, type(jac)))
+    if jac is True: # TODO: Temp
+        jac = lambda x: fun(x)[1]
+        _fun = lambda x: fun(x)[0]
+    elif jac is False:
+        raise NotImplementedError
+    else: # function provided
+        _fun = fun
+
 
     x = x.reshape((-1,1))
     _jac = lambda x: jac(x).reshape((-1,1))
     if x_old is None:
         x_old = x.copy()
-
-        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, fun, _jac,pnp=pnp)
+        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac,pnp=pnp,maxiter=maxls)
     else:
         grad_old = np.asarray(_jac(x_old))
-        phi_old = fun(x_old)
-        phi = fun(x)
+        phi_old = _fun(x_old)
+        phi = _fun(x)
     iterates = list()
     k = 1
 
     n = x.size  # Dimension of x
-
     gamma = 1
 
     S = np.zeros((n, 0))
@@ -61,6 +76,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
     #printdb(k)
     while True:
         # Update Sk,Yk
+        #print("k= {}".format(k))
         if k > maxcor:
             S = np.roll(S, -1)
             S[:, -1] = (x - x_old).flat
@@ -152,7 +168,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
 
         phi_old = float(phi)
         #printdb("Linesearch: ")
-        alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: fun(x - Hgrad * alpha),
+        alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: _fun(x - Hgrad * alpha),
                                                                                   lambda alpha: pnp.dot(
                                                                                       _jac(x - Hgrad * alpha).T, -Hgrad),
                                                                                   maxiter=maxls, **linesearch_options)

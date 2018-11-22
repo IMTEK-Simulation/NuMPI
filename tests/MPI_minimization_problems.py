@@ -1,8 +1,7 @@
 
 import numpy as np
 
-import scipy.optimize
-from Tools.ParallelNumpy import ParallelNumpy
+from PyLBGFS.Tools import ParallelNumpy
 
 from mpi4py import MPI
 
