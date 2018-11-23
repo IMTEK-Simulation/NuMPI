@@ -1,14 +1,14 @@
 import pytest
 
 import numpy as np
-from PyLBGFS.Tools import  ParallelNumpy
+from PyLBFGS.Tools import  ParallelNumpy
 from runtests.mpi import MPITest
 from tests.MPI_minimization_problems import MPI_Objective_Interface
 import scipy.optimize
 import  time
 import tests.minimization_problems as mp
 
-from PyLBGFS.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
+from PyLBFGS.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
 
 
 def timer(fun, *args, **kwargs):

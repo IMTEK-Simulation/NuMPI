@@ -14,7 +14,7 @@ import sys
 
 
 setup(
-    name = "PyLBGFS",
+    name = "PyLBFGS",
     package_data = {'': ['ChangeLog.md']},
     include_package_data = True,
     packages = find_packages(),

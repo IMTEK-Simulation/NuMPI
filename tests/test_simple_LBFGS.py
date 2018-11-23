@@ -1,9 +1,9 @@
 
 import numpy as np
 import scipy.optimize
-from PyLBGFS.LBFGS_Matrix_H import LBFGS
+from PyLBFGS.LBFGS_Matrix_H import LBFGS
 
-from PyLBGFS.Wolfe import second_wolfe_condition,first_wolfe_condition
+from PyLBFGS.Wolfe import second_wolfe_condition,first_wolfe_condition
 import pytest
 
 def test_3D():

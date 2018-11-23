@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.optimize
-from PyLBGFS.LBFGS_Matrix_H import LBFGS
+from PyLBFGS.LBFGS_Matrix_H import LBFGS
 import tests.minimization_problems as mp
 
 import pytest
