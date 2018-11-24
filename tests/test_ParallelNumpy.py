@@ -160,3 +160,6 @@ class test_ParallelNumpy(unittest.TestCase):
             loc_sl = slice(self.rank * step, (self.rank + 1) * step)
 
         np.testing.assert_allclose(self.np.dot(fulla[:, loc_sl], fullb[loc_sl,:]), np.dot(fulla, fullb))
+
+    def test_boolean(self): #TODO
+        pass

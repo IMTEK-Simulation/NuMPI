@@ -34,8 +34,10 @@ class ParallelNumpy :
         -------
         scalar np.ndarray , the sum of all Elements of the Array over all the Processors
         """
-
-        result = np.asarray(0,dtype=arr.dtype)
+        if arr.dtype==bool:
+            result = np.asarray(0, dtype=int) #TODO: maybe a big uint ?
+        else:
+            result = np.asarray(0,dtype=arr.dtype)
         self.comm.Allreduce(np.sum(arr,*args,**kwargs),result,op = MPI.SUM)
         return result
 
