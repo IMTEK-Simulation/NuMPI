@@ -26,6 +26,16 @@ class test_ParallelNumpy(unittest.TestCase):
         res = self.np.sum(arr)
         self.assertEqual(res, self.np.comm.Get_size() * 21.1)
 
+    def test_sum_boolean(self):
+        arr=np.array(((1,2.1,3),
+                     (4,5,6)))
+        arr=arr>3
+
+        #print(arr.dtype)
+        res = self.np.sum(arr)
+        self.assertEqual(res,self.np.comm.Get_size()*3)
+
+
     def test_max_2D(self):
         arr=np.reshape(np.array((-1,1,5,4,
                              4,5,4,5,
@@ -161,5 +171,4 @@ class test_ParallelNumpy(unittest.TestCase):
 
         np.testing.assert_allclose(self.np.dot(fulla[:, loc_sl], fullb[loc_sl,:]), np.dot(fulla, fullb))
 
-    def test_boolean(self): #TODO
-        pass
+
