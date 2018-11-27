@@ -45,6 +45,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
     else: # function provided
         _fun = fun
 
+    original_shape=x.shape
 
     x = x.reshape((-1,1))
     _jac = lambda x: jac(x).reshape((-1,1))
@@ -96,9 +97,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
                 (pnp.max(np.abs(grad)) < gtol if gtol is not None else True) and
                 ((phi - phi_old) / max((1,abs(phi),abs(phi_old))) <= ftol if ftol is not None else True)):
             result = scipy.optimize.OptimizeResult({'success': True,
-                                                    'x': x,
+                                                    'x': x.reshape(original_shape),
                                                     'fun':phi,
-                                                    'jac':grad,
+                                                    'jac':grad.reshape(original_shape),
                                                     'nit': k,
                                                     'iterates': iterates})
             # if iterates:
@@ -107,9 +108,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
 
         if k > maxiter:
             result = scipy.optimize.OptimizeResult({'success': False,
-                                                    'x': x,
+                                                    'x': x.reshape(original_shape),
                                                     'fun':phi,
-                                                    'jac':grad,
+                                                    'jac':grad.reshape(original_shape),
                                                     'nit': k,
                                                     'iterates': iterates})
 
@@ -183,9 +184,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
 
         if store_iterates == 'iterate':
             iterate = scipy.optimize.OptimizeResult(
-                {'x': x.copy(),
+                {'x': x.copy().reshape(original_shape),
                  'fun': phi,
-                 'jac': grad})
+                 'jac': grad.reshape(original_shape)})
             iterates.append(iterate)
 
         printdb("k = {}".format(k))
