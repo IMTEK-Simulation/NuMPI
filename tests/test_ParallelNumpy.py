@@ -35,11 +35,54 @@ class test_ParallelNumpy(unittest.TestCase):
         res = self.np.sum(arr)
         self.assertEqual(res,self.np.comm.Get_size()*3)
 
+    def test_sum_along_axis_decomp(self):
+        domain_resolution = (128, 65)
+        np.random.seed(2)
+        globaldata = np.random.random(domain_resolution)
 
+        nprocs = self.comm.Get_size()
+        rank = self.comm.Get_rank()
+
+        step = domain_resolution[0] // nprocs
+
+        if rank == nprocs - 1:
+            subdomain_slice = (slice(rank * step, None), slice(None, None))
+            subdomain_location = [rank * step, 0]
+            subdomain_resolution = [domain_resolution[0] - rank * step, domain_resolution[1]]
+        else:
+            subdomain_slice = (slice(rank * step, (rank + 1) * step), slice(None, None))
+            subdomain_location = [rank * step, 0]
+            subdomain_resolution = [step, domain_resolution[1]]
+
+        localdata = globaldata[subdomain_slice]
+
+        np.testing.assert_allclose(self.np.sum(localdata,axis=0), np.sum(globaldata,axis=0),rtol = 1e-12)
+        # Why are they not perfectly equal ?
     def test_max_2D(self):
         arr=np.reshape(np.array((-1,1,5,4,
                              4,5,4,5,
                              7,0,1,0.),dtype=float),(3,4))
+
+        rank = self.comm.Get_rank()
+        if self.comm.Get_size() >=4:
+            if rank ==0 :   local_arr = arr[0:2,0:2]
+            elif rank ==1 : local_arr = arr[0:2,2:]
+            elif rank == 2 :local_arr = arr[2:,0:2]
+            elif rank == 3 : local_arr = arr[2:,2:]
+            else : local_arr = np.empty(0,dtype=arr.dtype)
+        elif self.comm.Get_size() >=2 :
+            if   rank ==0 :   local_arr = arr[0:2,:]
+            elif rank ==1 : local_arr = arr[2:,:]
+            else:           local_arr = np.empty(0, dtype=arr.dtype)
+        else:
+            local_arr = arr
+        self.assertEqual(self.np.max(local_arr),7)
+
+
+    def test_max_2D_int(self):
+        arr=np.reshape(np.array((-1,1,5,4,
+                             4,5,4,5,
+                             7,0,1,0),dtype=int),(3,4))
 
         rank = self.comm.Get_rank()
         if self.comm.Get_size() >=4:
