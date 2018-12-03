@@ -26,6 +26,10 @@ class ParallelNumpy :
         """
         take care that the input arrays have the same datatype on all Processors !
 
+        when you specify an axis along which make the sum, be shure that it is the direction in which data is decomposed (for slab data decomposition) !
+
+        pencil data decomposition is not implemented yet.
+
         Parameters
         ----------
         arr: numpy Array
@@ -34,11 +38,10 @@ class ParallelNumpy :
         -------
         scalar np.ndarray , the sum of all Elements of the Array over all the Processors
         """
-        if arr.dtype==bool:
-            result = np.asarray(0, dtype=int) #TODO: maybe a big uint ?
-        else:
-            result = np.asarray(0,dtype=arr.dtype)
-        self.comm.Allreduce(np.sum(arr,*args,**kwargs),result,op = MPI.SUM)
+
+        locresult= np.sum(arr,*args,**kwargs)
+        result = np.zeros_like(locresult)
+        self.comm.Allreduce(locresult,result,op = MPI.SUM)
         return result
 
     #def array(self,*args,**kwargs):
@@ -65,6 +68,7 @@ class ParallelNumpy :
         """
         result = np.asarray(0, dtype=arr.dtype)
         self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([-np.inf],dtype=arr.dtype), result, op=MPI.MAX)
+        # FIXME: use the max of the dtype because np.inf only float
         #TODO: Not elegant, but following options didn't work
         #self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(None, dtype=arr.dtype), result, op=MPI.MAX)
         # Here when the first array isn't empty it is fine, but otherwise the result will be nan
@@ -95,15 +99,4 @@ class ParallelNumpy :
         self.comm.Allreduce(locresult, result, op=MPI.SUM)
         return result
 
-    def mean(self,arr): #TODO: this needs also the global number of elements, so it's not
-        """
-        Parameters
-        ----------
-        arr: numpy Array
-
-        Returns
-        -------
-        scalar, the mean of all Elements of the Array over all the Processors
-        """
-        return NotImplementedError("will never, use sum")
 
