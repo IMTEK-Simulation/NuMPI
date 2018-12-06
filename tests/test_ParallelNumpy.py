@@ -18,13 +18,13 @@ class test_ParallelNumpy(unittest.TestCase):
     def test_sum_1D(self):
         arr=np.array((1,2.1,3))
         res = self.np.sum(arr)
-        self.assertEqual(res, self.np.comm.Get_size() * 6.1)
+        np.testing.assert_allclose(res, self.np.comm.Get_size() * 6.1,atol=1e-12)
 
     def test_sum_2D(self):
         arr=np.array(((1,2.1,3),
                      (4,5,6)))
         res = self.np.sum(arr)
-        self.assertEqual(res, self.np.comm.Get_size() * 21.1)
+        np.testing.assert_allclose(res, self.np.comm.Get_size() * 21.1,atol=1e-12)
 
     def test_sum_boolean(self):
         arr=np.array(((1,2.1,3),
