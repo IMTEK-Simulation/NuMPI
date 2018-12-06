@@ -124,8 +124,8 @@ class test_ParallelNumpy(unittest.TestCase):
             local_arr = np.array([],dtype = float)
             #self.assertTrue(np.isnan(self.np.max(local_arr)))
             #self.assertTrue(np.isnan(self.np.min(local_arr)))
-            self.assertEqual(self.np.max(local_arr),-np.inf)
-            self.assertEqual(self.np.min(local_arr),np.inf)
+            self.assertEqual(self.np.max(local_arr),np.finfo(local_arr.dtype).min)
+            self.assertEqual(self.np.min(local_arr),np.finfo(local_arr.dtype).max)
 
 
 
