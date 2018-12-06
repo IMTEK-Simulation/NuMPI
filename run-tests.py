@@ -7,7 +7,7 @@ from runtests.mpi import Tester
 
 import os.path
 
-tester = Tester(os.path.join(os.path.abspath(__file__)), "PyLBFGS")
+tester = Tester(os.path.join(os.path.abspath(__file__)), "MPITools")
 
 print(Tester.__doc__)
 

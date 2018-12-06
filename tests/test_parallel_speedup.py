@@ -1,11 +1,11 @@
 
 import numpy as np
 from mpi4py import MPI
-from PyLBFGS.Tools import  ParallelNumpy
+from MPITools.Tools import  ParallelNumpy
 from tests.MPI_minimization_problems import MPI_Quadratic
 import  time
 
-from PyLBFGS.MPI_LBFGS_Matrix_H import LBFGS
+from MPITools.Optimization import LBFGS
 
 def timer(fun, *args, **kwargs):
     start = time.perf_counter()

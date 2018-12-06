@@ -1,9 +1,9 @@
 
 import numpy as np
 import scipy.optimize
-from PyLBFGS.LBFGS_Matrix_H import LBFGS
+from MPITools.Optimization.LBFGS_Matrix_H import LBFGS
 
-from PyLBFGS.Wolfe import second_wolfe_condition,first_wolfe_condition
+from MPITools.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
 import pytest
 
 def test_3D():
@@ -38,7 +38,6 @@ def test_3D():
         import matplotlib
         #matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
         fig, ax = plt.subplots()
         X, Y = np.meshgrid(xg, yg)
         ax.contour(X, Y, mat_fun(xg, yg))
@@ -84,7 +83,6 @@ def test_3D():
         import matplotlib
         #matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
         fig3d = plt.figure()
         ax3d = fig3d.add_subplot(111, projection='3d')
 
@@ -145,7 +143,6 @@ def test_quadratic_nD():
         import matplotlib
         matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
         fig3d = plt.figure()
         ax3d = fig3d.add_subplot(111, projection='3d')
 
@@ -192,7 +189,6 @@ def test_gaussian_nD(n):
         import matplotlib
         matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
-        from mpl_toolkits.mplot3d import Axes3D
         fig3d = plt.figure()
         ax3d = fig3d.add_subplot(111, projection='3d')
 

@@ -1,14 +1,14 @@
 import pytest
 
 import numpy as np
-from PyLBFGS.Tools import  ParallelNumpy
+from MPITools.Tools import  ParallelNumpy
 from runtests.mpi import MPITest
 from tests.MPI_minimization_problems import MPI_Objective_Interface
 import scipy.optimize
 import  time
 import tests.minimization_problems as mp
 
-from PyLBFGS.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
+from MPITools.Optimization.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
 
 
 def timer(fun, *args, **kwargs):
@@ -112,7 +112,6 @@ def test_g2tol(comm):
 def test_alltol(comm):
     pass
 
-
 @pytest.mark.skip(reason="just plotting")
 def test_time_complexity(comm):
 
@@ -148,12 +147,3 @@ def test_time_complexity(comm):
         ax2.legend()
         #ax.plot(n,n,c='gray')
         plt.show(block = True)
-
-
-
-
-
-
-
-
-

@@ -2,7 +2,7 @@
 import numpy as np
 import scipy.optimize
 import pytest
-from PyLBFGS.MPI_LBFGS_Matrix_H import LBFGS
+from MPITools.Optimization import LBFGS
 
 import tests.minimization_problems as mp
 
@@ -39,6 +39,7 @@ def test_shape_unchanged(shape):
     assert result.x.shape ==shape, "shape of result mismatch shape of startpoint"
     assert result.jac.shape == shape, "shape of result jac mismatch shape of startpoint"
 
+# FIXME: Implement
 def test_multiple_tol():
     pass
 

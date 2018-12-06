@@ -14,7 +14,7 @@ import sys
 
 
 setup(
-    name = "PyLBFGS",
+    name = "MPITools",
     package_data = {'': ['ChangeLog.md']},
     include_package_data = True,
     packages = find_packages(),

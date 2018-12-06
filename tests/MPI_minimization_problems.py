@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from PyLBFGS.Tools import ParallelNumpy
+from MPITools.Tools import ParallelNumpy
 
 from mpi4py import MPI
 

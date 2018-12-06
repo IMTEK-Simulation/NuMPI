@@ -2,7 +2,7 @@
 import numpy as np
 import scipy.optimize
 
-from PyLBFGS.Tools import ParallelNumpy
+from MPITools.Tools import ParallelNumpy
 from mpi4py import MPI
 
 def donothing(*args,**kwargs):
