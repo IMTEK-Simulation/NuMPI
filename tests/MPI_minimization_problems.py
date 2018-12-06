@@ -91,9 +91,6 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
 
 class MPI_Quadratic():
     """
-
-    This is the Definition like in Moré et al. and not like in scipy
-
     n should be even
 
     :param x: 1d array
@@ -155,16 +152,10 @@ class MPI_Quadratic():
     def xmin(self):
         """
         Location of minimum according to
-
-        Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained Optimization Software. 25 (1981).
-
-        This function not necessarily have only one Minimum in higher dimensional Space: see e.g. 10.1162/evco.2006.14.1.119
-
         :param n: number of DOF
         :return: array of size n
         """
-
-        return np.ones((self.subdomain_resolution, 0), dtype=float)
+        return np.zeros(self.subdomain_resolution, dtype=float)
 
 
 class MPI_Objective_Interface():
