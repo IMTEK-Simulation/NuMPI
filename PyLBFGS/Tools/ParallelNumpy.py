@@ -2,6 +2,12 @@
 import numpy as np
 from mpi4py import MPI
 
+def get_dtypeInfo(dtype):
+    if dtype.kind == 'i': return np.iinfo(dtype)
+    if dtype.kind == 'f': return np.finfo(dtype)
+    raise ValueError
+
+
 class ParallelNumpy :
 
     # just forward standart numpy functions
@@ -42,7 +48,10 @@ class ParallelNumpy :
         locresult= np.sum(arr,*args,**kwargs)
         result = np.zeros_like(locresult)
         self.comm.Allreduce(locresult,result,op = MPI.SUM)
-        return result
+        if type(locresult) == type(result):
+            return result
+        else :
+            return type(locresult)(result)
 
     #def array(self,*args,**kwargs):
     #    return np.array(*args, **kwargs)
@@ -67,7 +76,10 @@ class ParallelNumpy :
 
         """
         result = np.asarray(0, dtype=arr.dtype)
-        self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([-np.inf],dtype=arr.dtype), result, op=MPI.MAX)
+
+        absmin = get_dtypeInfo(arr.dtype).min # most negative value that can be stored in this datatype
+
+        self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([absmin],dtype=arr.dtype), result, op=MPI.MAX)
         # FIXME: use the max of the dtype because np.inf only float
         #TODO: Not elegant, but following options didn't work
         #self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(None, dtype=arr.dtype), result, op=MPI.MAX)
@@ -90,7 +102,8 @@ class ParallelNumpy :
 
         """
         result = np.asarray(0, dtype=arr.dtype)
-        self.comm.Allreduce(np.min(arr) if arr.size > 0 else np.array([np.inf],dtype=arr.dtype) , result, op=MPI.MIN)
+        absmax = get_dtypeInfo(arr.dtype).max # most positive value that can be stored in this datatype
+        self.comm.Allreduce(np.min(arr) if arr.size > 0 else np.array([absmax],dtype=arr.dtype) , result, op=MPI.MIN)
         return result
 
     def dot(self,a,b):
