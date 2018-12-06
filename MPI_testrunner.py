@@ -16,7 +16,7 @@ import importlib
 
 MPI_tests= [
     "test_ParallelNumpy",
-    "MPI_FileIO_test",
+    "MPI_FileIO_Test",
 #    "MPI_test_wavy_adhesive"
 ]
 
