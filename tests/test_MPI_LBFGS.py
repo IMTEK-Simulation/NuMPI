@@ -10,7 +10,6 @@ import tests.minimization_problems as mp
 
 from MPITools.Optimization.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
 
-
 def timer(fun, *args, **kwargs):
     start = time.perf_counter()
     res = fun(*args, **kwargs)

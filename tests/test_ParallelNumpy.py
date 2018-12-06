@@ -215,3 +215,8 @@ class test_ParallelNumpy(unittest.TestCase):
         np.testing.assert_allclose(self.np.dot(fulla[:, loc_sl], fullb[loc_sl,:]), np.dot(fulla, fullb))
 
 
+suite = unittest.TestSuite([unittest.TestLoader().loadTestsFromTestCase(test_ParallelNumpy)])
+
+if __name__ in  ['__main__','builtins']:
+    print("Running unittest test_ParallelNumpy")
+    result = unittest.TextTestRunner().run(suite)
