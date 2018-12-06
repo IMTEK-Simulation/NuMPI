@@ -37,7 +37,7 @@ def test_parallel_speedup():
         ax.plot(sizes,sizes,'--k',label="ideal")
 
     #for n in [int(1e5),int(2e5),int(1e6),int(2e6),int(1e7)]:
-    for n in [int(1e8)]:
+    for n in [int(1e6)]:
         #sizes = orsizes[orsizes > n / 1e4]
 
         if len(sizes) == 0 : continue
@@ -65,8 +65,11 @@ def test_parallel_speedup():
 
             if MPI.COMM_WORLD.Get_rank() == 0: print(" Before min n = {}".format(n))
 
-            res[i],t[i] = timer(LBFGS,PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor, maxiter=100000, gtol=(1e-5), pnp=pnp)
+            res[i],t[i] = timer(LBFGS,PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor, maxiter=100000, gtol=(1e-5),store_iterates =None, pnp=pnp)
             msg += "size {}:\n".format(size)
+
+            assert res[i].success, "Minimization faild"
+            np.testing.assert_allclose(res[i].x,PObjective.xmin())
 
             if MPI.COMM_WORLD.Get_rank() == 0 : print("n = {}, size = {}".format(n,size))
 
