@@ -47,8 +47,10 @@ class ParallelNumpy :
 
         locresult= np.sum(arr,*args,**kwargs)
         result = np.zeros_like(locresult)
-        self.comm.Allreduce(locresult,result,op = MPI.SUM)
-        if type(locresult) == type(result):
+        #print("Proc{}: result.dtype={}, locresult.dtype={} arr.dtype={}".format(self.comm.Get_rank(),result.dtype,locresult.dtype,arr.dtype))
+        mpitype = MPI._typedict[locresult.dtype.char]
+        self.comm.Allreduce([locresult,mpitype],[result,mpitype],op = MPI.SUM)
+        if type(locresult) == type(result):#TODO:Why is this done again ? 
             return result
         else :
             return type(locresult)(result)
@@ -78,8 +80,8 @@ class ParallelNumpy :
         result = np.asarray(0, dtype=arr.dtype)
 
         absmin = get_dtypeInfo(arr.dtype).min # most negative value that can be stored in this datatype
-
-        self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([absmin],dtype=arr.dtype), result, op=MPI.MAX)
+        mpitype = MPI._typedict[arr.dtype.char]
+        self.comm.Allreduce([np.max(arr) if arr.size > 0 else np.array([absmin],dtype=arr.dtype),mpitype], [result,mpitype], op=MPI.MAX)
         # FIXME: use the max of the dtype because np.inf only float
         #TODO: Not elegant, but following options didn't work
         #self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(None, dtype=arr.dtype), result, op=MPI.MAX)
@@ -103,13 +105,15 @@ class ParallelNumpy :
         """
         result = np.asarray(0, dtype=arr.dtype)
         absmax = get_dtypeInfo(arr.dtype).max # most positive value that can be stored in this datatype
-        self.comm.Allreduce(np.min(arr) if arr.size > 0 else np.array([absmax],dtype=arr.dtype) , result, op=MPI.MIN)
+        mpitype = MPI._typedict[arr.dtype.char]
+        self.comm.Allreduce([np.min(arr) if arr.size > 0 else np.array([absmax],dtype=arr.dtype),mpitype] ,[ result,mpitype], op=MPI.MIN)
         return result
 
     def dot(self,a,b):
         locresult = np.dot(a,b)
         result = np.zeros_like(locresult)
-        self.comm.Allreduce(locresult, result, op=MPI.SUM)
+        mpitype = MPI._typedict[locresult.dtype.char]
+        self.comm.Allreduce([locresult,mpitype], [result, mpitype], op=MPI.SUM)
         return result
 
 
