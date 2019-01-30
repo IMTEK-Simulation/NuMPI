@@ -98,7 +98,7 @@ class MPIFileView(metaclass=abc.ABCMeta):
         pass
 
 
-def MPIFileViewFactory(fn, comm, format = None): #TODO: DISCUSS: oder als __init__ von der MPIFileView Klasse ?
+def make_mpi_file_view(fn, comm, format = None): #TODO: DISCUSS: oder als __init__ von der MPIFileView Klasse ?
     readers = {
         "npy": MPIFileViewNPY
     }
