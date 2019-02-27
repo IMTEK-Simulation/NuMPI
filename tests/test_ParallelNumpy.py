@@ -228,7 +228,7 @@ class test_ParallelNumpy(unittest.TestCase):
 
         assert not self.np.any(locval)
 
-    def test_any_scalar(self):
+    def test_any_array(self):
         rank = self.comm.Get_rank()
 
         locval = np.array([False, False, True])
@@ -241,6 +241,35 @@ class test_ParallelNumpy(unittest.TestCase):
         locval = np.array([False, False, False])
 
         assert not self.np.any(locval)
+
+
+    def test_all_scalar(self):
+        rank = self.comm.Get_rank()
+
+        locval = True
+
+        if rank == 0:
+            locval=False
+
+        assert not self.np.all(locval)
+
+        locval = True
+
+        assert  self.np.all(locval)
+
+    def test_all_array(self):
+        rank = self.comm.Get_rank()
+
+        locval = np.array([True, True, True])
+
+        if rank == 0:
+            locval = np.array([False, True])
+
+        assert not self.np.all(locval)
+
+        locval = np.array([True, True, True])
+
+        assert  self.np.all(locval)
 
 
 suite = unittest.TestSuite([unittest.TestLoader().loadTestsFromTestCase(test_ParallelNumpy)])

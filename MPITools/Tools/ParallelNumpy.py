@@ -120,3 +120,8 @@ class ParallelNumpy :
         result = np.array(False, dtype=bool)
         self.comm.Allreduce(np.any(arr), result, op=MPI.LOR)
         return result.item()
+
+    def all(self, arr):
+        result = np.array(False, dtype=bool)
+        self.comm.Allreduce(np.all(arr), result, op=MPI.LAND)
+        return result.item()
