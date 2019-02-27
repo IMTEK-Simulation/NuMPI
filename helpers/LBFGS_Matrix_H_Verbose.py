@@ -74,9 +74,9 @@ def LBFGS(fun,fprime,x,x_old=None,m=5,grad2tol= 1e-6,MAXITER = 10,store_iterates
     STgrad_prev = np.array((1, m))
     YTgrad_prev = np.array((1, m))
 
-    grad = np.asarray(fprime(x))
+    grad = fprime(x).item()
     grad2 = np.sum(grad**2)
-    grad_old = np.asarray(fprime(x_old))
+    grad_old = fprime(x_old).item()
 
     alpha=0
 
@@ -103,7 +103,7 @@ def LBFGS(fun,fprime,x,x_old=None,m=5,grad2tol= 1e-6,MAXITER = 10,store_iterates
 
         # 2.
         grad2prev = grad2.copy()
-        grad2 = np.sum(np.asarray(grad) ** 2)  # ok
+        grad2 = np.sum(grad.item() ** 2)  # ok
 
 
         # check if job is done

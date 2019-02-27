@@ -1,3 +1,8 @@
+"""
+
+
+"""
+
 
 import numpy as np
 from mpi4py import MPI
@@ -76,7 +81,7 @@ def MPI_read_bytes(file, nbytes):
     return buf.tobytes()
 
 
-
+#TODO:
 def load_npy(fn, subdomain_location, subdomain_resolution, domain_resolution, comm):
     file = MPIFileViewNPY(fn, comm)
     if file.resolution != domain_resolution:
@@ -103,6 +108,10 @@ def make_mpi_file_view(fn, comm, format = None): #TODO: DISCUSS: oder als __init
         "npy": MPIFileViewNPY
     }
 
+    if not os.path.isfile(fn):
+        raise FileExistsError("file {} not found".format(fn))
+    #TODO: chack existence of file also with parallel reader.
+
     if format is not None:
         try:
             reader = readers[format]
@@ -115,10 +124,14 @@ def make_mpi_file_view(fn, comm, format = None): #TODO: DISCUSS: oder als __init
             return reader(fn, comm)
         except MPIFileTypeError:
             pass
-    raise MPIFileTypeError("No MPI filereader was able to read this file")
+    raise MPIFileTypeError("No MPI filereader was able to read the file {}".format(fn))
 
 
 class MPIFileViewNPY(MPIFileView):
+    """
+
+    you may have a look at numpy.lib.format if you want to understand how this code works
+    """
     def __init__(self, fn, comm):
         super().__init__(fn,comm)
         self._read_header()
