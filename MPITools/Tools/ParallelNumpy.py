@@ -116,4 +116,7 @@ class ParallelNumpy :
         self.comm.Allreduce([locresult,mpitype], [result, mpitype], op=MPI.SUM)
         return result
 
-
+    def any(self, arr):
+        result = np.array(False, dtype=bool)
+        self.comm.Allreduce(np.any(arr), result, op=MPI.LOR)
+        return result.item()

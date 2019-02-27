@@ -214,6 +214,34 @@ class test_ParallelNumpy(unittest.TestCase):
 
         np.testing.assert_allclose(self.np.dot(fulla[:, loc_sl], fullb[loc_sl,:]), np.dot(fulla, fullb))
 
+    def test_any_scalar(self):
+        rank = self.comm.Get_rank()
+
+        locval = False
+
+        if rank == 0:
+            locval=True
+
+        assert self.np.any(locval)
+
+        locval = False
+
+        assert not self.np.any(locval)
+
+    def test_any_scalar(self):
+        rank = self.comm.Get_rank()
+
+        locval = np.array([False, False, True])
+
+        if rank == 0:
+            locval = np.array([False, True])
+
+        assert self.np.any(locval)
+
+        locval = np.array([False, False, False])
+
+        assert not self.np.any(locval)
+
 
 suite = unittest.TestSuite([unittest.TestLoader().loadTestsFromTestCase(test_ParallelNumpy)])
 
