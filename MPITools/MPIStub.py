@@ -46,9 +46,39 @@ BXOR = Operations.BXOR
 MAXLOC = Operations.MAXLOC
 MINLOC = Operations.MINLOC
 
+
+### Opening modes
+
+class OpeningModes(Enum):
+    MODE_RDONLY = 'r'
+    MODE_WRONLY = 'a'
+    MODE_RDWR  = 'a'
+    MODE_CREATE = 'w'
+    MODE_EXCL = 'x'
+    # FIXME: The following modes are not supported
+    #MODE_DELETE_ON_CLOSE = 'A'
+    #MODE_UNIQUE_OPEN = 'A'
+    #MODE_SEQUENTIAL = 'A'
+    #MODE_APPEND = 'A'
+
+MODE_RDONLY = OpeningModes.MODE_RDONLY
+MODE_WRONLY = OpeningModes.MODE_WRONLY
+MODE_RDWR  = OpeningModes.MODE_RDWR
+MODE_CREATE = OpeningModes.MODE_CREATE
+MODE_EXCL = OpeningModes.MODE_EXCL
+# FIXME: The following modes are not supported
+#MODE_DELETE_ON_CLOSE = OpeningModes.MODE_DELETE_ON_CLOSE
+#MODE_UNIQUE_OPEN = OpeningModes.MODE_UNIQUE_OPEN
+#MODE_SEQUENTIAL = OpeningModes.MODE_SEQUENTIAL
+#MODE_APPEND = OpeningModes.MODE_APPEND
+
+
 ### Stub communicator object
 
 class Communicator(object):
+    def Barrier(self):
+        pass
+
     def Get_rank(self):
         return 0
 
@@ -76,5 +106,22 @@ class Communicator(object):
 
         recvdata[...] = senddata
     Allreduce = Reduce
+
+### Stub file I/O object
+
+class File(object):
+    def __init__(self, comm, filename, amode):
+        assert isinstance(comm, Communicator)
+        self.file = open(filename, amode.value+'b')
+
+    @classmethod
+    def Open(cls, comm, filename, amode=MODE_RDONLY): # FIXME: This method has an optional info argument
+        return File(comm, filename, amode)
+
+    def Read_all(self, buf):
+        assert buf.dtype == np.int8
+        data = self.file.read(len(buf))
+        buf[...] = np.frombuffer(data, count=len(buf), dtype=np.int8)
+
 
 COMM_WORLD = Communicator()

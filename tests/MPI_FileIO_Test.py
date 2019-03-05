@@ -4,17 +4,9 @@ import unittest
 import numpy as np
 import os
 
-try :
-    from mpi4py import MPI
-    _withMPI=True
-
-except ImportError:
-    print("No MPI")
-    _withMPI =False
-
+from MPITools import MPI
 from MPITools.FileIO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
 
-@unittest.skipUnless(_withMPI,"requires mpi4py")
 class test_MPI_2D_npy(unittest.TestCase):
     def setUp(self):
         self.comm = MPI.COMM_WORLD
@@ -29,7 +21,7 @@ class test_MPI_2D_npy(unittest.TestCase):
         if self.rank == 0:
             np.save("test_FileLoad_2D.npy",self.globaldata)
 
-        self.comm.barrier()
+        self.comm.Barrier()
 
     def decomp_2D_slab_y(self):
         step = self.domain_resolution[1] // self.nprocs

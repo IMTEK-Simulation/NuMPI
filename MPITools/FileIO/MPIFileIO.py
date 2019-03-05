@@ -5,7 +5,7 @@
 
 
 import numpy as np
-from mpi4py import MPI
+from .. import MPI
 import numpy as np
 import struct
 import os.path
