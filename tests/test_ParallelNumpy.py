@@ -1,8 +1,9 @@
 
 import unittest
 import numpy as np
+
+from MPITools import MPI
 from MPITools.Tools import ParallelNumpy
-from mpi4py import MPI
 
 class test_ParallelNumpy(unittest.TestCase):
 

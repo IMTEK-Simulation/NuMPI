@@ -5,6 +5,17 @@ MPITools and dependent projects without an MPI installation.
 
 from enum import Enum
 
+import numpy as np
+
+
+### Data types
+
+class Typedict(object):
+    def __getitem__(self, item):
+        return np.dtype(item)
+
+_typedict = Typedict()
+
 
 ### Operations
 
@@ -42,11 +53,28 @@ class Communicator(object):
         return 0
 
     def Get_size(self):
-        return 0
+        return 1
 
-    def Reduce(sendbuf, recvbuf, op=Operations.SUM, root=0):
+    def Reduce(self, sendbuf, recvbuf, op=Operations.SUM, root=0):
         if root != 0:
             raise ValueError('Root must be zero for MPI stub implementation.')
-        recvbuf[...] = sendbuf
 
-COMM_WORLD = Communicator
+        try:
+            senddata, sendtype = sendbuf
+        except:
+            senddata = sendbuf
+            sendtype = sendbuf.dtype
+
+        try:
+            recvdata, recvtype = recvbuf
+        except:
+            recvdata = recvbuf
+            recvtype = recvbuf.dtype
+
+        if sendtype != recvtype:
+            raise TypeError('Mismatch in send and receive MPI datatypes in MPI stub implementation.')
+
+        recvdata[...] = senddata
+    Allreduce = Reduce
+
+COMM_WORLD = Communicator()

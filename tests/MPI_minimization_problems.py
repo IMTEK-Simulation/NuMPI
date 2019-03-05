@@ -1,9 +1,8 @@
 
 import numpy as np
 
+from MPITools import MPI
 from MPITools.Tools import ParallelNumpy
-
-from mpi4py import MPI
 
 class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
     """

@@ -1,6 +1,6 @@
 
 import numpy as np
-from mpi4py import MPI
+from .. import MPI
 
 def get_dtypeInfo(dtype):
     if dtype.kind == 'i': return np.iinfo(dtype)

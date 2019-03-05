@@ -2,8 +2,8 @@
 import numpy as np
 import scipy.optimize
 
+from MPITools import MPI
 from MPITools.Tools import ParallelNumpy
-from mpi4py import MPI
 
 def donothing(*args,**kwargs):
     pass

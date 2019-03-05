@@ -7,12 +7,13 @@ import subprocess
 import sys
 
 try:
-    from mpi4py import MPI
+    import mpi4py
     _withMPI = True
 except ImportError:
     _withMPI = False
 import numpy as np
 import importlib
+from MPITools import MPI
 
 MPI_tests= [
     "test_ParallelNumpy",
