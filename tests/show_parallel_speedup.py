@@ -14,7 +14,7 @@ def timer(fun, *args, **kwargs):
     return res, delay
 
 
-def test_parallel_speedup():
+def show_parallel_speedup():
 
     msg = ""
 
@@ -84,4 +84,4 @@ def test_parallel_speedup():
 
 
 if __name__ == "__main__":
-    test_parallel_speedup()
+    show_parallel_speedup()
