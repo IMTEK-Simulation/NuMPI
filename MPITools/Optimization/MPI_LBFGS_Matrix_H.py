@@ -51,9 +51,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
     _jac = lambda x: jac(x).reshape((-1,1))
     if x_old is None:
         x_old = x.copy()
-        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac,pnp=pnp,maxiter=maxls)
+        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac, pnp=pnp, maxiter=maxls)
     else:
-        grad_old = _jac(x_old).item()
+        grad_old = np.asarray(_jac(x_old))
         phi_old = _fun(x_old)
         phi = _fun(x)
     iterates = list()
@@ -68,7 +68,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
     STgrad = np.array((1, maxcor))
     YTgrad = np.array((1, maxcor))
 
-    grad = _jac(x).item()
+    grad = np.asarray(_jac(x))
     grad2 = pnp.sum(grad ** 2)
 
     alpha = 0
@@ -90,7 +90,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
 
         # 2.
         grad2prev = grad2.copy()
-        grad2 = pnp.sum(grad.item() ** 2)  # ok
+        grad2 = pnp.sum(np.asarray(grad) ** 2)  # ok
 
         # check if job is done
         if ((grad2 < g2tol if g2tol is not None else True) and
