@@ -1,6 +1,5 @@
 
 
-import unittest
 import numpy as np
 import os
 
@@ -13,144 +12,174 @@ except ImportError:
     _withMPI =False
 
 from MPITools.FileIO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
+import pytest
 
-@unittest.skipUnless(_withMPI,"requires mpi4py")
-class test_MPI_2D_npy(unittest.TestCase):
-    def setUp(self):
-        self.comm = MPI.COMM_WORLD
+@pytest.mark.xfail(reason="not implemented", run=False)
+def test_FileSave_1D(comm):
 
-        self.rank = self.comm.Get_rank()
-        self.nprocs = self.comm.Get_size()
+    domain_resolution    = 128
+    np.random.seed(2)
+    globaldata = np.random.random(domain_resolution)
 
-        self.domain_resolution = (128,128)
-        np.random.seed(2)
-        self.globaldata = np.random.random(self.domain_resolution)
+    nprocs = comm.Get_size()
+    rank = comm.Get_rank()
 
-        if self.rank == 0:
-            np.save("test_FileLoad_2D.npy",self.globaldata)
+    step = domain_resolution // nprocs
 
-        self.comm.barrier()
+    if rank == nprocs - 1:
+        subdomain_slice = slice(rank * step, None)
+        subdomain_location =rank * step
+        subdomain_resolution = domain_resolution - rank * step
+    else:
+        subdomain_slice = slice(rank * step, (rank + 1) * step)
+        subdomain_location = rank * step
+        subdomain_resolution = step
 
-    def decomp_2D_slab_y(self):
-        step = self.domain_resolution[1] // self.nprocs
-        if self.rank == self.nprocs - 1:
-            self.subdomain_slice = (slice(None, None), slice(self.rank * step, None))
-            self.subdomain_location = [0, self.rank * step]
-            self.subdomain_resolution = [self.domain_resolution[0], self.domain_resolution[1] - self.rank * step]
-        else:
-            self.subdomain_slice = (slice(None, None), slice(self.rank * step, (self.rank + 1) * step))
-            self.subdomain_location = [0, self.rank * step]
-            self.subdomain_resolution = [self.domain_resolution[1], step]
+    localdata = globaldata[subdomain_slice]
 
-        self.localdata = self.globaldata[self.subdomain_slice]
+    save_npy("test_Filesave_1D.npy",localdata,subdomain_location,domain_resolution,comm)
 
-    def decomp_2D_slab_x(self):
-        step = self.domain_resolution[0] // self.nprocs
+    loaded_data = np.load("test_Filesave_1D.npy")
+    np.testing.assert_array_equal(loaded_data,globaldata)
 
-        if self.rank == self.nprocs - 1:
-            self.subdomain_slice = (slice(self.rank * step, None), slice(None, None))
-            self.subdomain_location = [self.rank * step, 0]
-            self.subdomain_resolution = [self.domain_resolution[0] - self.rank * step, self.domain_resolution[1]]
-        else:
-            self.subdomain_slice = (slice(self.rank * step, (self.rank + 1) * step), slice(None, None))
-            self.subdomain_location = [self.rank * step, 0]
-            self.subdomain_resolution = [step, self.domain_resolution[1]]
-
-        self.localdata = self.globaldata[self.subdomain_slice]
-
-    def test_FileSave_2D(self):
-        for decompfun in self.decomp_2D_slab_x,self.decomp_2D_slab_y:
-            with self.subTest(decompfun = decompfun):
-                decompfun()
-
-                save_npy("test_Filesave_2D.npy",self.localdata,self.subdomain_location,self.domain_resolution,self.comm)
-                loaded_data = np.load("test_Filesave_2D.npy")
-                np.testing.assert_array_equal(loaded_data,self.globaldata)
-        if self.rank == 0:
-            os.remove("test_Filesave_2D.npy")
+    comm.barrier()
+    if rank == 0:
+        os.remove("test_Filesave_1D.npy")
 
 
-    def test_FileView_2D(self):
-        for decompfun in self.decomp_2D_slab_x,self.decomp_2D_slab_y:
-            with self.subTest(decompfun = decompfun):
-                decompfun()
+@pytest.fixture(scope="module")
+def globaldata(comm):
+
+    rank = comm.Get_rank()
+    nprocs = comm.Get_size()
+
+    domain_resolution = (128,128)
+    np.random.seed(2)
+    globaldata = np.random.random(domain_resolution)
+
+    if rank == 0:
+        np.save("test_FileLoad_2D.npy", globaldata)
+
+    comm.barrier()
+
+    yield globaldata
+
+    if rank == 0:
+        os.remove("test_FileLoad_2D.npy")
 
 
-                #arr = np.load("test_FileLoad_2D.npy")
-                #assert arr.shape == self.domain_resolution
+### Helper function:
 
-                file = MPIFileViewNPY("test_FileLoad_2D.npy", comm=self.comm)
+class DistributedData:
+    def __init__(self, data, domain_resolution, subdomain_location):
+        self.data = data
+        self.domain_resolution = domain_resolution
+        self.subdomain_resolution = data.shape
+        self.subdomain_location = subdomain_location
 
-                assert file.resolution == self.domain_resolution
-                assert file.dtype == self.globaldata.dtype
+    @property
+    def subdomain_slice(self):
+        return tuple([slice(s, s + n) for s, n in
+                      zip(self.subdomain_location, self.subdomain_resolution)])
 
-                loaded_data = file.read(subdomain_resolution=self.subdomain_resolution,
-                                       subdomain_location= self.subdomain_location)
+def make_2d_slab_y(comm, globaldata):
+
+    nprocs = comm.Get_size()
+    rank = comm.Get_rank()
+
+    domain_resolution = globaldata.shape
+
+    step = domain_resolution[1] // nprocs
+    if rank == nprocs - 1:
+        subdomain_slice = (slice(None, None), slice(rank * step, None))
+        subdomain_location = [0, rank * step]
+        subdomain_resolution = [domain_resolution[0], domain_resolution[1] - rank * step]
+    else:
+        subdomain_slice = (slice(None, None), slice(rank * step, (rank + 1) * step))
+        subdomain_location = [0, rank * step]
+        subdomain_resolution = [domain_resolution[1], step]
+
+    return DistributedData(globaldata[subdomain_slice], domain_resolution, subdomain_location)
+
+def make_2d_slab_x(comm, globaldata):
+    """
+    returns the part of globaldata attribute to the present rank in 2D data decomposition
+    Parameters
+    ----------
+    comm : communicator
+    globaldata
+
+    Returns
+    -------
+    DistributedData
+    """
+    nprocs = comm.Get_size()
+    rank = comm.Get_rank()
+
+    domain_resolution = globaldata.shape
+
+    step = domain_resolution[0] // nprocs
+
+    if rank == nprocs - 1:
+        subdomain_slice = (slice(rank * step, None), slice(None, None))
+        subdomain_location = [rank * step, 0]
+        subdomain_resolution = [domain_resolution[0] - rank * step, domain_resolution[1]]
+    else:
+        subdomain_slice = (slice(rank * step, (rank + 1) * step), slice(None, None))
+        subdomain_location = [rank * step, 0]
+        subdomain_resolution = [step, domain_resolution[1]]
+
+    return DistributedData(globaldata[subdomain_slice], domain_resolution, subdomain_location)
+
+@pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
+def test_FileSave_2D(decompfun, comm, globaldata):
+    distdata = decompfun(comm, globaldata)
+
+    save_npy("test_Filesave_2D.npy",distdata.data,distdata.subdomain_location,distdata.domain_resolution, comm)
+    loaded_data = np.load("test_Filesave_2D.npy")
+    np.testing.assert_array_equal(loaded_data, globaldata)
+
+    comm.barrier()
+    if comm.Get_rank() == 0:
+        os.remove("test_Filesave_2D.npy")
+
+@pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
+def test_FileView_2D(decompfun, comm, globaldata):
+    distdata = decompfun(comm, globaldata)
+
+    #arr = np.load("test_FileLoad_2D.npy")
+    #assert arr.shape == self.domain_resolution
+
+    file = MPIFileViewNPY("test_FileLoad_2D.npy", comm=comm)
+
+    assert file.resolution == distdata.domain_resolution
+    assert file.dtype == globaldata.dtype
+
+    loaded_data = file.read(subdomain_resolution=distdata.subdomain_resolution,
+                            subdomain_location= distdata.subdomain_location)
 
 
-                np.testing.assert_array_equal(loaded_data,self.localdata)
+    np.testing.assert_array_equal(loaded_data, distdata.data)
 
-    def test_FileLoad_2D(self):
-        for decompfun in self.decomp_2D_slab_x, self.decomp_2D_slab_y:
-            with self.subTest(decompfun=decompfun):
-                decompfun()
+@pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
+def test_FileLoad_2D(decompfun, comm, globaldata):
+    distdata = decompfun(comm, globaldata)
 
-                # arr = np.load("test_FileLoad_2D.npy")
-                # assert arr.shape == self.domain_resolution
+    loaded_data = load_npy("test_FileLoad_2D.npy",
+                           subdomain_resolution=distdata.subdomain_resolution,
+                           subdomain_location=distdata.subdomain_location,
+                           domain_resolution=distdata.domain_resolution,
+                           comm=comm)
 
-                loaded_data = load_npy("test_FileLoad_2D.npy",
-                                       subdomain_resolution=self.subdomain_resolution,
-                                       subdomain_location=self.subdomain_location,
-                                       domain_resolution=self.domain_resolution,
-                                       comm=self.comm)
+    np.testing.assert_array_equal(loaded_data, distdata.data)
 
-                np.testing.assert_array_equal(loaded_data, self.localdata)
-
-                with self.assertRaises(MPIFileIncompatibleResolutionError):
-                    load_npy("test_FileLoad_2D.npy",
-                             subdomain_resolution=self.subdomain_resolution,
-                             subdomain_location=self.subdomain_location,
-                             domain_resolution=tuple([a + 1 for a in self.domain_resolution]),
-                             comm=self.comm)
-
-    def tearDown(self):
-        if self.rank == 0 :
-            os.remove("test_FileLoad_2D.npy")
+    with pytest.raises(MPIFileIncompatibleResolutionError):
+        load_npy("test_FileLoad_2D.npy",
+                 subdomain_resolution=distdata.subdomain_resolution,
+                 subdomain_location=distdata.subdomain_location,
+                 domain_resolution=tuple([a + 1 for a in distdata.domain_resolution]),
+                 comm=comm)
 
 
-class test_MPI_1D_npy(unittest.TestCase):
-    @unittest.expectedFailure
-    def test_FileSave_1D(self):
-        self.comm = MPI.COMM_WORLD
-
-        domain_resolution    = 128
-        np.random.seed(2)
-        self.globaldata = np.random.random(domain_resolution)
-
-        nprocs = self.comm.Get_size()
-        rank = self.comm.Get_rank()
-
-        step = domain_resolution // nprocs
-
-        if rank == nprocs - 1:
-            subdomain_slice = slice(rank * step, None)
-            subdomain_location =rank * step
-            subdomain_resolution = domain_resolution - rank * step
-        else:
-            subdomain_slice = slice(rank * step, (rank + 1) * step)
-            subdomain_location = rank * step
-            subdomain_resolution = step
-
-        localdata = self.globaldata[subdomain_slice]
-
-        save_npy("test_Filesave_1D.npy",localdata,subdomain_location,domain_resolution,self.comm)
-
-        loaded_data = np.load("test_Filesave_1D.npy")
-        np.testing.assert_array_equal(loaded_data,self.globaldata)
 
 
-suite = unittest.TestSuite([unittest.TestLoader().loadTestsFromTestCase(test_MPI_2D_npy)])
-
-if __name__ in  ['__main__','builtins']:
-    print("Running unittest MPI_FileIO_Test")
-    result = unittest.TextTestRunner().run(suite)
