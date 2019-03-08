@@ -171,7 +171,7 @@ class MPIFileViewNPY(MPIFileView):
         self.resolution = d['shape']
         self.fortran_order = d['fortran_order']
 
-    def read(self,subdomain_location, subdomain_resolution):
+    def read(self, subdomain_location, subdomain_resolution):
         if self.fortran_order:  # TODO: implement fortranorder compatibility
             raise MPIFileTypeError("File in fortranorder")
 
@@ -179,12 +179,14 @@ class MPIFileViewNPY(MPIFileView):
 
         mpitype = MPI._typedict[self.dtype.char]
 
-        filetype = mpitype.Create_vector(subdomain_resolution[0],
-                                         # nombre bloc : longueur dans la direction non contigue en memoire
-                                         subdomain_resolution[1],  # longuer bloc : contiguous direction
-                                         self.resolution[1]
-                                         # pas: les données sont contigues en direction y, deux elements de matrice avec le même x sont donc separes par ny cases en memoire
-                                         )  # create a type
+        # create a type
+        filetype = mpitype.Create_vector(
+             subdomain_resolution[0], # number of blocks  : length of data in the non-contiguous direction
+             subdomain_resolution[1], # length of block : length of data in contiguous direction
+             self.resolution[1]
+             # stepsize: the data is contiguous in y direction,
+             # two matrix elements with same x position are separated by ny in memory
+             )
 
         filetype.Commit()  # verification if type is OK
         self.file.Set_view(
