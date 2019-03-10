@@ -1,6 +1,10 @@
 """
 Stub implementation of mpi4py. This is necessary to run a serial version of
 MPITools and dependent projects without an MPI installation.
+
+Important note: This is at present *not* the complete API, but only includes
+the features that we need in our projects. If you miss some functionality,
+implement it and submit it back to us.
 """
 
 from enum import Enum
@@ -10,9 +14,35 @@ import numpy as np
 
 ### Data types
 
+class VectorDatatype(object):
+    def __init__(self, parent, count, blocklength, stride):
+        self._parent = parent
+        self._count = count
+        self._blocklength = blocklength
+        self._stride = stride
+
+    def Commit(self):
+        pass
+
+    def Free(self):
+        pass
+
+    def Get_size(self):
+        return self._count * self._blocklength * self._parent.Get_size()
+
+class Datatype(object):
+    def __init__(self, name):
+        self._dtype = np.dtype(name)
+
+    def Create_vector(self, count, blocklength, stride):
+        return VectorDatatype(self, count, blocklength, stride)
+
+    def Get_size(self):
+        return self._dtype.itemsize
+
 class Typedict(object):
     def __getitem__(self, item):
-        return np.dtype(item)
+        return Datatype(item)
 
 _typedict = Typedict()
 
@@ -49,24 +79,37 @@ MINLOC = Operations.MINLOC
 
 ### Opening modes
 
-class OpeningModes(Enum):
-    MODE_RDONLY = 'r'
-    MODE_WRONLY = 'a'
-    MODE_RDWR  = 'a'
-    MODE_CREATE = 'w'
-    MODE_EXCL = 'x'
-    # FIXME: The following modes are not supported
+class OpeningMode(Enum):
+    MODE_RDONLY = 1
+    MODE_WRONLY = 2
+    MODE_RDWR = 3
+    MODE_CREATE = 4
+    # FIXME: The following modes are not (yet) supported
+    #MODE_EXCL = 8
     #MODE_DELETE_ON_CLOSE = 'A'
     #MODE_UNIQUE_OPEN = 'A'
     #MODE_SEQUENTIAL = 'A'
     #MODE_APPEND = 'A'
 
-MODE_RDONLY = OpeningModes.MODE_RDONLY
-MODE_WRONLY = OpeningModes.MODE_WRONLY
-MODE_RDWR  = OpeningModes.MODE_RDWR
-MODE_CREATE = OpeningModes.MODE_CREATE
-MODE_EXCL = OpeningModes.MODE_EXCL
-# FIXME: The following modes are not supported
+    _MODE_6 = 6
+
+    def __or__(self, other):
+        return OpeningMode(self.value | other.value)
+
+    def std_mode(self):
+        if self.MODE_CREATE.value & self.value:
+            return 'wb'
+        if self.MODE_WRONLY.value & self.value:
+            return 'ab'
+        return 'rb'
+
+
+MODE_RDONLY = OpeningMode.MODE_RDONLY
+MODE_WRONLY = OpeningMode.MODE_WRONLY
+MODE_RDWR  = OpeningMode.MODE_RDWR
+MODE_CREATE = OpeningMode.MODE_CREATE
+# FIXME: The following modes are not (yet) supported
+#MODE_EXCL = OpeningMode.MODE_EXCL
 #MODE_DELETE_ON_CLOSE = OpeningModes.MODE_DELETE_ON_CLOSE
 #MODE_UNIQUE_OPEN = OpeningModes.MODE_UNIQUE_OPEN
 #MODE_SEQUENTIAL = OpeningModes.MODE_SEQUENTIAL
@@ -75,7 +118,7 @@ MODE_EXCL = OpeningModes.MODE_EXCL
 
 ### Stub communicator object
 
-class Communicator(object):
+class Intracomm(object):
     def Barrier(self):
         pass
 
@@ -110,18 +153,29 @@ class Communicator(object):
 ### Stub file I/O object
 
 class File(object):
-    def __init__(self, comm, filename, amode):
-        assert isinstance(comm, Communicator)
-        self.file = open(filename, amode.value+'b')
-
     @classmethod
     def Open(cls, comm, filename, amode=MODE_RDONLY): # FIXME: This method has an optional info argument
         return File(comm, filename, amode)
 
-    def Read_all(self, buf):
-        assert buf.dtype == np.int8
-        data = self.file.read(len(buf))
-        buf[...] = np.frombuffer(data, count=len(buf), dtype=np.int8)
+    def __init__(self, comm, filename, amode):
+        assert isinstance(comm, Intracomm)
+        self._file = open(filename, amode.std_mode())
+        self._filetype = None
 
+    def Get_position(self):
+        return self._file.tell()
 
-COMM_WORLD = Communicator()
+    def Read(self, buf):
+        data = self._file.read(len(buf) * buf.itemsize)
+        buf[...] = np.frombuffer(data, count=len(buf), dtype=buf.dtype)
+    Read_all = Read
+
+    def Set_view(self, disp, filetype=None):
+        self._file.seek(disp)
+        self._filetype = filetype
+
+    def Write(self, buf):
+        self._file.write(buf)
+    Write_all = Write
+
+COMM_WORLD = Intracomm()
