@@ -118,10 +118,10 @@ class ParallelNumpy :
 
     def any(self, arr):
         result = np.array(False, dtype=bool)
-        self.comm.Allreduce(np.any(arr), result, op=MPI.LOR)
+        self.comm.Allreduce(np.array(np.any(arr)), result, op=MPI.LOR)
         return result.item()
 
     def all(self, arr):
         result = np.array(False, dtype=bool)
-        self.comm.Allreduce(np.all(arr), result, op=MPI.LAND)
+        self.comm.Allreduce(np.array(np.all(arr), dtype=bool), result, op=MPI.LAND)
         return result.item()
