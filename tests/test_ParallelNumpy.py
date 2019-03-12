@@ -111,7 +111,7 @@ def test_max_min_empty(pnp):
         assert pnp.max(local_arr) ==  4
         assert pnp.min(local_arr) ==  0
 
-        if self.rank==0:
+        if pnp.comm.Get_rank()==0:
             local_arr = np.array([1, 0, 4], dtype=float)
         else :
 
