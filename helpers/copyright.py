@@ -2,7 +2,6 @@
 
 import os
 import sys
-import numpy as np
 from collections import defaultdict
 from datetime import datetime
 from subprocess import Popen, PIPE
