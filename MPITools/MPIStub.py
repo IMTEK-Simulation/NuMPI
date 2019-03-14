@@ -23,10 +23,13 @@
 #
 
 
-
 """
 Stub implementation of mpi4py. This is necessary to run a serial version of
 MPITools and dependent projects without an MPI installation.
+
+Disclaimer: This is at present not - and not intended to be - a full
+implementation of the API provided by mpi4py. It is a minimal implementation
+needed to run our codes.
 """
 
 from enum import Enum
@@ -39,6 +42,7 @@ import numpy as np
 class Typedict(object):
     def __getitem__(self, item):
         return np.dtype(item)
+
 
 _typedict = Typedict()
 
@@ -59,6 +63,7 @@ class Operations(Enum):
     MAXLOC = 11
     MINLOC = 12
 
+
 MIN = Operations.MIN
 MAX = Operations.MAX
 SUM = Operations.SUM
@@ -78,25 +83,28 @@ MINLOC = Operations.MINLOC
 class OpeningModes(Enum):
     MODE_RDONLY = 'r'
     MODE_WRONLY = 'a'
-    MODE_RDWR  = 'a'
+    MODE_RDWR = 'a'
     MODE_CREATE = 'w'
     MODE_EXCL = 'x'
     # FIXME: The following modes are not supported
-    #MODE_DELETE_ON_CLOSE = 'A'
-    #MODE_UNIQUE_OPEN = 'A'
-    #MODE_SEQUENTIAL = 'A'
-    #MODE_APPEND = 'A'
+    # MODE_DELETE_ON_CLOSE = 'A'
+    # MODE_UNIQUE_OPEN = 'A'
+    # MODE_SEQUENTIAL = 'A'
+    # MODE_APPEND = 'A'
+
 
 MODE_RDONLY = OpeningModes.MODE_RDONLY
 MODE_WRONLY = OpeningModes.MODE_WRONLY
-MODE_RDWR  = OpeningModes.MODE_RDWR
+MODE_RDWR = OpeningModes.MODE_RDWR
 MODE_CREATE = OpeningModes.MODE_CREATE
 MODE_EXCL = OpeningModes.MODE_EXCL
+
+
 # FIXME: The following modes are not supported
-#MODE_DELETE_ON_CLOSE = OpeningModes.MODE_DELETE_ON_CLOSE
-#MODE_UNIQUE_OPEN = OpeningModes.MODE_UNIQUE_OPEN
-#MODE_SEQUENTIAL = OpeningModes.MODE_SEQUENTIAL
-#MODE_APPEND = OpeningModes.MODE_APPEND
+# MODE_DELETE_ON_CLOSE = OpeningModes.MODE_DELETE_ON_CLOSE
+# MODE_UNIQUE_OPEN = OpeningModes.MODE_UNIQUE_OPEN
+# MODE_SEQUENTIAL = OpeningModes.MODE_SEQUENTIAL
+# MODE_APPEND = OpeningModes.MODE_APPEND
 
 
 ### Stub communicator object
@@ -131,17 +139,19 @@ class Communicator(object):
             raise TypeError('Mismatch in send and receive MPI datatypes in MPI stub implementation.')
 
         recvdata[...] = senddata
+
     Allreduce = Reduce
+
 
 ### Stub file I/O object
 
 class File(object):
     def __init__(self, comm, filename, amode):
         assert isinstance(comm, Communicator)
-        self.file = open(filename, amode.value+'b')
+        self.file = open(filename, amode.value + 'b')
 
     @classmethod
-    def Open(cls, comm, filename, amode=MODE_RDONLY): # FIXME: This method has an optional info argument
+    def Open(cls, comm, filename, amode=MODE_RDONLY):  # FIXME: This method has an optional info argument
         return File(comm, filename, amode)
 
     def Read_all(self, buf):

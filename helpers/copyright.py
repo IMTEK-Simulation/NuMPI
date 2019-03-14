@@ -23,7 +23,6 @@
 #
 
 
-
 import os
 import sys
 from collections import defaultdict
@@ -83,5 +82,5 @@ committers = parse_git_log(stdout, authors)
 prefix = 'Copyright'
 for name, years in committers.items():
     print('{} {} {}'.format(prefix, pretty_years(years), name))
-    prefix = ' '*len(prefix)
+    prefix = ' ' * len(prefix)
 print()

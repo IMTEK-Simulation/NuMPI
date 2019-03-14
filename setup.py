@@ -1,5 +1,6 @@
 #
-# Copyright 2018-2019 Antoine Sanner
+# Copyright 2019 Lars Pastewka
+#           2018-2019 Antoine Sanner
 # 
 # ### MIT license
 # 
@@ -21,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+
 
 
 

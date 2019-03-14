@@ -32,7 +32,7 @@ header_lines = sys.stdin.readlines()
 while file_lines[0].startswith('#'):
     file_lines = file_lines[1:]
 
-file_lines.insert(0, '#\n\n')
+file_lines.insert(0, '#\n')
 for header_line in header_lines[::-1]:
     file_lines.insert(0, '# {}'.format(header_line))
 file_lines.insert(0, '#\n')
