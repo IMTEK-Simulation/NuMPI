@@ -1,4 +1,5 @@
 #
+# Copyright 2019 Lars Pastewka
 # 
 # ### MIT license
 # 
@@ -20,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+
 
 
 import sys
