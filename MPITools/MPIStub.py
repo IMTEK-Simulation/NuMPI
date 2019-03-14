@@ -15,8 +15,11 @@ import numpy as np
 ### Data types
 
 class VectorDatatype(object):
-    def __init__(self, parent, count, blocklength, stride):
-        self._parent = parent
+    def __init__(self, oldtype, count, blocklength, stride):
+        if stride != blocklength:
+            raise NotImplementedError('Only vector datatypes with stride == blocklength are presently supported by '
+                                      'the MPI stub interface.')
+        self._oldtype = oldtype
         self._count = count
         self._blocklength = blocklength
         self._stride = stride
@@ -28,7 +31,10 @@ class VectorDatatype(object):
         pass
 
     def Get_size(self):
-        return self._count * self._blocklength * self._parent.Get_size()
+        return self._count * self._blocklength * self._oldtype.Get_size()
+
+    def _get_oldtype(self):
+        return self._oldtype
 
 class Datatype(object):
     def __init__(self, name):
@@ -39,6 +45,9 @@ class Datatype(object):
 
     def Get_size(self):
         return self._dtype.itemsize
+
+    def _end_of_block(self, position):
+        return None, None
 
 class Typedict(object):
     def __getitem__(self, item):
@@ -160,18 +169,25 @@ class File(object):
     def __init__(self, comm, filename, amode):
         assert isinstance(comm, Intracomm)
         self._file = open(filename, amode.std_mode())
+        self._disp = 0
+        self._etype = _typedict['i1']
         self._filetype = None
 
+    def Close(self):
+        self._file.close()
+
     def Get_position(self):
-        return self._file.tell()
+        return self._file.tell() - self._disp
 
     def Read(self, buf):
-        data = self._file.read(len(buf) * buf.itemsize)
-        buf[...] = np.frombuffer(data, count=len(buf), dtype=buf.dtype)
+        data = self._file.read(buf.size * buf.itemsize)
+        buf[...] = np.frombuffer(data, count=buf.size, dtype=buf.dtype).reshape(buf.shape)
     Read_all = Read
 
-    def Set_view(self, disp, filetype=None):
+    def Set_view(self, disp, etype=None, filetype=None):
         self._file.seek(disp)
+        self._disp = disp
+        self._etype = etype
         self._filetype = filetype
 
     def Write(self, buf):

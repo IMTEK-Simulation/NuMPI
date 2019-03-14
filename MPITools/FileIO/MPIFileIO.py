@@ -67,6 +67,8 @@ def save_npy(fn,data, subdomain_location,resolution,comm):
     file.Write_all(data.copy()) #TODO: is the copy needed ?
     filetype.Free()
 
+    file.Close()
+
 class MPIFileTypeError(Exception):
     pass
 
@@ -86,8 +88,9 @@ def load_npy(fn, subdomain_location, subdomain_resolution, domain_resolution, co
     file = MPIFileViewNPY(fn, comm)
     if file.resolution != domain_resolution:
         raise MPIFileIncompatibleResolutionError("domain_resolution is {} but file resolution is {}".format(domain_resolution,file.resolution))
-
-    return file.read(subdomain_location, subdomain_resolution)
+    data = file.read(subdomain_location, subdomain_resolution)
+    file.close()
+    return data
 
 class MPIFileView(metaclass=abc.ABCMeta):
     def __init__(self, fn, comm):
@@ -197,3 +200,6 @@ class MPIFileViewNPY(MPIFileView):
         filetype.Free()
 
         return data
+
+    def close(self):
+        self.file.Close()

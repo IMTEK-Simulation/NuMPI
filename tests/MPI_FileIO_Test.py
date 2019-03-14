@@ -79,6 +79,7 @@ class test_MPI_2D_npy(unittest.TestCase):
                 loaded_data = file.read(subdomain_resolution=self.subdomain_resolution,
                                        subdomain_location= self.subdomain_location)
 
+                file.close()
 
                 np.testing.assert_array_equal(loaded_data,self.localdata)
 
