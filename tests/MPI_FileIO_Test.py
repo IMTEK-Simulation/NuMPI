@@ -3,7 +3,6 @@
 import numpy as np
 import os
 
-from MPITools import MPI
 from MPITools.FileIO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
 import pytest
 
