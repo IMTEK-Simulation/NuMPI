@@ -4,13 +4,21 @@ MPITools
 Testing
 -------
 
-From main source directory
+We use [runtests](https://github.com/bccp/runtests). 
 
-```bash
-source env.sh
-python setup.py test
-mpirun -np <nbofprocessors> python MPI_testrunner.py
+We had to add some modifications so presently you should install it directly from my fork: 
 
 ```
-each processor should tell 
-`The following 0 tests Failed: []` near the end.
+pip install -e  git+git@github.com:AntoineSIMTEK/runtests.git#egg=runtests
+```
+
+From the main installation directory:
+```bash
+python run-tests.py
+```
+
+If you want to use MPITools without mpi4py, you can simply run the tests with pytest. 
+
+```bash
+pytest tests/
+```
