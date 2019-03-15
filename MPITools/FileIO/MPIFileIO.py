@@ -35,7 +35,7 @@ import struct
 import os.path
 import abc
 
-from numpy.lib.format import read_magic, _read_array_header, magic, MAGIC_PREFIX, _filter_header
+from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
 from numpy.lib.utils import safe_eval
 
 
