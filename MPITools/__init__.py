@@ -28,8 +28,10 @@ import warnings
 
 try:
     from mpi4py import MPI
+    _has_mpi4py = True
 except ImportError:
     warnings.warn('Could not import mpi4py; falling back to MPI stub implementation.', ImportWarning)
     import MPITools.MPIStub as MPI
+    _has_mpi4py = False
 
 from . import Tools, Optimization
