@@ -29,7 +29,7 @@ import scipy.optimize
 
 
 def fun(x):
-    return np.asscalar(x[0]**2+x[1]**2)
+    return (x[0]**2+x[1]**2).item()
 def der(x):
     return 2 * x
 

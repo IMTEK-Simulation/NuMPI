@@ -85,7 +85,7 @@ class ObjectiveFunction(object,metaclass=abc.ABCMeta):
 
             eps = 1e-4
             # unit Vector with random Direction
-            phi = np.asscalar(np.random.random(1) * 2 * np.pi)
+            phi = (np.random.random(1) * 2 * np.pi).item()
             u = np.array([[np.cos(phi)], [np.sin(phi)]])
 
             print((cls.f(x + u * eps) - cls.f(x)) / eps)
@@ -111,7 +111,7 @@ class Trigonometric(ObjectiveFunction):
         f = n - np.sum(np.cos(x)) +  idxVector * (1 - np.cos(x)) - np.sin(x)
 
         jac = np.reshape(np.sin(x),(1,-1)) + np.diag((-np.cos(x) + idxVector * np.sin(x)).flat)
-        return np.asscalar(np.sum(f**2)), np.reshape(2*jac.T@f,old_shape)
+        return np.sum(f**2).item(), np.reshape(2*jac.T@f,old_shape)
 
     @staticmethod
     def startpoint(n):
@@ -154,7 +154,7 @@ class Trigonometric(ObjectiveFunction):
 
             eps = 1e-4
             # unit Vector with random Direction
-            phi = np.asscalar(np.random.random(1)* 2* np.pi)
+            phi = (np.random.random(1)* 2* np.pi).item()
             u = np.array([[np.cos(phi)],[np.sin(phi)]])
 
             print((Trigonometric.f(x + u * eps) - Trigonometric.f(x)) / eps)
@@ -181,7 +181,7 @@ class Extended_Rosenbrock(ObjectiveFunction):
         n = x.size
 
 
-        sumf2  = np.asscalar(np.sum(100 * (x[1::2] - x[:-1:2]**2)**2 + (1 - x[:-1:2])**2 ))
+        sumf2  = (np.sum(100 * (x[1::2] - x[:-1:2]**2)**2 + (1 - x[:-1:2])**2 )).item()
 
         grad = np.zeros_like(x)
         grad[1::2]  = 200 * (x[1::2] - x[:-1:2]**2)

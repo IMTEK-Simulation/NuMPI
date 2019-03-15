@@ -49,7 +49,7 @@ def test_directional_derivative(Objective,n) :
         eps = 1e-5
         print((Objective.f(x + u * eps) - Objective.f(x)) / eps)
         der_numerical  = (Objective.f(x + u * eps) - Objective.f(x)) / eps
-        der_analytical = np.asscalar(Objective.grad(x).T@u)
+        der_analytical = (Objective.grad(x).T@u).item()
         assert abs(der_numerical- der_analytical)/der_analytical < 1e-3, "(der_numerical- der_analytical)/der_analytical = {}".format(abs(der_numerical- der_analytical)/der_analytical)
 
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock,mp.Trigonometric])

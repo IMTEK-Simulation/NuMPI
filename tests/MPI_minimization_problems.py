@@ -68,7 +68,7 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         x_odd = x[self._sl_odd]
         x_even = x[self._sl_even]
 
-        sumf2 = np.asscalar(self.pnp.sum(100 * (x_odd - x_even ** 2) ** 2 + (1 - x_even) ** 2))
+        sumf2 = (self.pnp.sum(100 * (x_odd - x_even ** 2) ** 2 + (1 - x_even) ** 2)).item()
 
         grad = np.zeros_like(x)
         grad[self._sl_odd] = 200 * (x_odd - x_even ** 2)

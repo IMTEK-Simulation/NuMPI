@@ -49,7 +49,7 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,maxiter=10,**kwargs):
         return val
 
     def _fprime(alpha):
-        val=np.asscalar(pnp.dot(fprime(x0 - grad0 * alpha).T, -grad0))
+        val=pnp.dot(fprime(x0 - grad0 * alpha).T, -grad0).item()
         return val
 
     alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
