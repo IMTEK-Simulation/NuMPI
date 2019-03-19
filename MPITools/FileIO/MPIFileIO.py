@@ -1,21 +1,45 @@
-"""
+#
+# Copyright 2019 Lars Pastewka
+#           2018-2019 Antoine Sanner
+# 
+# ### MIT license
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
 
 """
-
+MPI-parallel writing of matrices in numpy's 'npy' format.
+"""
 
 import numpy as np
-from mpi4py import MPI
+from .. import MPI
 import numpy as np
 import struct
 import os.path
 import abc
 
-
-from numpy.lib.format import read_magic, _read_array_header,magic, MAGIC_PREFIX, _filter_header
+from numpy.lib.format import read_magic, _read_array_header, magic, MAGIC_PREFIX, _filter_header
 from numpy.lib.utils import safe_eval
 
-def save_npy(fn,data, subdomain_location,resolution,comm):
+
+def save_npy(fn, data, subdomain_location, resolution, comm):
     """
 
     Parameters
@@ -29,7 +53,7 @@ def save_npy(fn,data, subdomain_location,resolution,comm):
     -------
 
     """
-    if len(data.shape)!=2: raise ValueError
+    if len(data.shape) != 2: raise ValueError
 
     subdomain_resolution = data.shape
     from numpy.lib.format import dtype_to_descr, magic
@@ -37,7 +61,7 @@ def save_npy(fn,data, subdomain_location,resolution,comm):
 
     arr_dict_str = str({'descr': dtype_to_descr(data.dtype),
                         'fortran_order': False,
-                        'shape':resolution})
+                        'shape': resolution})
 
     while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
         arr_dict_str += ' '
@@ -65,11 +89,13 @@ def save_npy(fn,data, subdomain_location,resolution,comm):
         header_len + (subdomain_location[0] * resolution[1] + subdomain_location[1]) * mpitype.Get_size(),
         filetype=filetype)
 
-    file.Write_all(data.copy()) #TODO: is the copy needed ?
+    file.Write_all(data.copy())  # TODO: is the copy needed ?
     filetype.Free()
+
 
 class MPIFileTypeError(Exception):
     pass
+
 
 class MPIFileIncompatibleResolutionError(Exception):
     pass
@@ -82,13 +108,15 @@ def MPI_read_bytes(file, nbytes):
     return buf.tobytes()
 
 
-#TODO:
+# TODO:
 def load_npy(fn, subdomain_location, subdomain_resolution, domain_resolution, comm):
     file = MPIFileViewNPY(fn, comm)
     if file.resolution != domain_resolution:
-        raise MPIFileIncompatibleResolutionError("domain_resolution is {} but file resolution is {}".format(domain_resolution,file.resolution))
+        raise MPIFileIncompatibleResolutionError(
+            "domain_resolution is {} but file resolution is {}".format(domain_resolution, file.resolution))
 
     return file.read(subdomain_location, subdomain_resolution)
+
 
 class MPIFileView(metaclass=abc.ABCMeta):
     def __init__(self, fn, comm):
@@ -104,14 +132,14 @@ class MPIFileView(metaclass=abc.ABCMeta):
         pass
 
 
-def make_mpi_file_view(fn, comm, format = None): #TODO: DISCUSS: oder als __init__ von der MPIFileView Klasse ?
+def make_mpi_file_view(fn, comm, format=None):  # TODO: DISCUSS: oder als __init__ von der MPIFileView Klasse ?
     readers = {
         "npy": MPIFileViewNPY
     }
 
     if not os.path.isfile(fn):
         raise FileExistsError("file {} not found".format(fn))
-    #TODO: chack existence of file also with parallel reader.
+    # TODO: chack existence of file also with parallel reader.
 
     if format is not None:
         try:
@@ -133,11 +161,12 @@ class MPIFileViewNPY(MPIFileView):
 
     you may have a look at numpy.lib.format if you want to understand how this code works
     """
+
     def __init__(self, fn, comm):
-        super().__init__(fn,comm)
+        super().__init__(fn, comm)
         self._read_header()
 
-    def detect_format(self): # TODO: maybe useless
+    def detect_format(self):  # TODO: maybe useless
         try:
             self._read_header()
             return True
@@ -182,16 +211,17 @@ class MPIFileViewNPY(MPIFileView):
 
         # create a type
         filetype = mpitype.Create_vector(
-             subdomain_resolution[0], # number of blocks  : length of data in the non-contiguous direction
-             subdomain_resolution[1], # length of block : length of data in contiguous direction
-             self.resolution[1]
-             # stepsize: the data is contiguous in y direction,
-             # two matrix elements with same x position are separated by ny in memory
-             )
+            subdomain_resolution[0],  # number of blocks  : length of data in the non-contiguous direction
+            subdomain_resolution[1],  # length of block : length of data in contiguous direction
+            self.resolution[1]
+            # stepsize: the data is contiguous in y direction,
+            # two matrix elements with same x position are separated by ny in memory
+        )
 
         filetype.Commit()  # verification if type is OK
         self.file.Set_view(
-            self.file.Get_position() + (subdomain_location[0] * self.resolution[1] + subdomain_location[1]) * mpitype.Get_size(),
+            self.file.Get_position() + (
+                    subdomain_location[0] * self.resolution[1] + subdomain_location[1]) * mpitype.Get_size(),
             filetype=filetype)
 
         data = np.empty(subdomain_resolution, dtype=self.dtype)

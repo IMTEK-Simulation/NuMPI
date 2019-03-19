@@ -1,9 +1,34 @@
+#
+# Copyright 2019 Lars Pastewka
+#           2018 Antoine Sanner
+# 
+# ### MIT license
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
+
+
 
 import numpy as np
 
+from MPITools import MPI
 from MPITools.Tools import ParallelNumpy
-
-from mpi4py import MPI
 
 class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
     """
@@ -43,7 +68,7 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         x_odd = x[self._sl_odd]
         x_even = x[self._sl_even]
 
-        sumf2 = np.asscalar(self.pnp.sum(100 * (x_odd - x_even ** 2) ** 2 + (1 - x_even) ** 2))
+        sumf2 = (self.pnp.sum(100 * (x_odd - x_even ** 2) ** 2 + (1 - x_even) ** 2)).item()
 
         grad = np.zeros_like(x)
         grad[self._sl_odd] = 200 * (x_odd - x_even ** 2)
