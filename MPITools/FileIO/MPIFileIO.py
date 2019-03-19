@@ -52,10 +52,11 @@ def save_npy(fn,data, subdomain_location,resolution,comm):
 
     mpitype = MPI._typedict[data.dtype.char]
     filetype = mpitype.Create_vector(subdomain_resolution[0],
-                                     # nombre bloc : longueur dans la direction non contigue en memoire
-                                     subdomain_resolution[1],  # longuer bloc : contiguous direction
+                                     # number of blocks  : length of data in the non-contiguous direction
+                                     subdomain_resolution[1],  # length of block : length of data in contiguous direction
                                      resolution[1]
-                                     # pas: les données sont contigues en direction y, deux elements de matrice avec le même x sont donc separes par ny cases en memoire
+                                     # stepsize: the data is contiguous in y direction,
+                                     # two matrix elements with same x position are separated by ny in memory
                                      )  # create a type
     # see MPI_TYPE_VECTOR
 

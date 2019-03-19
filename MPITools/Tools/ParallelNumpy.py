@@ -9,22 +9,6 @@ def get_dtypeInfo(dtype):
 
 
 class ParallelNumpy :
-
-    # just forward standart numpy functions
-    #array = np.array
-    #zeros=np.zeros
-    #ones = np.ones
-    #ones_like = np.ones_like
-
-    #ma = np.ma
-    #logical_and = np.logical_and
-    #logical_or = np.logical_or
-
-    #asscalar = np.asscalar
-
-    #prod = np.prod #TODO: will I  or force using standart numpy directly ?
-
-
     def __init__(self,comm=MPI.COMM_WORLD):
         self.comm = comm
 
@@ -54,16 +38,6 @@ class ParallelNumpy :
             return result
         else :
             return type(locresult)(result)
-
-    #def array(self,*args,**kwargs):
-    #    return np.array(*args, **kwargs)
-#
-#
-    #def zeros(self,*args,**kwargs):
-    #    return np.zeros(*args, **kwargs)
-#
-    #def ones(self,*args,**kwargs):
-    #    return np.ones(*args, **kwargs)
 
     def max(self,arr):
         """

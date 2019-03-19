@@ -10,9 +10,6 @@ from setuptools import setup, find_packages, Extension
 import os
 import sys
 
-
-
-
 setup(
     name = "MPITools",
     package_data = {'': ['ChangeLog.md']},
@@ -29,5 +26,4 @@ setup(
     description = "numerical tools for mpi parallelized code",
     license = "MIT",
     test_suite = 'tests',
-
 )
