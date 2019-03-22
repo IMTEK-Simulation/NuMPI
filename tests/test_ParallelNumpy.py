@@ -28,8 +28,8 @@
 import pytest
 import numpy as np
 
-from MPITools import MPI
-from MPITools.Tools import ParallelNumpy
+from NuMPI import MPI
+from NuMPI.Tools import ParallelNumpy
 
 
 @pytest.fixture

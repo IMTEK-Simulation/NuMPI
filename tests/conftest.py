@@ -27,13 +27,13 @@ collect_ignore_glob = ["*MPI_*.py"]
 
 import pytest
 
-import MPITools
+import NuMPI
 
-if MPITools._has_mpi4py:
+if NuMPI._has_mpi4py:
     from runtests.mpi import MPITestFixture
 
     comm = MPITestFixture([1, 2, 3, 4, 10], scope='session')
 else:
     @pytest.fixture(scope='module')
     def comm():
-        return MPITools.MPI.COMM_WORLD
+        return NuMPI.MPI.COMM_WORLD

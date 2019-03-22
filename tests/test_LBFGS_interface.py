@@ -27,7 +27,7 @@
 import numpy as np
 import scipy.optimize
 import pytest
-from MPITools.Optimization import LBFGS
+from NuMPI.Optimization import LBFGS
 
 import tests.minimization_problems as mp
 

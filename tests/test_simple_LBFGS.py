@@ -26,9 +26,9 @@
 
 import numpy as np
 import scipy.optimize
-from MPITools.Optimization.LBFGS_Matrix_H import LBFGS
+from NuMPI.Optimization.LBFGS_Matrix_H import LBFGS
 
-from MPITools.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
+from NuMPI.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
 import pytest
 
 def test_3D():

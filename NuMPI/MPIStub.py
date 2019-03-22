@@ -25,7 +25,7 @@
 
 """
 Stub implementation of mpi4py. This is necessary to run a serial version of
-MPITools and dependent projects without an MPI installation.
+NuMPI and dependent projects without an MPI installation.
 
 Disclaimer: This is at present not - and not intended to be - a full
 implementation of the API provided by mpi4py. It is a minimal implementation

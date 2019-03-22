@@ -26,11 +26,11 @@
 
 import numpy as np
 from mpi4py import MPI
-from MPITools.Tools import  ParallelNumpy
+from NuMPI.Tools import  ParallelNumpy
 from tests.MPI_minimization_problems import MPI_Quadratic
 import  time
 
-from MPITools.Optimization import LBFGS
+from NuMPI.Optimization import LBFGS
 
 def timer(fun, *args, **kwargs):
     start = time.perf_counter()

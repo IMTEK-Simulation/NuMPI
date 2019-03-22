@@ -26,14 +26,14 @@
 import pytest
 
 import numpy as np
-from MPITools.Tools import  ParallelNumpy
+from NuMPI.Tools import  ParallelNumpy
 from runtests.mpi import MPITest
 from tests.MPI_minimization_problems import MPI_Objective_Interface
 import scipy.optimize
 import  time
 import tests.minimization_problems as mp
 
-from MPITools.Optimization.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
+from NuMPI.Optimization.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
 
 def timer(fun, *args, **kwargs):
     start = time.perf_counter()

@@ -27,8 +27,8 @@
 
 import numpy as np
 
-from MPITools import MPI
-from MPITools.Tools import ParallelNumpy
+from NuMPI import MPI
+from NuMPI.Tools import ParallelNumpy
 
 class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
     """

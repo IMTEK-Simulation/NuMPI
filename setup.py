@@ -38,7 +38,7 @@ import os
 import sys
 
 setup(
-    name = "MPITools",
+    name = "NuMPI",
     package_data = {'': ['ChangeLog.md']},
     include_package_data = True,
     packages = find_packages(),

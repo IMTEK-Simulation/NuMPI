@@ -29,8 +29,8 @@
 import numpy as np
 import scipy.optimize
 
-from MPITools import MPI
-from MPITools.Tools import ParallelNumpy
+from NuMPI import MPI
+from NuMPI.Tools import ParallelNumpy
 
 def donothing(*args,**kwargs):
     pass
