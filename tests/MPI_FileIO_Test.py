@@ -29,7 +29,7 @@
 import numpy as np
 import os
 
-from NuMPI.FileIO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
+from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
 import pytest
 
 @pytest.mark.xfail(reason="not implemented", run=False)

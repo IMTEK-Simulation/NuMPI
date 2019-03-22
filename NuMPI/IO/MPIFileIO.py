@@ -101,7 +101,7 @@ class MPIFileIncompatibleResolutionError(Exception):
     pass
 
 
-def MPI_read_bytes(file, nbytes):
+def mpi_read_bytes(file, nbytes):
     # allocate the buffer
     buf = np.empty(nbytes, dtype=np.int8)
     file.Read_all(buf)
@@ -176,7 +176,7 @@ class MPIFileViewNPY(MPIFileView):
     def _read_header(self):
         magic_str = magic(1, 0)
         self.file = MPI.File.Open(self.comm, self.fn, MPI.MODE_RDONLY)  #
-        magic_str = MPI_read_bytes(self.file, len(magic_str))
+        magic_str = mpi_read_bytes(self.file, len(magic_str))
         if magic_str[:-2] != MAGIC_PREFIX:
             raise MPIFileTypeError("MAGIC_PREFIX missing at the beginning of file {}".format(self.fn))
 
@@ -189,9 +189,9 @@ class MPIFileViewNPY(MPIFileView):
         else:
             raise MPIFileTypeError("Invalid version %r" % version)
 
-        hlength_str = MPI_read_bytes(self.file, struct.calcsize(hlength_type))
+        hlength_str = mpi_read_bytes(self.file, struct.calcsize(hlength_type))
         header_length = struct.unpack(hlength_type, hlength_str)[0]
-        header = MPI_read_bytes(self.file, header_length)
+        header = mpi_read_bytes(self.file, header_length)
 
         header = _filter_header(header)
 
