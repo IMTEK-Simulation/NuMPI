@@ -197,7 +197,3 @@ def test_FileLoad_2D(decompfun, comm, globaldata):
                  subdomain_location=distdata.subdomain_location,
                  domain_resolution=tuple([a + 1 for a in distdata.domain_resolution]),
                  comm=comm)
-
-
-
-
