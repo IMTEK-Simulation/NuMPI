@@ -1,5 +1,5 @@
-Contributing to MPITools
-========================
+Contributing to NuMPI
+=====================
 
 Code style
 ----------

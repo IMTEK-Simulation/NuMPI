@@ -1,5 +1,5 @@
-MPITools
-========
+NuMPI
+=====
 
 Testing
 -------
@@ -17,7 +17,7 @@ From the main installation directory:
 python run-tests.py
 ```
 
-If you want to use MPITools without mpi4py, you can simply run the tests with pytest. 
+If you want to use NuMPI without mpi4py, you can simply run the tests with pytest. 
 
 ```bash
 pytest tests/
