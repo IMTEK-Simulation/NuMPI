@@ -37,6 +37,12 @@ def test_directional_derivative(Objective,n) :
     :param n: number of dimensions
     :return:
     """
+    _verbose = False
+    if _verbose:
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.set_xscale("log")
+        ax.set_yscale("log")
 
     for i in range(12):
         x= Objective.bounds[0] + (Objective.bounds[1] - Objective.bounds[0]) * np.random.random(n)
@@ -46,12 +52,23 @@ def test_directional_derivative(Objective,n) :
         u.shape = (-1,1)
 
         # TODO: Don't know which Tolerance to associate with which eps
-        eps = 1e-5
-        print((Objective.f(x + u * eps) - Objective.f(x)) / eps)
-        der_numerical  = (Objective.f(x + u * eps) - Objective.f(x)) / eps
-        der_analytical = (Objective.grad(x).T@u).item()
-        assert abs(der_numerical- der_analytical)/der_analytical < 1e-3, "(der_numerical- der_analytical)/der_analytical = {}".format(abs(der_numerical- der_analytical)/der_analytical)
+        epsilons = np.array([1e-3,1e-5,1e-6])
+        #der_numerical = np.zeros_like(epsilons)
+        #der_analytical = np.zeros_like(epsilons)
+        errorratios = np.zeros_like(epsilons)
+        for eps, i in zip(epsilons, range(len(epsilons))):
+            #print((Objective.f(x + u * eps) - Objective.f(x)) / eps)
+            der_numerical  = (Objective.f(x + u * eps) - Objective.f(x)) / eps
+            der_analytical = (Objective.grad(x).T@u).item()
 
+            errorratios[i] =  np.abs(der_numerical - der_analytical) /eps
+        errorratios /= errorratios[0]
+        if _verbose:
+            ax.plot(epsilons,errorratios)
+
+        assert (errorratios < 10).all(), "error_ratios".format(abs(der_numerical- der_analytical)/der_analytical)
+    if _verbose:
+        plt.show(block=True)
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock,mp.Trigonometric])
 @pytest.mark.parametrize("n",[2,4,10,20])
 def test_Gradient(Objective,n) :
@@ -64,8 +81,14 @@ def test_Gradient(Objective,n) :
     :param n: number of dimensions
     :return:
     """
+    _verbose = False
+    if _verbose:
+        import matplotlib.pyplot as plt
+        fig,ax = plt.subplots()
+        ax.set_xscale("log")
+        ax.set_yscale("log")
 
-    for i in range(12):
+    for i in range(12): # reproduce to have a bit of statistics
         x= Objective.bounds[0] + (Objective.bounds[1] - Objective.bounds[0]) * np.random.random(n)
         #x.shape = (-1,1)
 
@@ -73,6 +96,11 @@ def test_Gradient(Objective,n) :
         errors = np.array([scipy.optimize.check_grad(Objective.f,Objective.grad,x,epsilon = eps) for eps in epsilons ]) # should be O(epsilon)
         errorratios = errors / epsilons # should be O(1)
         errorratios /= errorratios[0]
+        if _verbose:
+            ax.plot(epsilons,errorratios)
+
+
         #print(errorratios)
         assert np.prod(errorratios < 10), "errorratios = {}".format(errorratios)
-
+    if _verbose:
+        plt.show(block=True)
