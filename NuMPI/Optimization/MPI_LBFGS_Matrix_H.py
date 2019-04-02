@@ -63,8 +63,33 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,maxiter=10,**kwargs):
 
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=None, ftol= None,maxiter=10000,
           maxls=20,linesearch_options={}, pnp=ParallelNumpy(MPI.COMM_WORLD),store_iterates=None,printdb=donothing,**options):
+    """
+
+    Parameters
+    ----------
+    fun
+    x
+    args
+    jac
+    x_old: initial guess
+    maxcor: max number of history gradients stored
+    gtol
+    g2tol
+    ftol
+    maxiter
+    maxls
+    linesearch_options
+    pnp
+    store_iterates
+    printdb
+    options
+
+    Returns
+    -------
+
+    """
     #print("jac = {}, type = {}".format(jac, type(jac)))
-    if jac is True: # TODO: Temp
+    if jac is True: # TODO: Temp, exactracts jacobian and function separately (extra computation for each !) Later we should compute them together once
         jac = lambda x: fun(x)[1]
         _fun = lambda x: fun(x)[0]
     elif jac is False:
@@ -75,7 +100,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
     original_shape=x.shape
 
     x = x.reshape((-1,1))
-    _jac = lambda x: jac(x).reshape((-1,1))
+    _jac = lambda x: jac(x).reshape((-1, 1))
     if x_old is None:
         x_old = x.copy()
         x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac, pnp=pnp, maxiter=maxls)
@@ -119,6 +144,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
         grad2prev = grad2.copy()
         grad2 = pnp.sum(np.asarray(grad) ** 2)  # ok
 
+        ######################
         # check if job is done
         if ((grad2 < g2tol if g2tol is not None else True) and
                 (pnp.max(np.abs(grad)) < gtol if gtol is not None else True) and
@@ -142,15 +168,16 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
                                                     'iterates': iterates})
 
             return result
-
-        STgrad_prev = STgrad.copy()
+        ###########
+        # new iteration
+        STgrad_prev = STgrad.copy() #TODO: preallocate
         YTgrad_prev = YTgrad.copy()
 
         STgrad = pnp.dot(S.T, grad)
         YTgrad = pnp.dot(Y.T, grad)
 
         if k > maxcor:
-            w = np.vstack([STgrad_prev, gamma * YTgrad_prev])
+            w = np.vstack([STgrad_prev, gamma * YTgrad_prev]) #TODO: vstack
             S_now_T_grad_prev = np.roll(STgrad_prev,-1)
             S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * w.T.dot(p)
         else : # straightforward Version
@@ -189,10 +216,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=Non
         Rinv = np.linalg.inv(R)
 
         RiSg = Rinv.dot(STgrad)
-        p = np.vstack([Rinv.T.dot(D + gamma * YTY).dot(RiSg) - gamma * Rinv.T.dot(YTgrad)
-                          , - RiSg])
+        p = np.vstack([Rinv.T.dot(D + gamma * YTY).dot(RiSg) - gamma * Rinv.T.dot(YTgrad), - RiSg]) #TODO
 
-        Hgrad = gamma * grad + np.hstack([S, gamma * Y]).dot(p)
+        Hgrad = gamma * grad + np.hstack([S, gamma * Y]).dot(p) #TODO
 
         phi_old = float(phi)
         #printdb("Linesearch: ")
