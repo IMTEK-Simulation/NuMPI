@@ -1,6 +1,12 @@
 NuMPI
 =====
 
+NuMPI is a collection of numerical tools for MPI-parallelized Python codes. NuMPI presently contains:
+
+- An (incomplete) stub implementation of the [mpi4py](https://bitbucket.org/mpi4py/mpi4py) interface to the MPI libraries.
+- Parallel file IO in numpy's [.npy](https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html) format.
+- An MPI-parallel implementation of the L-BFGS optimizer.
+
 Testing
 -------
 
