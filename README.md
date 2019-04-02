@@ -28,3 +28,11 @@ If you want to use NuMPI without mpi4py, you can simply run the tests with pytes
 ```bash
 pytest tests/
 ```
+
+Testing on the cluster
+----------------------
+On NEMO for example
+
+```bash
+msub -q expresss -l walltime=15:00,nodes=1:ppn=20 NEMO_test_job.sh -m bea
+```
