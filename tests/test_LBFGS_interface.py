@@ -22,41 +22,52 @@
 # SOFTWARE.
 #
 
-
-
 import numpy as np
 import scipy.optimize
 import pytest
 from NuMPI.Optimization import LBFGS
-
+from NuMPI.Tools import ParallelNumpy
+from runtests.mpi import MPITestFixture
 import tests.minimization_problems as mp
+import tests.MPI_minimization_problems as mpi_mp
 
-@pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock])
-@pytest.mark.parametrize("n",[10])
-def test_minimize_call(Objective,n):
+@pytest.fixture
+def pnp(comm):
+    return ParallelNumpy(comm)
 
+@pytest.mark.parametrize("Objectiveclass",[mpi_mp.MPI_Quadratic])
+def test_minimize_call(pnp, Objectiveclass):
+    comm = pnp.comm
+    n= 10 + 2 * comm.Get_size()
+    Objective=Objectiveclass(n, pnp=pnp)
     ## Test column Vector call
-    result = scipy.optimize.minimize(Objective.f,Objective.startpoint(n),jac=Objective.grad,method=LBFGS,options ={"gtol":1e-6})
+    print("Test column Vector call")
+    result = scipy.optimize.minimize(Objective.f,Objective.startpoint(), jac=Objective.grad,method=LBFGS,options ={"gtol":1e-6,"pnp":pnp})
     assert result.success
-    np.testing.assert_allclose(np.reshape(result.x, (-1,)), np.reshape(Objective.xmin(n), (-1,)), rtol=1e-7)
+    assert pnp.max(abs( np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,)) )) \
+             / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
 
     ## Test row Vectors call (like scipy and PyCo)
-    result = scipy.optimize.minimize(Objective.f, Objective.startpoint(n).reshape(-1),method=LBFGS, jac=lambda x: Objective.grad(x).reshape(-1), options={"gtol": 1e-6})
+    print("# Test row Vectors call (like scipy and PyCo)")
+    result = scipy.optimize.minimize(Objective.f, Objective.startpoint().reshape(-1),method=LBFGS, jac=lambda x: Objective.grad(x).reshape(-1), options={"gtol": 1e-6, "pnp":pnp})
     assert result.success, ""
-    np.testing.assert_allclose(np.reshape(result.x, (-1,)), np.reshape(Objective.xmin(n), (-1,)), rtol=1e-7)
+    assert pnp.max(
+        abs(np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,)))) \
+           / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
 
 # TODO: test when jac is Bool
 
 @pytest.mark.parametrize("shape",[(10,),(10,1),(1,10),(2,4)])
 def test_shape_unchanged(shape):
-
+    """
+    This test is only serial
+    """
     size = np.prod(shape)
     Objective = mp.Extended_Rosenbrock
 
     x0 = Objective.startpoint(size).reshape(shape)
 
-
-    result=LBFGS(Objective.f, x0, jac=Objective.grad, gtol=1e-8)
+    result=LBFGS(Objective.f, x0, jac=Objective.grad, gtol=1e-8, pnp=np)
 
     assert result.success, ""
     np.testing.assert_allclose(np.reshape(result.x, (-1,)), np.reshape(Objective.xmin(size), (-1,)), rtol=1e-5)
