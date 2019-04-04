@@ -30,7 +30,7 @@ import numpy as np
 import scipy.optimize
 
 from NuMPI import MPI
-from NuMPI.Tools import ParallelNumpy
+from NuMPI.Tools import Reduction
 
 def donothing(*args,**kwargs):
     pass
@@ -61,8 +61,8 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,maxiter=10,**kwargs):
 
     return x, fprime(x) , x0, grad0, phi,phi0
 
-def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5,g2tol=None, ftol= None,maxiter=10000,
-          maxls=20,linesearch_options={}, pnp=ParallelNumpy(MPI.COMM_WORLD),store_iterates=None,printdb=donothing,**options):
+def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5, g2tol=None, ftol= None, maxiter=10000,
+          maxls=20, linesearch_options={}, pnp=Reduction(MPI.COMM_WORLD), store_iterates=None, printdb=donothing, **options):
     """
 
     Parameters

@@ -28,7 +28,7 @@
 import numpy as np
 
 from NuMPI import MPI
-from NuMPI.Tools import ParallelNumpy
+from NuMPI.Tools import Reduction
 
 class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
     """
@@ -42,7 +42,7 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
     """
     bounds = (-4, 4)
 
-    def __init__(self,domain_resolution,pnp = ParallelNumpy()):
+    def __init__(self, domain_resolution, pnp = Reduction()):
         raise NotImplementedError("Need to implement communication")
         comm = pnp.comm
         nprocs = comm.Get_size()
@@ -123,7 +123,7 @@ class MPI_Quadratic():
     """
     bounds = (-4, 4)
 
-    def __init__(self,domain_resolution,pnp = ParallelNumpy(),factors = None, startpoint = None):
+    def __init__(self, domain_resolution, pnp = Reduction(), factors = None, startpoint = None):
         comm = pnp.comm
         nprocs = comm.Get_size()
         rank = comm.Get_rank()

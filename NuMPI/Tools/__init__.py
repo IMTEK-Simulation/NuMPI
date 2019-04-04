@@ -24,4 +24,4 @@
 
 
 
-from .ParallelNumpy import ParallelNumpy
+from .Reduction import Reduction

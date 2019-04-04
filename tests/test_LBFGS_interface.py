@@ -26,14 +26,14 @@ import numpy as np
 import scipy.optimize
 import pytest
 from NuMPI.Optimization import LBFGS
-from NuMPI.Tools import ParallelNumpy
+from NuMPI.Tools import Reduction
 from runtests.mpi import MPITestFixture
 import tests.minimization_problems as mp
 import tests.MPI_minimization_problems as mpi_mp
 
 @pytest.fixture
 def pnp(comm):
-    return ParallelNumpy(comm)
+    return Reduction(comm)
 
 @pytest.mark.parametrize("Objectiveclass",[mpi_mp.MPI_Quadratic])
 def test_minimize_call(pnp, Objectiveclass):

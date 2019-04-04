@@ -26,7 +26,7 @@
 import pytest
 
 import numpy as np
-from NuMPI.Tools import  ParallelNumpy
+from NuMPI.Tools import  Reduction
 from runtests.mpi import MPITest
 from tests.MPI_minimization_problems import MPI_Objective_Interface
 import scipy.optimize
@@ -88,7 +88,7 @@ def test_MPI_steepest_descent_wolfe2(comm):
     x_ref = start + direction * alpha
     #steepest_descent_wolfe2
 
-    x= steepest_descent_wolfe2(par.startpoint(),par.f,par.grad,pnp=ParallelNumpy(comm),c1=1e-4,c2=0.9)[0]
+    x= steepest_descent_wolfe2(par.startpoint(), par.f, par.grad, pnp=Reduction(comm), c1=1e-4, c2=0.9)[0]
 
     np.testing.assert_allclose(x.reshape(-1), x_ref[par.subdomain_slice])
 
@@ -117,7 +117,7 @@ def test_analytical_min(comm):
 
     x0 = PObjective.startpoint()
 
-    res = LBFGS(PObjective.f, x0,jac=PObjective.grad, maxcor=5, maxiter=100, gtol=1e-12,pnp= ParallelNumpy(comm))
+    res = LBFGS(PObjective.f, x0, jac=PObjective.grad, maxcor=5, maxiter=100, gtol=1e-12, pnp= Reduction(comm))
 
     np.testing.assert_allclose(res.x,PObjective.xmin(),atol=1e-16,rtol = 1e-5)
 
@@ -145,7 +145,7 @@ def test_time_complexity(comm):
     n= np.array([10,100,1000,1e4,1e5,1e6],dtype = int)
     t = np.zeros(len(n),dtype=float)
     res = [None] * len(n)
-    pnp = ParallelNumpy(comm)
+    pnp = Reduction(comm)
     for i in range(len(n)):
         PObjective = MPI_Objective_Interface(Objective, domain_resolution=n[i], comm=comm)
         x0 = PObjective.startpoint()
@@ -155,7 +155,7 @@ def test_time_complexity(comm):
         assert res[i].success
 
 
-    if False:
+    if True:
         import matplotlib.pyplot as plt
 
         fig,ax = plt.subplots()

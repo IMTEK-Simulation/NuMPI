@@ -29,12 +29,12 @@ import pytest
 import numpy as np
 
 from NuMPI import MPI
-from NuMPI.Tools import ParallelNumpy
+from NuMPI.Tools import Reduction
 
 
 @pytest.fixture
 def pnp(comm):
-    return ParallelNumpy(comm)
+    return Reduction(comm)
 
 def test_sum_scalar(pnp):
     res=pnp.sum(np.array(1))

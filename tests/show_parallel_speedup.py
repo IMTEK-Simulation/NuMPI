@@ -22,13 +22,11 @@
 # SOFTWARE.
 #
 
-
-
 import numpy as np
 from mpi4py import MPI
-from NuMPI.Tools import  ParallelNumpy
+from NuMPI.Tools import  Reduction
 from tests.MPI_minimization_problems import MPI_Quadratic
-import  time
+import time
 
 from NuMPI.Optimization import LBFGS
 
@@ -38,9 +36,7 @@ def timer(fun, *args, **kwargs):
     delay = time.perf_counter() - start
     return res, delay
 
-
 def show_parallel_speedup():
-
     msg = ""
 
     orsizes = np.array([4, 8, 10,20])
@@ -83,7 +79,7 @@ def show_parallel_speedup():
             else:
                 comm = MPI.COMM_WORLD.Split(color)
 
-            pnp = ParallelNumpy(comm)
+            pnp = Reduction(comm)
             #PObjective = MPI_Objective_Interface(Objective, domain_resolution=n, comm=comm)
             PObjective = MPI_Quadratic(domain_resolution=n, pnp=pnp,factors = factors, startpoint=startpoint)
             x0 = PObjective.startpoint()
@@ -94,8 +90,11 @@ def show_parallel_speedup():
             msg += "size {}:\n".format(size)
 
             assert res[i].success, "Minimization faild"
-            np.testing.assert_allclose(res[i].x,PObjective.xmin())
-
+            assert pnp.max(
+                abs(np.reshape(res[i].x, (-1,)) - np.reshape(PObjective.xmin(),
+                                                             (-1,)))) \
+                   / pnp.max(
+                abs(PObjective.startpoint() - PObjective.xmin())) < 1e-5
             if MPI.COMM_WORLD.Get_rank() == 0 : print("n = {}, size = {}".format(n,size))
 
         if toPlot :

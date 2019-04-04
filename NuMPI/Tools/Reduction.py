@@ -35,7 +35,7 @@ def get_dtypeInfo(dtype):
     raise ValueError
 
 
-class ParallelNumpy :
+class Reduction :
     def __init__(self,comm=MPI.COMM_WORLD):
         self.comm = comm
 
