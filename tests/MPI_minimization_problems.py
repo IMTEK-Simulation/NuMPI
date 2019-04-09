@@ -154,10 +154,10 @@ class MPI_Quadratic():
 
     def f_grad(self,x):
         factdotx = self.factors.reshape(x.shape) * x
-        return self.pnp.sum(factdotx**2,axis = 0), 2 * factdotx
+        return self.pnp.sum(factdotx**2,axis = 0).item(), 2 * factdotx
 
     def f(self, x):
-        return self.pnp.sum(np.dot((x ** 2).flat, self.factors**2), axis=0)
+        return self.pnp.sum(np.dot((x ** 2).item(), self.factors**2), axis=0)
 
     def grad(self, x):
         return 2 * self.factors.reshape(x.shape) * x

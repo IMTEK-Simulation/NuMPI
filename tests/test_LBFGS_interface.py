@@ -36,20 +36,21 @@ def pnp(comm):
     return Reduction(comm)
 
 @pytest.mark.parametrize("Objectiveclass",[mpi_mp.MPI_Quadratic])
-def test_minimize_call(pnp, Objectiveclass):
+def test_minimize_call_column(pnp, Objectiveclass):
     comm = pnp.comm
     n= 10 + 2 * comm.Get_size()
     Objective=Objectiveclass(n, pnp=pnp)
-    ## Test column Vector call
-    print("Test column Vector call")
-    result = scipy.optimize.minimize(Objective.f,Objective.startpoint(), jac=Objective.grad,method=LBFGS,options ={"gtol":1e-6,"pnp":pnp})
+    result = scipy.optimize.minimize(Objective.f_grad,Objective.startpoint(), jac=True,method=LBFGS,options ={"gtol":1e-8,"ftol":1e-20,"pnp":pnp})
     assert result.success
     assert pnp.max(abs( np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,)) )) \
              / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
 
-    ## Test row Vectors call (like scipy and PyCo)
-    print("# Test row Vectors call (like scipy and PyCo)")
-    result = scipy.optimize.minimize(Objective.f, Objective.startpoint().reshape(-1),method=LBFGS, jac=lambda x: Objective.grad(x).reshape(-1), options={"gtol": 1e-6, "pnp":pnp})
+@pytest.mark.parametrize("Objectiveclass", [mpi_mp.MPI_Quadratic])
+def test_minimize_call_row(pnp, Objectiveclass):
+    comm = pnp.comm
+    n = 10 + 2 * comm.Get_size()
+    Objective = Objectiveclass(n, pnp=pnp)
+    result = scipy.optimize.minimize(Objective.f_grad, Objective.startpoint().reshape(-1),method=LBFGS, jac=True, options={"gtol": 1e-8,"ftol":1e-20, "pnp":pnp})
     assert result.success, ""
     assert pnp.max(
         abs(np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,)))) \
@@ -67,7 +68,7 @@ def test_shape_unchanged(shape):
 
     x0 = Objective.startpoint(size).reshape(shape)
 
-    result=LBFGS(Objective.f, x0, jac=Objective.grad, gtol=1e-8, pnp=np)
+    result=LBFGS(Objective.f_grad, x0, jac=True, gtol=1e-10, ftol=1e-40 , pnp=np)
 
     assert result.success, ""
     np.testing.assert_allclose(np.reshape(result.x, (-1,)), np.reshape(Objective.xmin(size), (-1,)), rtol=1e-5)
