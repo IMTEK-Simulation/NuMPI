@@ -61,9 +61,11 @@ def steepest_descent_wolfe2(x0,f,fprime, pnp = None,maxiter=10,**kwargs):
 
     return x, fprime(x) , x0, grad0, phi,phi0
 
-def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5, g2tol=None, ftol= None, maxiter=10000,
-          maxls=20, linesearch_options={}, pnp=Reduction(MPI.COMM_WORLD), store_iterates=None, printdb=donothing, **options):
+def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.2e-9, maxiter=15000,
+          maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9), pnp=Reduction(MPI.COMM_WORLD), store_iterates=None, printdb=donothing, **options):
     """
+
+    convergence if |grad|_{\infty} <= gtol or <= ftol is satisfied
 
     Parameters
     ----------
@@ -73,14 +75,24 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5, g2tol=No
     jac
     x_old: initial guess
     maxcor: max number of history gradients stored
-    gtol
-    g2tol
-    ftol
+    gtol:
+    ftol:
     maxiter
-    maxls
-    linesearch_options
+    maxls, default 20, as in scipy.optimize.fmin_l_bfgs_b
+    linesearch_options: further options for the linesearch
+    the result of the linesearch has to satisfy the strong wolfe condition
+    See Wright and Nocedal, 'Numerical Optimization',p.34
+    c1 parameter for the sufficient decrease condition
+    c2 parameter for the curfvature condition
+    
+    default values are choosen here to match the implementation in
+    the Fortran subroutine L-BFGS-B 3.0 by
+    Ciyou Zhu, Richard Byrd, and Jorge Nocedal
+
+    See lbfgsb.f line 2497, with gtol=c2 and ftol=c1
+    
     pnp
-    store_iterates
+    store_iterates: stores each iterate of x, only debugging
     printdb
     options
 
@@ -103,7 +115,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5, g2tol=No
     _jac = lambda x: jac(x).reshape((-1, 1))
     if x_old is None:
         x_old = x.copy()
-        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac, pnp=pnp, maxiter=maxls)
+        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac, pnp=pnp, maxiter=maxls, **linesearch_options)
     else:
         grad_old = np.asarray(_jac(x_old))
         phi_old = _fun(x_old)
@@ -114,11 +126,13 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5, g2tol=No
     n = x.size  # Dimension of x
     gamma = 1
 
-    S = np.zeros((n, 0))
-    Y = np.zeros((n, 0))
+    S = np.zeros((n, 0)) # history of the steps of x
+    Y = np.zeros((n, 0)) # history of gradient differences
     R = np.zeros((0, 0))
     STgrad = np.array((1, maxcor))
     YTgrad = np.array((1, maxcor))
+    STgrad_prev = STgrad.copy()  # TODO: preallocate
+    YTgrad_prev = YTgrad.copy()
 
     grad = np.asarray(_jac(x))
     grad2 = pnp.sum(grad ** 2)
@@ -141,19 +155,33 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = 1e-5, g2tol=No
             Y = np.hstack([Y, grad - grad_old])
 
         # 2.
-        grad2prev = grad2.copy()
-        grad2 = pnp.sum(np.asarray(grad) ** 2)  # ok
+        grad2prev = grad2
+        grad2 = pnp.sum(np.asarray(grad) ** 2)
 
         ######################
         # check if job is done
-        if ((grad2 < g2tol if g2tol is not None else True) and
-                (pnp.max(np.abs(grad)) < gtol if gtol is not None else True) and
-                ((phi - phi_old) / max((1,abs(phi),abs(phi_old))) <= ftol if ftol is not None else True)):
+        #if ((grad2 < g2tol if g2tol is not None else True) and
+        #        (pnp.max(np.abs(grad)) < gtol if gtol is not None else True) and
+        #        ((phi - phi_old) / max((1,abs(phi),abs(phi_old))) <= ftol if ftol is not None else True)):
+        if (pnp.max(np.abs(grad)) < gtol ):
             result = scipy.optimize.OptimizeResult({'success': True,
                                                     'x': x.reshape(original_shape),
                                                     'fun':phi,
                                                     'jac':grad.reshape(original_shape),
                                                     'nit': k,
+                                                    'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
+                                                    'iterates': iterates})
+            # if iterates:
+            #    result['iterates'] = iterates
+            return result
+
+        if ((phi_old - phi)  <= ftol * max((1,abs(phi),abs(phi_old)))):
+            result = scipy.optimize.OptimizeResult({'success': True,
+                                                    'x': x.reshape(original_shape),
+                                                    'fun':phi,
+                                                    'jac':grad.reshape(original_shape),
+                                                    'nit': k,
+                                                    'message': 'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH',
                                                     'iterates': iterates})
             # if iterates:
             #    result['iterates'] = iterates
