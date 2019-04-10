@@ -45,7 +45,7 @@ def test_linesearch():
     pass
 
 @MPITest([1, 2, 3, 4])
-def test_MPI_Parallel_Interface(comm):
+def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interface ?
     """
     Test if parallel Version gives the same as the serial Version
     :param comm:
@@ -88,7 +88,7 @@ def test_MPI_steepest_descent_wolfe2(comm):
     x_ref = start + direction * alpha
     #steepest_descent_wolfe2
 
-    x= steepest_descent_wolfe2(par.startpoint(), par.f, par.grad, pnp=Reduction(comm), c1=1e-4, c2=0.9)[0]
+    x= steepest_descent_wolfe2(par.startpoint(), par.f_grad, pnp=Reduction(comm), c1=1e-4, c2=0.9)[0]
 
     np.testing.assert_allclose(x.reshape(-1), x_ref[par.subdomain_slice])
 
@@ -117,7 +117,7 @@ def test_analytical_min(comm):
 
     x0 = PObjective.startpoint()
 
-    res = LBFGS(PObjective.f, x0, jac=PObjective.grad, maxcor=5, maxiter=100, gtol=1e-12, pnp= Reduction(comm))
+    res = LBFGS(PObjective.f_grad, x0, jac=True, maxcor=5, maxiter=100, gtol=1e-12, pnp= Reduction(comm))
 
     np.testing.assert_allclose(res.x,PObjective.xmin(),atol=1e-16,rtol = 1e-5)
 
@@ -150,7 +150,7 @@ def test_time_complexity(comm):
         PObjective = MPI_Objective_Interface(Objective, domain_resolution=n[i], comm=comm)
         x0 = PObjective.startpoint()
 
-        res[i],t[i] = timer(LBFGS,PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor, maxiter=100000, gtol=(1e-5), pnp=pnp)
+        res[i],t[i] = timer(LBFGS,PObjective.f_grad, x0, jac=True, maxcor=maxcor, maxiter=100000, gtol=(1e-5), pnp=pnp)
 
         assert res[i].success
 

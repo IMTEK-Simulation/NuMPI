@@ -23,46 +23,51 @@
 # SOFTWARE.
 #
 
-
-
-
 import numpy as np
 import scipy.optimize
 
 from NuMPI import MPI
 from NuMPI.Tools import Reduction
 
+from NuMPI.Optimization.linesearch import scalar_search_wolfe2
+
 def donothing(*args,**kwargs):
     pass
 
-def steepest_descent_wolfe2(x0,f,fprime, pnp = None,maxiter=10,**kwargs):
+def steepest_descent_wolfe2(x0,f_gradf, pnp = None,maxiter=10,**kwargs):
     """
     For first Iteration there is no history. We make a steepest descent satisfying strong Wolfe Condition
     :return:
     """
-
     # x_old.shape=(-1,1)
-    grad0 = fprime(x0)
+    phi0, grad0 = f_gradf(x0)
+    grad0 = grad0.reshape((-1,1))
 
-    def _fun(alpha):
-        val = f(x0 - grad0 * alpha)
-        return val
+    derphi0 = pnp.dot(grad0.T, -grad0).item()
+    gradf = np.zeros_like(grad0)
+    # stores the last evaluated gradf,
+    # take care, the linesearch has to return the last evaluated value
+    # TODO: Dangerous
+    def _phi_phiprime(alpha):
+        phi, gradf[...] = f_gradf(x0 - grad0 * alpha)
+        phiprime = pnp.dot(gradf.T, -grad0).item()
+        return phi, phiprime
 
-    def _fprime(alpha):
-        val=pnp.dot(fprime(x0 - grad0 * alpha).T, -grad0).item()
-        return val
+    # like in lbfgsb
+    # if (iter.eq. 0.and..not.boxed) then
+    #    stp = min(one / dnorm, stpmx)
 
-    alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
-        _fun,
-        _fprime, maxiter=maxiter, **kwargs)
+    alpha, phi, phi0, derphi = scalar_search_wolfe2(_phi_phiprime, maxiter=maxiter,
+    phi0=phi0, derphi0=derphi0, step=min(1., 1. / np.sqrt(-derphi0)),  **kwargs)
 
     assert derphi is not None, "Line Search in first steepest descent failed"
     x = x0 - grad0 * alpha
 
-    return x, fprime(x) , x0, grad0, phi,phi0
+    return x, gradf , x0, grad0, phi,phi0, derphi
 
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.2e-9, maxiter=15000,
-          maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9), pnp=Reduction(MPI.COMM_WORLD), store_iterates=None, printdb=donothing, **options):
+          maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9), pnp=Reduction(MPI.COMM_WORLD),
+          store_iterates=None, printdb=donothing, **options):
     """
 
     convergence if |grad|_{\infty} <= gtol or <= ftol is satisfied
@@ -83,7 +88,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
     the result of the linesearch has to satisfy the strong wolfe condition
     See Wright and Nocedal, 'Numerical Optimization',p.34
     c1 parameter for the sufficient decrease condition
-    c2 parameter for the curfvature condition
+    c2 parameter for the curvature condition
     
     default values are choosen here to match the implementation in
     the Fortran subroutine L-BFGS-B 3.0 by
@@ -100,30 +105,65 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
     -------
 
     """
+
     #print("jac = {}, type = {}".format(jac, type(jac)))
     if jac is True: # TODO: Temp, exactracts jacobian and function separately (extra computation for each !) Later we should compute them together once
-        jac = lambda x: fun(x)[1]
-        _fun = lambda x: fun(x)[0]
-    elif jac is False:
-        raise NotImplementedError
-    else: # function provided
-        _fun = fun
+        def fun_grad(x):
+            """
+            reshapes the gradient in a convenient form
+            Parameters
+            ----------
+            x
 
-    original_shape=x.shape
+            Returns
+            -------
+
+            """
+            f, grad = fun(x)
+            return f, grad.reshape((-1,1))
+
+    elif jac is False:
+        raise NotImplementedError("Numerical evaluation of gradient not implemented")
+    else:
+        # function and gradient provided sepatately
+
+        def fun_grad(x):
+            """
+            evaluates function and grad consequently (important, see issue #13)
+            and reshapes the gradient in a convenient form
+            Parameters
+            ----------
+            x
+
+            Returns
+            -------
+
+            """
+            # order matte
+            f = fun(x)
+            grad = jac(x).reshape((-1,1))
+            return f, grad
+
+    # user can provide x in the shape of his convenience
+    # but we will work with the shape (-1, 1)
+    original_shape = x.shape
 
     x = x.reshape((-1,1))
-    _jac = lambda x: jac(x).reshape((-1, 1))
+
     if x_old is None:
         x_old = x.copy()
-        x,grad,x_old,grad_old,phi,phi_old = steepest_descent_wolfe2(x_old, _fun, _jac, pnp=pnp, maxiter=maxls, **linesearch_options)
+        x, grad, x_old, grad_old, phi, phi_old, derphi = \
+            steepest_descent_wolfe2(x_old, fun_grad, pnp=pnp, maxiter=maxls,
+                                    **linesearch_options)
     else:
-        grad_old = np.asarray(_jac(x_old))
-        phi_old = _fun(x_old)
-        phi = _fun(x)
+        phi_old, grad_old = fun_grad(x_old) # phi_old is never used, except for the convergence criterion
+        phi, grad = fun_grad(x)
+
+    # full history of x is sored here if wished
     iterates = list()
     k = 1
 
-    n = x.size  # Dimension of x
+    n = x.size  # number of degrees of freedom
     gamma = 1
 
     S = np.zeros((n, 0)) # history of the steps of x
@@ -134,7 +174,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
     STgrad_prev = STgrad.copy()  # TODO: preallocate
     YTgrad_prev = YTgrad.copy()
 
-    grad = np.asarray(_jac(x))
     grad2 = pnp.sum(grad ** 2)
 
     alpha = 0
@@ -167,7 +206,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             result = scipy.optimize.OptimizeResult({'success': True,
                                                     'x': x.reshape(original_shape),
                                                     'fun':phi,
-                                                    'jac':grad.reshape(original_shape),
+                                                    'jac': grad.reshape(original_shape),
                                                     'nit': k,
                                                     'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
                                                     'iterates': iterates})
@@ -179,7 +218,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             result = scipy.optimize.OptimizeResult({'success': True,
                                                     'x': x.reshape(original_shape),
                                                     'fun':phi,
-                                                    'jac':grad.reshape(original_shape),
+                                                    'jac': grad.reshape(original_shape),
                                                     'nit': k,
                                                     'message': 'CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH',
                                                     'iterates': iterates})
@@ -191,7 +230,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             result = scipy.optimize.OptimizeResult({'success': False,
                                                     'x': x.reshape(original_shape),
                                                     'fun':phi,
-                                                    'jac':grad.reshape(original_shape),
+                                                    'jac': grad.reshape(original_shape),
                                                     'nit': k,
                                                     'iterates': iterates})
 
@@ -205,9 +244,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         YTgrad = pnp.dot(Y.T, grad)
 
         if k > maxcor:
-            w = np.vstack([STgrad_prev, gamma * YTgrad_prev]) #TODO: vstack
+            #w = np.vstack([STgrad_prev, gamma * YTgrad_prev]) #TODO: vstack
             S_now_T_grad_prev = np.roll(STgrad_prev,-1)
-            S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * w.T.dot(p)
+            S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * (STgrad_prev.T.dot(p1) + gamma * YTgrad_prev.T.dot(p2))
         else : # straightforward Version
             S_now_T_grad_prev = pnp.dot(S.T, grad_old)
 
@@ -240,28 +279,37 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         else:
             YTY = pnp.dot(Y.T, Y)
 
+        # Step 5.
         gamma = D[-1, -1] / YTY[-1, -1]  # n.b. D[-1,-1] = sk-1T yk-1 = yk-1T sk-1
+
+        # Step 6. and 7. together
         Rinv = np.linalg.inv(R)
-
         RiSg = Rinv.dot(STgrad)
-        p = np.vstack([Rinv.T.dot(D + gamma * YTY).dot(RiSg) - gamma * Rinv.T.dot(YTgrad), - RiSg]) #TODO
+        p1 = Rinv.T.dot(D + gamma * YTY).dot(RiSg) - gamma * Rinv.T.dot(YTgrad)
+        p2 = - RiSg #TODO
 
-        Hgrad = gamma * grad + np.hstack([S, gamma * Y]).dot(p) #TODO
+        #temphstack=np.hstack([S, gamma * Y])
+
+        Hgrad = gamma * grad + S.dot(p1)+ gamma * Y.dot(p2)
 
         phi_old = float(phi)
         #printdb("Linesearch: ")
-        alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(lambda alpha: _fun(x - Hgrad * alpha),
-                                                                                  lambda alpha: pnp.dot(
-                                                                                      _jac(x - Hgrad * alpha).T, -Hgrad),
-                                                                                  maxiter=maxls, **linesearch_options)
+        grad_old[:] = grad
+        x_old[:] = x
+        def _phi_phiprime(alpha):
+            phi, grad[...] = fun_grad(x - Hgrad * alpha)
+            phiprime = pnp.dot(grad.T, -Hgrad).item()
+            return phi, phiprime
+
+        #TODO: oldphi0: is it allowed to stay outside of the search direction ?
+        alpha, phi, phi0, derphi = scalar_search_wolfe2(_phi_phiprime, phi0=phi,
+                                                        derphi0=pnp.dot(grad.T, -Hgrad).item(), maxiter=maxls, **linesearch_options)
+
         printdb("derphi: {}".format(derphi))
         assert derphi is not None, "line-search did not converge"
 
-        x_old[:] = x
-        x = x - Hgrad * alpha
 
-        grad_old[:] = grad
-        grad = _jac(x)
+        x = x - Hgrad * alpha
 
         if store_iterates == 'iterate':
             iterate = scipy.optimize.OptimizeResult(
