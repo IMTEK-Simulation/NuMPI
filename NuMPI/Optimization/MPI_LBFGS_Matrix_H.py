@@ -53,7 +53,12 @@ def steepest_descent_wolfe2(x0,f_gradf, pnp = None,maxiter=10,**kwargs):
         phiprime = pnp.dot(gradf.T, -grad0).item()
         return phi, phiprime
 
-    alpha, phi, phi0, derphi = scalar_search_wolfe2(_phi_phiprime, maxiter=maxiter, phi0=phi0, derphi0=derphi0, **kwargs)
+    # like in lbfgsb
+    # if (iter.eq. 0.and..not.boxed) then
+    #    stp = min(one / dnorm, stpmx)
+
+    alpha, phi, phi0, derphi = scalar_search_wolfe2(_phi_phiprime, maxiter=maxiter,
+    phi0=phi0, derphi0=derphi0, step=min(1., 1. / np.sqrt(-derphi0)),  **kwargs)
 
     assert derphi is not None, "Line Search in first steepest descent failed"
     x = x0 - grad0 * alpha

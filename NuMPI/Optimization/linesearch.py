@@ -14,7 +14,7 @@ class LineSearchWarning(RuntimeWarning):
 
 def scalar_search_wolfe2(phi_derphi, phi0=None,
                          old_phi0=None, derphi0=None,
-                         c1=1e-4, c2=0.9, amax=None,
+                         c1=1e-4, c2=0.9, amax=None,step = None,
                          extra_condition=None, maxiter=10):
     """Find alpha that satisfies strong Wolfe conditions.
 
@@ -75,10 +75,13 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
         phi0, derphi0 = phi_derphi(0.)
 
     alpha0 = 0
-    if old_phi0 is not None and derphi0 != 0:
-        alpha1 = min(1.0, 1.01*2*(phi0 - old_phi0)/derphi0)
+    if step is not None:
+        alpha1 = step
     else:
-        alpha1 = 1.0
+        if old_phi0 is not None and derphi0 != 0:
+            alpha1 = min(1.0, 1.01*2*(phi0 - old_phi0)/derphi0)
+        else:
+            alpha1 = 1.0
 
     if alpha1 < 0:
         alpha1 = 1.0
