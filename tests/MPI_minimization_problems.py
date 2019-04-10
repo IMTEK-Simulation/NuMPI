@@ -63,8 +63,13 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         self._sl_odd  = slice(self.subdomain_location%2,None,2)
         self._sl_even = slice((self.subdomain_location+1)%2,None,2)
         self.pnp = pnp
+        self.nfeval = 0
+        self.ngradeval = 0
 
     def f_grad(self,x):
+        self.nfeval +=1
+        self.ngradeval +=1
+
         x_odd = x[self._sl_odd]
         x_even = x[self._sl_even]
 
@@ -77,9 +82,11 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         return sumf2, grad
 
     def f(self, x):
+        self.ngradeval -=1
         return self.f_grad(x)[0]
 
     def grad(self, x):
+        self.nfeval -=1 # compensate for self.nfeval +=1 in f_grad
         return self.f_grad(x)[1]
 
     def startpoint(self):
@@ -152,14 +159,22 @@ class MPI_Quadratic():
         else :
             self._startpoint = np.random.normal(size= self.subdomain_resolution)
 
+        self.nfeval = 0
+        self.ngradeval = 0
+
     def f_grad(self,x):
+        self.nfeval += 1
+        self.ngradeval +=1
         factdotx = self.factors.reshape(x.shape) * x
         return self.pnp.sum(factdotx**2,axis = 0).item(), 2 * factdotx
 
     def f(self, x):
-        return self.pnp.sum(np.dot((x ** 2).item(), self.factors**2), axis=0)
+        self.nfeval += 1
+        factdotx = self.factors.reshape(x.shape) * x
+        return self.pnp.sum(factdotx**2,axis = 0).item()
 
     def grad(self, x):
+        self.ngradeval +=1
         return 2 * self.factors.reshape(x.shape) * x
 
     def startpoint(self):
