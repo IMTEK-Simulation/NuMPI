@@ -1,10 +1,11 @@
 language: python
-matrix:
-  include:
-  - env: WITH_MPI=no
-    python: 3.5
-  - env: WITH_MPI=yes
-    python: 3.5
+python:
+  - 3.5
+  - 3.6
+  - 3.7
+env:
+  - WITH_MPI=no
+  - WITH_MPI=yes
 install:
   - sudo apt-get update
   - if [ "$WITH_MPI" == "yes" ]; then sudo apt-get install openmpi-bin libopenmpi-dev; fi
