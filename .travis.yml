@@ -1,12 +1,7 @@
-language: generic
-matrix:
-  include:
-    - python: 3.4
-      language: python
-      python: "3.4"
-      os: linux
-      dist: xenial
-      env: PYTHON=/usr/bin/python3.4
+language: python
+python: 3.4
+os: linux
+dist: xenial
 install:
   - "python setup.py install"
 script:
