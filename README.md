@@ -7,6 +7,11 @@ NuMPI is a collection of numerical tools for MPI-parallelized Python codes. NuMP
 - Parallel file IO in numpy's [.npy](https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html) format.
 - An MPI-parallel implementation of the L-BFGS optimizer.
 
+Build status
+------------
+
+[![Build Status](https://www.travis-ci.org/IMTEK-Simulation/NuMPI.svg?branch=master)](https://www.travis-ci.org/IMTEK-Simulation/NuMPI)
+
 Testing
 -------
 
