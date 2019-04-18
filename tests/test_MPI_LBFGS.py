@@ -44,7 +44,7 @@ def timer(fun, *args, **kwargs):
 def test_linesearch():
     pass
 
-@MPITest([1, 2, 3, 4])
+
 def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interface ?
     """ Tests the parallel wrapping of objectives
     Test if parallel Version gives the same as the serial Version
@@ -73,7 +73,7 @@ def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interfa
 
 #@pytest.mark.parametrize("PObjective",[mp.Extended_Rosenbrock]) # Objective should support parallelization !
 #@pytest.mark.parametrize("n",[10,20])
-@MPITest([1, 2,3,4,8,10,11])
+
 def test_analytical_min(comm):
     """
     Compares the result with the analyticaly known posistion of the minimum
@@ -100,16 +100,16 @@ def test_analytical_min(comm):
 
     assert np.abs(res.fun-Objective.minVal(n))< 1e-7
 
-@MPITest([1, 2,3,4,8,10,11])
+
 def test_ftol(comm):
     pass
-@MPITest([1, 2,3,4,8,10,11])
+
 def test_gtol(comm):
     pass
-@MPITest([1, 2,3,4,8,10,11])
+
 def test_g2tol(comm):
     pass
-@MPITest([1, 2,3,4,8,10,11])
+
 def test_alltol(comm):
     pass
 
