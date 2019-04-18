@@ -37,10 +37,24 @@ def pnp(comm):
 
 @pytest.mark.parametrize("Objectiveclass",[mpi_mp.MPI_Quadratic])
 def test_minimize_call_column(pnp, Objectiveclass):
+    """
+    Checks the compatibility with a scipy.optimize.minimze call. Note that one
+    should not use this type of call when running in parallel
+
+    Parameters
+    ----------
+    pnp
+    Objectiveclass
+
+    Returns
+    -------
+
+    """
+
     comm = pnp.comm
     n= 10 + 2 * comm.Get_size()
     Objective=Objectiveclass(n, pnp=pnp)
-    result = scipy.optimize.minimize(Objective.f_grad,Objective.startpoint(), jac=True,method=LBFGS,options ={"gtol":1e-8,"ftol":1e-20,"pnp":pnp})
+    result = scipy.optimize.minimize(Objective.f_grad, Objective.startpoint(), jac=True,method=LBFGS,options ={"gtol":1e-8,"ftol":1e-20,"pnp":pnp})
     assert result.success
     assert pnp.max(abs( np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,)) )) \
              / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
