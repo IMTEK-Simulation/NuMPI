@@ -1,12 +1,10 @@
-language: python
+language: generic
 matrix:
   include:
   - env: WITH_MPI=no
-    python: 3.5
     os: linux
     dist: xenial
   - env: WITH_MPI=yes
-    python: 3.5
     os: linux
     dist: xenial
 before_install:
@@ -20,8 +18,3 @@ notifications:
   email:
     - antoine.sanner@imtek.uni-freiburg.de
     - lars.pastewka@imtek.uni-freiburg.de
-addons:
-  apt:
-    packages:
-    - python-numpy
-    - python-scipy
