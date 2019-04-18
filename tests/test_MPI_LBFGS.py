@@ -46,7 +46,7 @@ def test_linesearch():
 
 @MPITest([1, 2, 3, 4])
 def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interface ?
-    """
+    """ Tests the parallel wrapping of objectives
     Test if parallel Version gives the same as the serial Version
     :param comm:
     :return:
@@ -69,29 +69,6 @@ def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interfa
     np.testing.assert_almost_equal(mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),par.f(par.startpoint()),err_msg="Different Function Value at startpoint")
     np.testing.assert_allclose(mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[par.subdomain_slice],
                                    par.grad(par.startpoint()), err_msg="Different Gradient Value at startpoint")
-
-@MPITest([1,2,3,4])
-def test_MPI_steepest_descent_wolfe2(comm):
-
-    n = 24
-
-    par = MPI_Objective_Interface(mp.Extended_Rosenbrock, domain_resolution=n, comm=comm)
-    ref = mp.Extended_Rosenbrock
-
-    start = mp.Extended_Rosenbrock.startpoint(n).reshape(-1)
-    direction = - mp.Extended_Rosenbrock.grad(start).reshape(-1)
-
-    alpha =scipy.optimize.line_search(mp.Extended_Rosenbrock.f,mp.Extended_Rosenbrock.grad,start,direction,c1=1e-4,c2=0.9)[0]
-
-    assert alpha is not None
-
-    x_ref = start + direction * alpha
-    #steepest_descent_wolfe2
-
-    x= steepest_descent_wolfe2(par.startpoint(), par.f_grad, pnp=Reduction(comm), c1=1e-4, c2=0.9)[0]
-
-    np.testing.assert_allclose(x.reshape(-1), x_ref[par.subdomain_slice])
-
 
 
 #@pytest.mark.parametrize("PObjective",[mp.Extended_Rosenbrock]) # Objective should support parallelization !
@@ -119,7 +96,7 @@ def test_analytical_min(comm):
 
     res = LBFGS(PObjective.f_grad, x0, jac=True, maxcor=5, maxiter=100, gtol=1e-12, pnp= Reduction(comm))
 
-    np.testing.assert_allclose(res.x,PObjective.xmin(),atol=1e-16,rtol = 1e-5)
+    np.testing.assert_allclose(res.x,PObjective.xmin(),atol=1e-16,rtol = 1e-7)
 
     assert np.abs(res.fun-Objective.minVal(n))< 1e-7
 
