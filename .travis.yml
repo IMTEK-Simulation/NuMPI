@@ -1,11 +1,21 @@
 language: python
-python: 3.4
-os: linux
-dist: xenial
+matrix:
+  include:
+  - env: WITH_MPI=no
+    python: 3.5
+    os: linux
+    dist: xenial
+  - env: WITH_MPI=yes
+    python: 3.5
+    os: linux
+    dist: xenial
+before_install:
+  - source .travis.before_install.bash
 install:
   - "python setup.py install"
 script:
-  - "python run-tests.py"
+  - "pytest"
+  - "if [ "$WITH_MPI" == "yes" ]; then python run-tests.py; fi"
 notifications:
   email:
     - antoine.sanner@imtek.uni-freiburg.de
