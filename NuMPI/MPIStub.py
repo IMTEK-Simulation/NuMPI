@@ -112,7 +112,7 @@ MODE_EXCL = OpeningModes.MODE_EXCL
 class Communicator(object):
     def Barrier(self):
         pass
-
+    barrier=Barrier
     def Get_rank(self):
         return 0
 
@@ -142,6 +142,25 @@ class Communicator(object):
 
     Allreduce = Reduce
 
+    def Allgather(self, sendbuf, recvbuf_counts):
+        try:
+            senddata, sendtype = sendbuf
+        except:
+            senddata = sendbuf
+            sendtype = sendbuf.dtype
+
+        try:
+            recvdata, counts, recvtype = recvbuf_counts
+        except:
+            recvdata, counts = recvbuf_counts
+            recvtype = recvdata.dtype
+
+        if sendtype != recvtype:
+            raise TypeError('Mismatch in send and receive MPI datatypes in MPI stub implementation.')
+
+        recvdata[...] = senddata
+
+    Allgatherv = Allgather
 
 ### Stub file I/O object
 
