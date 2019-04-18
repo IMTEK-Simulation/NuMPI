@@ -67,7 +67,7 @@ def steepest_descent_wolfe2(x0,f_gradf, pnp = None,maxiter=10,**kwargs):
 
 def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.2e-9, maxiter=15000,
           maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9), pnp=Reduction(MPI.COMM_WORLD),
-          store_iterates=None, printdb=donothing, **options):
+          store_iterates=None, printdb=donothing, callback=None, **options):
     """
 
     convergence if |grad|_{\infty} <= gtol or <= ftol is satisfied
@@ -105,6 +105,9 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
     -------
 
     """
+
+    if callback is None:
+        callback=donothing
 
     #print("jac = {}, type = {}".format(jac, type(jac)))
     if jac is True: # TODO: Temp, exactracts jacobian and function separately (extra computation for each !) Later we should compute them together once
@@ -176,7 +179,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
 
     grad2 = pnp.sum(grad ** 2)
 
-    alpha = 0
+    alpha = 0 #line search step size
 
     # Start loop
     #printdb(k)
@@ -202,6 +205,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         #if ((grad2 < g2tol if g2tol is not None else True) and
         #        (pnp.max(np.abs(grad)) < gtol if gtol is not None else True) and
         #        ((phi - phi_old) / max((1,abs(phi),abs(phi_old))) <= ftol if ftol is not None else True)):
+        callback(x)
+
         if (pnp.max(np.abs(grad)) < gtol ):
             result = scipy.optimize.OptimizeResult({'success': True,
                                                     'x': x.reshape(original_shape),
