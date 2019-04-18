@@ -1,0 +1,17 @@
+language: python
+python: 3.4
+os: linux
+dist: xenial
+install:
+  - "python setup.py install"
+script:
+  - "python run-tests.py"
+notifications:
+  email:
+    - antoine.sanner@imtek.uni-freiburg.de
+    - lars.pastewka@imtek.uni-freiburg.de
+addons:
+  apt:
+    packages:
+    - python-numpy
+    - python-scipy
