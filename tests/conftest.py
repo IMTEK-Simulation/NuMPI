@@ -23,8 +23,6 @@
 #
 
 
-collect_ignore_glob = ["*MPI_*.py"]
-
 import pytest
 
 import NuMPI
