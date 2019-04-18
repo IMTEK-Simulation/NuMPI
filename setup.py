@@ -23,19 +23,7 @@
 # SOFTWARE.
 #
 
-
-
-
-
-"""
-@file   setup.py
-"""
-
-import numpy as np
-#import versioneer
-from setuptools import setup, find_packages, Extension
-import os
-import sys
+from setuptools import setup, find_packages
 
 setup(
     name = "NuMPI",
