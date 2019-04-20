@@ -110,7 +110,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         callback=donothing
 
     #print("jac = {}, type = {}".format(jac, type(jac)))
-    if jac is True: # TODO: Temp, exactracts jacobian and function separately (extra computation for each !) Later we should compute them together once
+    if jac is True:
         def fun_grad(x):
             """
             reshapes the gradient in a convenient form
@@ -170,12 +170,14 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
     gamma = 1
 
     S = np.zeros((n, 0)) # history of the steps of x
+    Slist = []
     Y = np.zeros((n, 0)) # history of gradient differences
+    Ylist = []
     R = np.zeros((0, 0))
-    STgrad = np.array((1, maxcor))
-    YTgrad = np.array((1, maxcor))
-    STgrad_prev = STgrad.copy()  # TODO: preallocate
-    YTgrad_prev = YTgrad.copy()
+    #STgrad = np.array((1, maxcor))
+    #YTgrad = np.array((1, maxcor))
+    #STgrad_prev = STgrad.copy()  # TODO: preallocate
+    #YTgrad_prev = YTgrad.copy()
 
     grad2 = pnp.sum(grad ** 2)
 
@@ -187,14 +189,23 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         # Update Sk,Yk
         #print("k= {}".format(k))
         if k > maxcor:
-            S = np.roll(S, -1)
-            S[:, -1] = (x - x_old).flat
-            Y = np.roll(Y, -1)
-            Y[:, -1] = (grad - grad_old).flat
+            #S = np.roll(S, -1)
+            #S[:, -1] = (x - x_old).flat
+
+            Slist[:-1] = Slist[1:]
+            Slist[-1] = (x - x_old)
+
+            #Y = np.roll(Y, -1)
+            #Y[:, -1] = (grad - grad_old).flat
+
+            Ylist[:-1] = Ylist[1:]
+            Ylist[-1] = (grad - grad_old)
 
         else:
-            S = np.hstack([S, x - x_old])
-            Y = np.hstack([Y, grad - grad_old])
+            #S = np.hstack([S, x - x_old])
+            Slist.append(x-x_old)
+            #Y = np.hstack([Y, grad - grad_old])
+            Ylist.append(grad - grad_old)
 
         # 2.
         grad2prev = grad2
@@ -242,18 +253,19 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             return result
         ###########
         # new iteration
-        STgrad_prev = STgrad.copy() #TODO: preallocate
-        YTgrad_prev = YTgrad.copy()
 
-        STgrad = pnp.dot(S.T, grad)
-        YTgrad = pnp.dot(Y.T, grad)
+
+        STgrad = np.array([pnp.dot(si.T, grad) for si in Slist]).reshape(-1, 1)
+        YTgrad = np.array([pnp.dot(yi.T, grad) for yi in Ylist]).reshape(-1, 1)
+        #STgrad = pnp.dot(S.T, grad)
+        #YTgrad = pnp.dot(Y.T, grad)
 
         if k > maxcor:
             #w = np.vstack([STgrad_prev, gamma * YTgrad_prev]) #TODO: vstack
             S_now_T_grad_prev = np.roll(STgrad_prev,-1)
             S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * (STgrad_prev.T.dot(p1) + gamma * YTgrad_prev.T.dot(p2))
         else : # straightforward Version
-            S_now_T_grad_prev = pnp.dot(S.T, grad_old)
+            S_now_T_grad_prev = np.array([pnp.dot(si.T, grad_old) for si in Slist]).reshape(-1, 1)
 
 
         if k > maxcor:
@@ -263,11 +275,14 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             R[:, -1] = STym1.flat  #O(m x n)
 
         elif k == 1:
-            R = np.triu(pnp.dot(S.T, Y))
+            #Rm = np.triu(pnp.dot(S.T, Y))
+            R = np.triu(np.array([[pnp.dot(si.T, yi).item() for yi in Ylist] for si in Slist]))
+            #print(R)
         else:
+            #Rm = np.vstack([Rm, np.zeros(k - 1)])
+            #Rm = np.hstack([Rm, pnp.dot(S.T, Y[:, -1]).reshape(k, 1)])
             R = np.vstack([R, np.zeros(k - 1)])
-            R = np.hstack([R, pnp.dot(S.T, Y[:, -1]).reshape(k, 1)])
-
+            R = np.hstack([R, np.array([pnp.dot(si.T, Ylist[-1]) for si in Slist]).reshape(k, 1)])
         if k > maxcor:
             D = np.roll(D, (-1, -1), axis=(0, 1))
             # D[-1,-1] = np.dot(Y[:,-1],Y[:,-1])# yk-1Tyk-1 # TOOPTIMIZE
@@ -275,15 +290,15 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         else:
             #D = np.diag(np.einsum("ik,ik -> k", S, Y))
             D = np.diag(R.diagonal())
-        assert D[-1,-1] >0, "k = {}: ".format(k)  # Assumption of Theorem 2.2
+        assert D[-1,-1] > 0, "k = {}: ".format(k)  # Assumption of Theorem 2.2
 
         if k > maxcor:
             YTY = np.roll(YTY, (-1, -1), axis=(0, 1))
             YTY[-1, :-1] = YTY[:-1, -1] = (YTgrad[:-1] - YTgrad_prev[1:]).flat
             YTY[-1, -1] = grad2prev - grad2 + 2 * YTgrad[-1]
         else:
-            YTY = pnp.dot(Y.T, Y)
-
+            #YTYm = pnp.dot(Y.T, Y)
+            YTY = np.array([[pnp.dot(yi1.T, yi2).item() for yi2 in Ylist] for yi1 in Ylist])
         # Step 5.
         gamma = D[-1, -1] / YTY[-1, -1]  # n.b. D[-1,-1] = sk-1T yk-1 = yk-1T sk-1
 
@@ -295,7 +310,10 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
 
         #temphstack=np.hstack([S, gamma * Y])
 
-        Hgrad = gamma * grad + S.dot(p1)+ gamma * Y.dot(p2)
+        #Hgradm = gamma * grad + S.dot(p1)  + gamma * Y.dot(p2)
+        Hgrad = gamma * grad
+        for si, yi, p1i, p2i in zip(Slist, Ylist, p1.flat, p2.flat):
+            Hgrad += si * p1i.item() + gamma * yi * p2i.item()
 
         phi_old = float(phi)
         #printdb("Linesearch: ")
@@ -325,3 +343,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
 
         printdb("k = {}".format(k))
         k = k + 1
+
+        STgrad_prev = STgrad.copy()
+        YTgrad_prev = YTgrad.copy()
