@@ -116,6 +116,8 @@ class Communicator(object):
     def Get_rank(self):
         return 0
 
+    rank=0
+
     def Get_size(self):
         return 1
 
