@@ -27,6 +27,7 @@
 import warnings
 
 try:
+    #raise ImportError()
     from mpi4py import MPI
     _has_mpi4py = True
 except ImportError:
