@@ -24,4 +24,4 @@
 
 
 
-from . import minimization_problems
+from . import minimization_problems, MPI_minimization_problems
