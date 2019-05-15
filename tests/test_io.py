@@ -81,7 +81,7 @@ def globaldata(comm):
     comm.barrier()
 
     yield globaldata
-
+    comm.barrier()
     if rank == 0:
         os.remove("test_FileLoad_2D.npy")
 

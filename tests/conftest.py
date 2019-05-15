@@ -32,6 +32,6 @@ if NuMPI._has_mpi4py:
 
     comm = MPITestFixture([1, 2, 3, 4, 10], scope='session')
 else:
-    @pytest.fixture(scope='module')
+    @pytest.fixture(scope='session')
     def comm():
         return NuMPI.MPI.COMM_WORLD
