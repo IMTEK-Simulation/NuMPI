@@ -90,7 +90,8 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
 
     filetype.Commit()  # verification if type is OK
     file.Set_view(
-        header_len + (subdomain_location[0] * resolution[1] + subdomain_location[1]) * mpitype.Get_size(),
+        header_len + (subdomain_location[0] * resolution[1]
+                      + subdomain_location[1]) * mpitype.Get_size(),
         filetype=filetype)
 
     file.Write_all(data.copy())  # TODO: is the copy needed ?
