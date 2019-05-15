@@ -1,4 +1,4 @@
-**/.ipnyb_checkpoints
+**/.ipynb_checkpoints
 *.log
 tests/.pytest_cache
 build/
