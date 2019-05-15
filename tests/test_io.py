@@ -191,6 +191,40 @@ def test_FileLoad_2D(decompfun, comm, globaldata):
     np.testing.assert_array_equal(loaded_data, distdata.data)
 
 
+@pytest.fixture
+def npyfile():
+    yield "test_same_numpy.npy"
+    try:
+        os.remove("test_same_numpy.npy")
+    except:
+        pass
 
+def test_load_same_numpy_load(npyfile):
+    data = np.random.random(size=(2, 3))
+    np.save(npyfile, data)
+    loaded_data = load_npy(npyfile)
+    np.testing.assert_allclose(loaded_data, data)
+
+@pytest.mark.xfail # see #15
+def test_same_numpy_load_transposed(npyfile):
+    data = np.random.random(size=(2, 3)).T
+    np.save(npyfile, data)
+    loaded_data = load_npy(npyfile)
+    np.testing.assert_allclose(loaded_data, data)
+
+def test_load_same_numpy_save(npyfile):
+    data = np.random.random(size=(2, 3))
+    save_npy(npyfile, data)
+    loaded_data = np.load(npyfile)
+    np.testing.assert_allclose(loaded_data, data)
+    assert np.isfortran(data) == np.isfortran(loaded_data)
+
+@pytest.mark.xfail #see #15
+def test_same_numpy_save_transposed(npyfile):
+    data = np.random.random(size=(2, 3)).T
+    save_npy(npyfile, data)
+    loaded_data = np.load(npyfile)
+    np.testing.assert_allclose(loaded_data, data)
+    assert np.isfortran(data) == np.isfortran(loaded_data)
 
 
