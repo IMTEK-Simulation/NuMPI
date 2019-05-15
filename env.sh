@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-
-#! /bin/sh
-
 PYTHON="$1"
 if [ -z "$PYTHON" ]; then
   PYTHON="python"
