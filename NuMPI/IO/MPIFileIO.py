@@ -39,7 +39,7 @@ from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
 from numpy.lib.utils import safe_eval
 
 
-def save_npy(fn, data, subdomain_location, resolution, comm):
+def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_WORLD):
     """
 
     Parameters
@@ -54,8 +54,12 @@ def save_npy(fn, data, subdomain_location, resolution, comm):
 
     """
     if len(data.shape) != 2: raise ValueError
-
     subdomain_resolution = data.shape
+    if subdomain_location is None:
+        subdomain_location = (0,0)
+    if resolution is None:
+        resolution = subdomain_resolution
+
     from numpy.lib.format import dtype_to_descr, magic
     magic_str = magic(1, 0)
 
@@ -109,11 +113,11 @@ def mpi_read_bytes(file, nbytes):
 
 
 # TODO:
-def load_npy(fn, subdomain_location, subdomain_resolution, domain_resolution, comm):
+def load_npy(fn, subdomain_location=None, subdomain_resolution=None, comm=MPI.COMM_WORLD):
     file = MPIFileViewNPY(fn, comm)
-    if file.resolution != domain_resolution:
-        raise MPIFileIncompatibleResolutionError(
-            "domain_resolution is {} but file resolution is {}".format(domain_resolution, file.resolution))
+    #if file.resolution != domain_resolution:
+    #    raise MPIFileIncompatibleResolutionError(
+    #        "domain_resolution is {} but file resolution is {}".format(domain_resolution, file.resolution))
 
     return file.read(subdomain_location, subdomain_resolution)
 
@@ -153,7 +157,7 @@ def make_mpi_file_view(fn, comm, format=None):  # TODO: DISCUSS: oder als __init
             return reader(fn, comm)
         except MPIFileTypeError:
             pass
-    raise MPIFileTypeError("No MPI filereader was able to read the file {}".format(fn))
+    raise MPIFileTypeError("No MPI filereader was able to open_topography the file {}".format(fn))
 
 
 class MPIFileViewNPY(MPIFileView):
@@ -201,7 +205,13 @@ class MPIFileViewNPY(MPIFileView):
         self.resolution = d['shape']
         self.fortran_order = d['fortran_order']
 
-    def read(self, subdomain_location, subdomain_resolution):
+    def read(self, subdomain_location=None, subdomain_resolution=None):
+
+        if subdomain_location is None:
+            subdomain_location = (0,0)
+        if subdomain_resolution is None:
+            subdomain_resolution = self.resolution
+
         if self.fortran_order:  # TODO: implement fortranorder compatibility
             raise MPIFileTypeError("File in fortranorder")
 

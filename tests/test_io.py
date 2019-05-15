@@ -186,14 +186,11 @@ def test_FileLoad_2D(decompfun, comm, globaldata):
     loaded_data = load_npy("test_FileLoad_2D.npy",
                            subdomain_resolution=distdata.subdomain_resolution,
                            subdomain_location=distdata.subdomain_location,
-                           domain_resolution=distdata.domain_resolution,
                            comm=comm)
 
     np.testing.assert_array_equal(loaded_data, distdata.data)
 
-    with pytest.raises(MPIFileIncompatibleResolutionError):
-        load_npy("test_FileLoad_2D.npy",
-                 subdomain_resolution=distdata.subdomain_resolution,
-                 subdomain_location=distdata.subdomain_location,
-                 domain_resolution=tuple([a + 1 for a in distdata.domain_resolution]),
-                 comm=comm)
+
+
+
+
