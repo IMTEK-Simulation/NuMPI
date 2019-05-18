@@ -1,35 +1,10 @@
-#
-# Copyright 2019 Lars Pastewka
-# 
-# ### MIT license
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
-
-
 """
 Stub implementation of mpi4py. This is necessary to run a serial version of
 NuMPI and dependent projects without an MPI installation.
 
-Disclaimer: This is at present not - and not intended to be - a full
-implementation of the API provided by mpi4py. It is a minimal implementation
-needed to run our codes.
+Important note: This is at present *not* the complete API, but only includes
+the features that we need in our projects. If you miss some functionality,
+implement it and submit it back to us.
 """
 
 from enum import Enum
@@ -39,9 +14,46 @@ import numpy as np
 
 ### Data types
 
+class VectorDatatype(object):
+    def __init__(self, oldtype, count, blocklength, stride):
+        if stride != blocklength:
+            raise NotImplementedError('Only vector datatypes with stride == blocklength are presently supported by '
+                                      'the MPI stub interface.')
+        self._oldtype = oldtype
+        self._count = count
+        self._blocklength = blocklength
+        self._stride = stride
+
+    def Commit(self):
+        pass
+
+    def Free(self):
+        pass
+
+    def Get_size(self):
+        return self._count * self._blocklength * self._oldtype.Get_size()
+
+    def _get_oldtype(self):
+        return self._oldtype
+
+
+class Datatype(object):
+    def __init__(self, name):
+        self._dtype = np.dtype(name)
+
+    def Create_vector(self, count, blocklength, stride):
+        return VectorDatatype(self, count, blocklength, stride)
+
+    def Get_size(self):
+        return self._dtype.itemsize
+
+    def _end_of_block(self, position):
+        return None, None
+
+
 class Typedict(object):
     def __getitem__(self, item):
-        return np.dtype(item)
+        return Datatype(item)
 
 
 _typedict = Typedict()
@@ -80,27 +92,39 @@ MINLOC = Operations.MINLOC
 
 ### Opening modes
 
-class OpeningModes(Enum):
-    MODE_RDONLY = 'r'
-    MODE_WRONLY = 'a'
-    MODE_RDWR = 'a'
-    MODE_CREATE = 'w'
-    MODE_EXCL = 'x'
-    # FIXME: The following modes are not supported
+class OpeningMode(Enum):
+    MODE_RDONLY = 1
+    MODE_WRONLY = 2
+    MODE_RDWR = 3
+    MODE_CREATE = 4
+    # FIXME: The following modes are not (yet) supported
+    # MODE_EXCL = 8
     # MODE_DELETE_ON_CLOSE = 'A'
     # MODE_UNIQUE_OPEN = 'A'
     # MODE_SEQUENTIAL = 'A'
     # MODE_APPEND = 'A'
 
+    _MODE_6 = 6
 
-MODE_RDONLY = OpeningModes.MODE_RDONLY
-MODE_WRONLY = OpeningModes.MODE_WRONLY
-MODE_RDWR = OpeningModes.MODE_RDWR
-MODE_CREATE = OpeningModes.MODE_CREATE
-MODE_EXCL = OpeningModes.MODE_EXCL
+    def __or__(self, other):
+        return OpeningMode(self.value | other.value)
+
+    def std_mode(self):
+        if self.MODE_CREATE.value & self.value:
+            return 'wb'
+        if self.MODE_WRONLY.value & self.value:
+            return 'ab'
+        return 'rb'
 
 
-# FIXME: The following modes are not supported
+MODE_RDONLY = OpeningMode.MODE_RDONLY
+MODE_WRONLY = OpeningMode.MODE_WRONLY
+MODE_RDWR = OpeningMode.MODE_RDWR
+MODE_CREATE = OpeningMode.MODE_CREATE
+
+
+# FIXME: The following modes are not (yet) supported
+# MODE_EXCL = OpeningMode.MODE_EXCL
 # MODE_DELETE_ON_CLOSE = OpeningModes.MODE_DELETE_ON_CLOSE
 # MODE_UNIQUE_OPEN = OpeningModes.MODE_UNIQUE_OPEN
 # MODE_SEQUENTIAL = OpeningModes.MODE_SEQUENTIAL
@@ -109,14 +133,14 @@ MODE_EXCL = OpeningModes.MODE_EXCL
 
 ### Stub communicator object
 
-class Communicator(object):
+class Intracomm(object):
     def Barrier(self):
         pass
-    barrier=Barrier
+
+    barrier = Barrier
+
     def Get_rank(self):
         return 0
-
-    rank=0
 
     def Get_size(self):
         return 1
@@ -164,21 +188,43 @@ class Communicator(object):
 
     Allgatherv = Allgather
 
+
 ### Stub file I/O object
 
 class File(object):
-    def __init__(self, comm, filename, amode):
-        assert isinstance(comm, Communicator)
-        self.file = open(filename, amode.value + 'b')
-
     @classmethod
     def Open(cls, comm, filename, amode=MODE_RDONLY):  # FIXME: This method has an optional info argument
         return File(comm, filename, amode)
 
-    def Read_all(self, buf):
-        assert buf.dtype == np.int8
-        data = self.file.read(len(buf))
-        buf[...] = np.frombuffer(data, count=len(buf), dtype=np.int8)
+    def __init__(self, comm, filename, amode):
+        assert isinstance(comm, Intracomm)
+        self._file = open(filename, amode.std_mode())
+        self._disp = 0
+        self._etype = _typedict['i1']
+        self._filetype = None
+
+    def Close(self):
+        self._file.close()
+
+    def Get_position(self):
+        return self._file.tell() - self._disp
+
+    def Read(self, buf):
+        data = self._file.read(buf.size * buf.itemsize)
+        buf[...] = np.frombuffer(data, count=buf.size, dtype=buf.dtype).reshape(buf.shape)
+
+    Read_all = Read
+
+    def Set_view(self, disp, etype=None, filetype=None):
+        self._file.seek(disp)
+        self._disp = disp
+        self._etype = etype
+        self._filetype = filetype
+
+    def Write(self, buf):
+        self._file.write(buf)
+
+    Write_all = Write
 
 
-COMM_WORLD = Communicator()
+COMM_WORLD = Intracomm()
