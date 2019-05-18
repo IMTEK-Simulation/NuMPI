@@ -197,10 +197,10 @@ def test_FileLoad_2D(decompfun, comm, globaldata):
 @pytest.fixture
 def npyfile():
     yield "test_same_numpy.npy"
-    try:
-        os.remove("test_same_numpy.npy")
-    except:
-        pass
+    #try:
+    #    os.remove("test_same_numpy.npy")
+    #except:
+    #    pass
 
 def test_load_same_numpy_load(npyfile):
     data = np.random.random(size=(2, 3))
