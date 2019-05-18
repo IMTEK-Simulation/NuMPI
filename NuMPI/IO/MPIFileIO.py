@@ -1,19 +1,19 @@
 #
 # Copyright 2019 Lars Pastewka
 #           2018-2019 Antoine Sanner
-# 
+#
 # ### MIT license
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -97,6 +97,7 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
     file.Write_all(data.copy())  # TODO: is the copy needed ?
     filetype.Free()
 
+    file.Close()
 
 class MPIFileTypeError(Exception):
     pass
@@ -119,8 +120,9 @@ def load_npy(fn, subdomain_location=None, subdomain_resolution=None, comm=MPI.CO
     #if file.resolution != domain_resolution:
     #    raise MPIFileIncompatibleResolutionError(
     #        "domain_resolution is {} but file resolution is {}".format(domain_resolution, file.resolution))
-
-    return file.read(subdomain_location, subdomain_resolution)
+    data = file.read(subdomain_location, subdomain_resolution)
+    file.close()
+    return data
 
 
 class MPIFileView(metaclass=abc.ABCMeta):
@@ -241,3 +243,6 @@ class MPIFileViewNPY(MPIFileView):
         filetype.Free()
 
         return data
+
+    def close(self):
+        self.file.Close()
