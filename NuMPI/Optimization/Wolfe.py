@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Antoine Sanner
+# Copyright 2019 Lars Pastewka
 # 
 # ### MIT license
 # 
