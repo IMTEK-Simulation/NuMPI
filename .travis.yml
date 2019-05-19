@@ -21,7 +21,7 @@ install:
   - python -m pip install -r requirements.txt
   - python setup.py install
 script:
-  - if [ "$WITH_MPI" == "yes" ]; then python run-tests.py --verbose; else pytest --verbose; fi
+  - if [ "$WITH_MPI" == "yes" ]; then python run-tests.py --verbose --full-trace -s; else pytest --verbose --full-trace -s; fi
 notifications:
   email:
     - antoine.sanner@imtek.uni-freiburg.de
