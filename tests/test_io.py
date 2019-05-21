@@ -157,12 +157,13 @@ def test_FileSave_2D(decompfun, comm, globaldata):
              distdata.data,
              distdata.subdomain_location,
              distdata.domain_resolution, comm)
-
+    comm.barrier()
     if comm.Get_rank() == 0:
         loaded_data = np.load("test_Filesave_2D.npy")
         np.testing.assert_array_equal(loaded_data, globaldata)
 
         os.remove("test_Filesave_2D.npy")
+    comm.barrier()
 
 @pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
 def test_FileView_2D(decompfun, comm, globaldata):
