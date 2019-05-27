@@ -192,6 +192,7 @@ def test_FileView_2D(decompfun, comm, globaldata):
 
     np.testing.assert_array_equal(loaded_data, distdata.data)
 
+
 @pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
 def test_FileLoad_2D(decompfun, comm, globaldata):
     distdata = decompfun(comm, globaldata)
@@ -209,28 +210,31 @@ def npyfile():
     yield "test_same_numpy.npy"
     try:
         os.remove("test_same_numpy.npy")
-    except:
+    except FileNotFoundError:
         pass
 
+
+@pytest.mark.skip(reason="just some statements on numpy behaviour")
 def test_detect_fortran_order(comm_self):
     # fix some statements on numpy behaviour
 
-    ## Prepare fortran array
+    # Prepare fortran array
     arr = np.array(range(6), dtype=float).reshape(3, 2)
     arr = arr.transpose()
 
     # States numpy behaviour
     assert arr.shape == (2, 3)
-    assert arr.flags["C_CONTIGUOUS"]==False
-    assert arr.flags["F_CONTIGUOUS"]==True
+    assert arr.flags["C_CONTIGUOUS"] is False
+    assert arr.flags["F_CONTIGUOUS"] is True
 
     np.save("test.npy", arr)
 
-    #asserts the loaded array is exactly the same
+    # asserts the loaded array is exactly the same
     loaded = np.load("test.npy")
     assert loaded.shape == (2, 3)
-    assert loaded.flags["C_CONTIGUOUS"] == False
-    assert loaded.flags["F_CONTIGUOUS"] == True
+    assert loaded.flags["C_CONTIGUOUS"] is False
+    assert loaded.flags["F_CONTIGUOUS"] is True
+
 
 def test_load_same_numpy_load(comm_self, npyfile):
     data = np.random.random(size=(2, 3))
@@ -238,12 +242,13 @@ def test_load_same_numpy_load(comm_self, npyfile):
     loaded_data = load_npy(npyfile, comm=comm_self)
     np.testing.assert_allclose(loaded_data, data)
 
-#@pytest.mark.xfail # see #15
+
 def test_same_numpy_load_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
     np.save(npyfile, data)
     loaded_data = load_npy(npyfile, comm=comm_self)
     np.testing.assert_allclose(loaded_data, data)
+
 
 def test_load_same_numpy_save(comm_self,npyfile):
     data = np.random.random(size=(2, 3))
@@ -252,7 +257,7 @@ def test_load_same_numpy_save(comm_self,npyfile):
     np.testing.assert_allclose(loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)
 
-@pytest.mark.xfail #see #15
+
 def test_same_numpy_save_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
     save_npy(npyfile, data, comm=comm_self)

@@ -59,12 +59,12 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
         subdomain_location = (0,0)
     if resolution is None:
         resolution = subdomain_resolution
+    fortran_order = np.isfortran(data)
 
     from numpy.lib.format import dtype_to_descr, magic
     magic_str = magic(1, 0)
-
     arr_dict_str = str({'descr': dtype_to_descr(data.dtype),
-                        'fortran_order': False,
+                        'fortran_order': fortran_order,
                         'shape': resolution})
 
     while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
@@ -78,11 +78,22 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
         file.Write(np.int16(len(arr_dict_str)))
         file.Write(arr_dict_str.encode('latin-1'))
 
+    if fortran_order:
+        # the returned array will be in fortran_order.
+        # the data is loaded in C_contiguous array but in a transposed manner
+        # data.transpose() is called which swaps the shapes back again and
+        # toggles C-order to F-order
+        ix = 1
+        iy = 0
+    else:
+        ix = 0
+        iy = 1
+
     mpitype = MPI._typedict[data.dtype.char]
-    filetype = mpitype.Create_vector(subdomain_resolution[0],
+    filetype = mpitype.Create_vector(subdomain_resolution[ix],
                                      # number of blocks  : length of data in the non-contiguous direction
-                                     subdomain_resolution[1],  # length of block : length of data in contiguous direction
-                                     resolution[1]
+                                     subdomain_resolution[iy],  # length of block : length of data in contiguous direction
+                                     resolution[iy]
                                      # stepsize: the data is contiguous in y direction,
                                      # two matrix elements with same x position are separated by ny in memory
                                      )  # create a type
@@ -90,10 +101,11 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
 
     filetype.Commit()  # verification if type is OK
     file.Set_view(
-        header_len + (subdomain_location[0] * resolution[1]
-                      + subdomain_location[1]) * mpitype.Get_size(),
+        header_len + (subdomain_location[ix] * resolution[iy]
+                      + subdomain_location[iy]) * mpitype.Get_size(),
         filetype=filetype)
-
+    if fortran_order:
+        data = data.transpose()
     file.Write_all(data.copy())  # TODO: is the copy needed ?
     filetype.Free()
 
