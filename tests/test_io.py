@@ -68,17 +68,22 @@ def test_FileSave_1D(comm):
     if rank == 0:
         os.remove("test_Filesave_1D.npy")
 
-
-@pytest.fixture(scope="module")
-def globaldata(comm):
+@pytest.mark.parametrize('order', )
+@pytest.fixture(scope="module", params=("C", "F"))
+def globaldata(request, comm):
+    order = request.param
 
     rank = comm.Get_rank()
     nprocs = comm.Get_size()
 
     domain_resolution = (128,128)
     np.random.seed(2)
-    globaldata = np.random.random(domain_resolution)
-
+    if order=="C":
+        globaldata = np.random.random(domain_resolution)
+        assert globaldata.flags["C_CONTIGUOUS"]
+    elif order=="F":
+        globaldata = np.random.random(domain_resolution[::-1]).transpose()
+        assert globaldata.flags["F_CONTIGUOUS"]
     if rank == 0:
         np.save("test_FileLoad_2D.npy", globaldata)
 
