@@ -162,7 +162,6 @@ def make_mpi_file_view(fn, comm, format=None):  # TODO: DISCUSS: oder als __init
             pass
     raise MPIFileTypeError("No MPI filereader was able to open_topography the file {}".format(fn))
 
-
 class MPIFileViewNPY(MPIFileView):
     """
 
@@ -205,8 +204,10 @@ class MPIFileViewNPY(MPIFileView):
         d = safe_eval(header)  # TODO: Copy from _read_array_header  with all the assertions
 
         self.dtype = np.dtype(d['descr'])
-        self.resolution = d['shape']
+
         self.fortran_order = d['fortran_order']
+
+        self.resolution = d['shape']
 
     def read(self, subdomain_location=None, subdomain_resolution=None):
 
@@ -215,18 +216,27 @@ class MPIFileViewNPY(MPIFileView):
         if subdomain_resolution is None:
             subdomain_resolution = self.resolution
 
-        if self.fortran_order:  # TODO: implement fortranorder compatibility
-            raise MPIFileTypeError("File in fortranorder")
-
         # Now how to start reading ?
 
         mpitype = MPI._typedict[self.dtype.char]
 
+
+        if self.fortran_order:
+            # the returned array will be in fortran_order.
+            # the data is loaded in C_contiguous array but in a transposed manner
+            # data.transpose() is called which swaps the shapes back again and
+            # toggles C-order to F-order
+            ix = 1
+            iy = 0
+        else:
+            ix = 0
+            iy = 1
+
         # create a type
         filetype = mpitype.Create_vector(
-            subdomain_resolution[0],  # number of blocks  : length of data in the non-contiguous direction
-            subdomain_resolution[1],  # length of block : length of data in contiguous direction
-            self.resolution[1]
+            subdomain_resolution[ix],  # number of blocks  : length of data in the non-contiguous direction
+            subdomain_resolution[iy],  # length of block : length of data in contiguous direction
+            self.resolution[iy]
             # stepsize: the data is contiguous in y direction,
             # two matrix elements with same x position are separated by ny in memory
         )
@@ -234,13 +244,17 @@ class MPIFileViewNPY(MPIFileView):
         filetype.Commit()  # verification if type is OK
         self.file.Set_view(
             self.file.Get_position() + (
-                    subdomain_location[0] * self.resolution[1] + subdomain_location[1]) * mpitype.Get_size(),
+                    subdomain_location[ix] * self.resolution[iy] + subdomain_location[iy]) * mpitype.Get_size(),
             filetype=filetype)
 
-        data = np.empty(subdomain_resolution, dtype=self.dtype)
+        data = np.empty((subdomain_resolution[ix], subdomain_resolution[iy]),
+                        dtype=self.dtype)
 
         self.file.Read_all(data)
         filetype.Free()
+
+        if self.fortran_order:
+            data = data.transpose()
 
         return data
 

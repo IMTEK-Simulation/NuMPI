@@ -30,7 +30,11 @@ import numpy as np
 import os
 
 from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
+from NuMPI import MPI
 import pytest
+
+
+
 
 @pytest.mark.xfail(reason="not implemented", run=False)
 def test_FileSave_1D(comm):
@@ -45,15 +49,15 @@ def test_FileSave_1D(comm):
     step = domain_resolution // nprocs
 
     if rank == nprocs - 1:
-        subdomain_slice = slice(rank * step, None)
+        subdomain_slices = slice(rank * step, None)
         subdomain_location =rank * step
         subdomain_resolution = domain_resolution - rank * step
     else:
-        subdomain_slice = slice(rank * step, (rank + 1) * step)
+        subdomain_slices = slice(rank * step, (rank + 1) * step)
         subdomain_location = rank * step
         subdomain_resolution = step
 
-    localdata = globaldata[subdomain_slice]
+    localdata = globaldata[subdomain_slices]
 
     save_npy("test_Filesave_1D.npy",localdata,subdomain_location,domain_resolution,comm)
 
@@ -96,7 +100,7 @@ class DistributedData:
         self.subdomain_location = subdomain_location
 
     @property
-    def subdomain_slice(self):
+    def subdomain_slices(self):
         return tuple([slice(s, s + n) for s, n in
                       zip(self.subdomain_location, self.subdomain_resolution)])
 
@@ -109,15 +113,15 @@ def make_2d_slab_y(comm, globaldata):
 
     step = domain_resolution[1] // nprocs
     if rank == nprocs - 1:
-        subdomain_slice = (slice(None, None), slice(rank * step, None))
+        subdomain_slices = (slice(None, None), slice(rank * step, None))
         subdomain_location = [0, rank * step]
         subdomain_resolution = [domain_resolution[0], domain_resolution[1] - rank * step]
     else:
-        subdomain_slice = (slice(None, None), slice(rank * step, (rank + 1) * step))
+        subdomain_slices = (slice(None, None), slice(rank * step, (rank + 1) * step))
         subdomain_location = [0, rank * step]
         subdomain_resolution = [domain_resolution[1], step]
 
-    return DistributedData(globaldata[subdomain_slice], domain_resolution, subdomain_location)
+    return DistributedData(globaldata[subdomain_slices], domain_resolution, subdomain_location)
 
 def make_2d_slab_x(comm, globaldata):
     """
@@ -139,15 +143,15 @@ def make_2d_slab_x(comm, globaldata):
     step = domain_resolution[0] // nprocs
 
     if rank == nprocs - 1:
-        subdomain_slice = (slice(rank * step, None), slice(None, None))
+        subdomain_slices = (slice(rank * step, None), slice(None, None))
         subdomain_location = [rank * step, 0]
         subdomain_resolution = [domain_resolution[0] - rank * step, domain_resolution[1]]
     else:
-        subdomain_slice = (slice(rank * step, (rank + 1) * step), slice(None, None))
+        subdomain_slices = (slice(rank * step, (rank + 1) * step), slice(None, None))
         subdomain_location = [rank * step, 0]
         subdomain_resolution = [step, domain_resolution[1]]
 
-    return DistributedData(globaldata[subdomain_slice], domain_resolution, subdomain_location)
+    return DistributedData(globaldata[subdomain_slices], domain_resolution, subdomain_location)
 
 @pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
 def test_FileSave_2D(decompfun, comm, globaldata):
@@ -203,30 +207,50 @@ def npyfile():
     except:
         pass
 
-def test_load_same_numpy_load(npyfile):
+def test_detect_fortran_order(comm_self):
+    # fix some statements on numpy behaviour
+
+    ## Prepare fortran array
+    arr = np.array(range(6), dtype=float).reshape(3, 2)
+    arr = arr.transpose()
+
+    # States numpy behaviour
+    assert arr.shape == (2, 3)
+    assert arr.flags["C_CONTIGUOUS"]==False
+    assert arr.flags["F_CONTIGUOUS"]==True
+
+    np.save("test.npy", arr)
+
+    #asserts the loaded array is exactly the same
+    loaded = np.load("test.npy")
+    assert loaded.shape == (2, 3)
+    assert loaded.flags["C_CONTIGUOUS"] == False
+    assert loaded.flags["F_CONTIGUOUS"] == True
+
+def test_load_same_numpy_load(comm_self, npyfile):
     data = np.random.random(size=(2, 3))
     np.save(npyfile, data)
-    loaded_data = load_npy(npyfile)
+    loaded_data = load_npy(npyfile, comm=comm_self)
     np.testing.assert_allclose(loaded_data, data)
 
-@pytest.mark.xfail # see #15
-def test_same_numpy_load_transposed(npyfile):
+#@pytest.mark.xfail # see #15
+def test_same_numpy_load_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
     np.save(npyfile, data)
-    loaded_data = load_npy(npyfile)
+    loaded_data = load_npy(npyfile, comm=comm_self)
     np.testing.assert_allclose(loaded_data, data)
 
-def test_load_same_numpy_save(npyfile):
+def test_load_same_numpy_save(comm_self,npyfile):
     data = np.random.random(size=(2, 3))
-    save_npy(npyfile, data)
+    save_npy(npyfile, data, comm=comm_self)
     loaded_data = np.load(npyfile)
     np.testing.assert_allclose(loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)
 
 @pytest.mark.xfail #see #15
-def test_same_numpy_save_transposed(npyfile):
+def test_same_numpy_save_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
-    save_npy(npyfile, data)
+    save_npy(npyfile, data, comm=comm_self)
     loaded_data = np.load(npyfile)
     np.testing.assert_allclose(loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)
