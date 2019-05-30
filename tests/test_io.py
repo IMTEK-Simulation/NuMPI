@@ -39,27 +39,27 @@ import pytest
 @pytest.mark.xfail(reason="not implemented", run=False)
 def test_FileSave_1D(comm):
 
-    domain_resolution    = 128
+    nb_domain_grid_pts    = 128
     np.random.seed(2)
-    globaldata = np.random.random(domain_resolution)
+    globaldata = np.random.random(nb_domain_grid_pts)
 
     nprocs = comm.Get_size()
     rank = comm.Get_rank()
 
-    step = domain_resolution // nprocs
+    step = nb_domain_grid_pts // nprocs
 
     if rank == nprocs - 1:
         subdomain_slices = slice(rank * step, None)
-        subdomain_location =rank * step
-        subdomain_resolution = domain_resolution - rank * step
+        subdomain_locations =rank * step
+        nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
     else:
         subdomain_slices = slice(rank * step, (rank + 1) * step)
-        subdomain_location = rank * step
-        subdomain_resolution = step
+        subdomain_locations = rank * step
+        nb_subdomain_grid_pts = step
 
     localdata = globaldata[subdomain_slices]
 
-    save_npy("test_Filesave_1D.npy",localdata,subdomain_location,domain_resolution,comm)
+    save_npy("test_Filesave_1D.npy",localdata,subdomain_locations,nb_domain_grid_pts,comm)
 
     loaded_data = np.load("test_Filesave_1D.npy")
     np.testing.assert_array_equal(loaded_data,globaldata)
@@ -76,13 +76,13 @@ def globaldata(request, comm):
     rank = comm.Get_rank()
     nprocs = comm.Get_size()
 
-    domain_resolution = (128,128)
+    nb_domain_grid_pts = (128,128)
     np.random.seed(2)
     if order=="C":
-        globaldata = np.random.random(domain_resolution)
+        globaldata = np.random.random(nb_domain_grid_pts)
         assert globaldata.flags["C_CONTIGUOUS"]
     elif order=="F":
-        globaldata = np.random.random(domain_resolution[::-1]).transpose()
+        globaldata = np.random.random(nb_domain_grid_pts[::-1]).transpose()
         assert globaldata.flags["F_CONTIGUOUS"]
     if rank == 0:
         np.save("test_FileLoad_2D.npy", globaldata)
@@ -98,35 +98,35 @@ def globaldata(request, comm):
 ### Helper function:
 
 class DistributedData:
-    def __init__(self, data, domain_resolution, subdomain_location):
+    def __init__(self, data, nb_domain_grid_pts, subdomain_locations):
         self.data = data
-        self.domain_resolution = domain_resolution
-        self.subdomain_resolution = data.shape
-        self.subdomain_location = subdomain_location
+        self.nb_domain_grid_pts = nb_domain_grid_pts
+        self.nb_subdomain_grid_pts = data.shape
+        self.subdomain_locations = subdomain_locations
 
     @property
     def subdomain_slices(self):
         return tuple([slice(s, s + n) for s, n in
-                      zip(self.subdomain_location, self.subdomain_resolution)])
+                      zip(self.subdomain_locations, self.nb_subdomain_grid_pts)])
 
 def make_2d_slab_y(comm, globaldata):
 
     nprocs = comm.Get_size()
     rank = comm.Get_rank()
 
-    domain_resolution = globaldata.shape
+    nb_domain_grid_pts = globaldata.shape
 
-    step = domain_resolution[1] // nprocs
+    step = nb_domain_grid_pts[1] // nprocs
     if rank == nprocs - 1:
         subdomain_slices = (slice(None, None), slice(rank * step, None))
-        subdomain_location = [0, rank * step]
-        subdomain_resolution = [domain_resolution[0], domain_resolution[1] - rank * step]
+        subdomain_locations = [0, rank * step]
+        nb_subdomain_grid_pts = [nb_domain_grid_pts[0], nb_domain_grid_pts[1] - rank * step]
     else:
         subdomain_slices = (slice(None, None), slice(rank * step, (rank + 1) * step))
-        subdomain_location = [0, rank * step]
-        subdomain_resolution = [domain_resolution[1], step]
+        subdomain_locations = [0, rank * step]
+        nb_subdomain_grid_pts = [nb_domain_grid_pts[1], step]
 
-    return DistributedData(globaldata[subdomain_slices], domain_resolution, subdomain_location)
+    return DistributedData(globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations)
 
 def make_2d_slab_x(comm, globaldata):
     """
@@ -143,20 +143,20 @@ def make_2d_slab_x(comm, globaldata):
     nprocs = comm.Get_size()
     rank = comm.Get_rank()
 
-    domain_resolution = globaldata.shape
+    nb_domain_grid_pts = globaldata.shape
 
-    step = domain_resolution[0] // nprocs
+    step = nb_domain_grid_pts[0] // nprocs
 
     if rank == nprocs - 1:
         subdomain_slices = (slice(rank * step, None), slice(None, None))
-        subdomain_location = [rank * step, 0]
-        subdomain_resolution = [domain_resolution[0] - rank * step, domain_resolution[1]]
+        subdomain_locations = [rank * step, 0]
+        nb_subdomain_grid_pts = [nb_domain_grid_pts[0] - rank * step, nb_domain_grid_pts[1]]
     else:
         subdomain_slices = (slice(rank * step, (rank + 1) * step), slice(None, None))
-        subdomain_location = [rank * step, 0]
-        subdomain_resolution = [step, domain_resolution[1]]
+        subdomain_locations = [rank * step, 0]
+        nb_subdomain_grid_pts = [step, nb_domain_grid_pts[1]]
 
-    return DistributedData(globaldata[subdomain_slices], domain_resolution, subdomain_location)
+    return DistributedData(globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations)
 
 @pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
 def test_FileSave_2D(decompfun, comm, globaldata):
@@ -164,8 +164,8 @@ def test_FileSave_2D(decompfun, comm, globaldata):
 
     save_npy("test_Filesave_2D.npy",
              distdata.data,
-             distdata.subdomain_location,
-             distdata.domain_resolution, comm)
+             distdata.subdomain_locations,
+             distdata.nb_domain_grid_pts, comm)
     comm.barrier()
     if comm.Get_rank() == 0:
         loaded_data = np.load("test_Filesave_2D.npy")
@@ -179,15 +179,15 @@ def test_FileView_2D(decompfun, comm, globaldata):
     distdata = decompfun(comm, globaldata)
 
     #arr = np.load("test_FileLoad_2D.npy")
-    #assert arr.shape == self.domain_resolution
+    #assert arr.shape == self.nb_domain_grid_pts
 
     file = MPIFileViewNPY("test_FileLoad_2D.npy", comm=comm)
 
-    assert file.resolution == distdata.domain_resolution
+    assert file.nb_grid_pts == distdata.nb_domain_grid_pts
     assert file.dtype == globaldata.dtype
 
-    loaded_data = file.read(subdomain_resolution=distdata.subdomain_resolution,
-                            subdomain_location= distdata.subdomain_location)
+    loaded_data = file.read(nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
+                            subdomain_locations= distdata.subdomain_locations)
 
 
     np.testing.assert_array_equal(loaded_data, distdata.data)
@@ -198,8 +198,8 @@ def test_FileLoad_2D(decompfun, comm, globaldata):
     distdata = decompfun(comm, globaldata)
 
     loaded_data = load_npy("test_FileLoad_2D.npy",
-                           subdomain_resolution=distdata.subdomain_resolution,
-                           subdomain_location=distdata.subdomain_location,
+                           nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
+                           subdomain_locations=distdata.subdomain_locations,
                            comm=comm)
 
     np.testing.assert_array_equal(loaded_data, distdata.data)

@@ -39,14 +39,14 @@ from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
 from numpy.lib.utils import safe_eval
 
 
-def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_WORLD):
+def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM_WORLD):
     """
 
     Parameters
     ----------
     data : numpy array : data owned by the processor
     location : index of the first element of data within the global data
-    resolution : resolution of the global data
+    nb_grid_pts : nb_grid_pts of the global data
     comm : MPI communicator
 
     Returns
@@ -54,18 +54,18 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
 
     """
     if len(data.shape) != 2: raise ValueError
-    subdomain_resolution = data.shape
-    if subdomain_location is None:
-        subdomain_location = (0,0)
-    if resolution is None:
-        resolution = subdomain_resolution
+    nb_subdomain_grid_pts = data.shape
+    if subdomain_locations is None:
+        subdomain_locations = (0,0)
+    if nb_grid_pts is None:
+        nb_grid_pts = nb_subdomain_grid_pts
     fortran_order = np.isfortran(data)
 
     from numpy.lib.format import dtype_to_descr, magic
     magic_str = magic(1, 0)
     arr_dict_str = str({'descr': dtype_to_descr(data.dtype),
                         'fortran_order': fortran_order,
-                        'shape': resolution})
+                        'shape': nb_grid_pts})
 
     while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
         arr_dict_str += ' '
@@ -90,10 +90,10 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
         iy = 1
 
     mpitype = MPI._typedict[data.dtype.char]
-    filetype = mpitype.Create_vector(subdomain_resolution[ix],
+    filetype = mpitype.Create_vector(nb_subdomain_grid_pts[ix],
                                      # number of blocks  : length of data in the non-contiguous direction
-                                     subdomain_resolution[iy],  # length of block : length of data in contiguous direction
-                                     resolution[iy]
+                                     nb_subdomain_grid_pts[iy],  # length of block : length of data in contiguous direction
+                                     nb_grid_pts[iy]
                                      # stepsize: the data is contiguous in y direction,
                                      # two matrix elements with same x position are separated by ny in memory
                                      )  # create a type
@@ -101,8 +101,8 @@ def save_npy(fn, data, subdomain_location=None, resolution=None, comm=MPI.COMM_W
 
     filetype.Commit()  # verification if type is OK
     file.Set_view(
-        header_len + (subdomain_location[ix] * resolution[iy]
-                      + subdomain_location[iy]) * mpitype.Get_size(),
+        header_len + (subdomain_locations[ix] * nb_grid_pts[iy]
+                      + subdomain_locations[iy]) * mpitype.Get_size(),
         filetype=filetype)
     if fortran_order:
         data = data.transpose()
@@ -127,12 +127,12 @@ def mpi_read_bytes(file, nbytes):
 
 
 # TODO:
-def load_npy(fn, subdomain_location=None, subdomain_resolution=None, comm=MPI.COMM_WORLD):
+def load_npy(fn, subdomain_locations=None, nb_subdomain_grid_pts=None, comm=MPI.COMM_WORLD):
     file = MPIFileViewNPY(fn, comm)
-    #if file.resolution != domain_resolution:
+    #if file.nb_grid_pts != nb_domain_grid_pts:
     #    raise MPIFileIncompatibleResolutionError(
-    #        "domain_resolution is {} but file resolution is {}".format(domain_resolution, file.resolution))
-    data = file.read(subdomain_location, subdomain_resolution)
+    #        "nb_domain_grid_pts is {} but file nb_grid_pts is {}".format(nb_domain_grid_pts, file.nb_grid_pts))
+    data = file.read(subdomain_locations, nb_subdomain_grid_pts)
     file.close()
     return data
 
@@ -219,14 +219,14 @@ class MPIFileViewNPY(MPIFileView):
 
         self.fortran_order = d['fortran_order']
 
-        self.resolution = d['shape']
+        self.nb_grid_pts = d['shape']
 
-    def read(self, subdomain_location=None, subdomain_resolution=None):
+    def read(self, subdomain_locations=None, nb_subdomain_grid_pts=None):
 
-        if subdomain_location is None:
-            subdomain_location = (0,0)
-        if subdomain_resolution is None:
-            subdomain_resolution = self.resolution
+        if subdomain_locations is None:
+            subdomain_locations = (0,0)
+        if nb_subdomain_grid_pts is None:
+            nb_subdomain_grid_pts = self.nb_grid_pts
 
         # Now how to start reading ?
 
@@ -246,9 +246,9 @@ class MPIFileViewNPY(MPIFileView):
 
         # create a type
         filetype = mpitype.Create_vector(
-            subdomain_resolution[ix],  # number of blocks  : length of data in the non-contiguous direction
-            subdomain_resolution[iy],  # length of block : length of data in contiguous direction
-            self.resolution[iy]
+            nb_subdomain_grid_pts[ix],  # number of blocks  : length of data in the non-contiguous direction
+            nb_subdomain_grid_pts[iy],  # length of block : length of data in contiguous direction
+            self.nb_grid_pts[iy]
             # stepsize: the data is contiguous in y direction,
             # two matrix elements with same x position are separated by ny in memory
         )
@@ -256,10 +256,10 @@ class MPIFileViewNPY(MPIFileView):
         filetype.Commit()  # verification if type is OK
         self.file.Set_view(
             self.file.Get_position() + (
-                    subdomain_location[ix] * self.resolution[iy] + subdomain_location[iy]) * mpitype.Get_size(),
+                    subdomain_locations[ix] * self.nb_grid_pts[iy] + subdomain_locations[iy]) * mpitype.Get_size(),
             filetype=filetype)
 
-        data = np.empty((subdomain_resolution[ix], subdomain_resolution[iy]),
+        data = np.empty((nb_subdomain_grid_pts[ix], nb_subdomain_grid_pts[iy]),
                         dtype=self.dtype)
 
         self.file.Read_all(data)

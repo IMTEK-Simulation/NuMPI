@@ -42,26 +42,26 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
     """
     bounds = (-4, 4)
 
-    def __init__(self, domain_resolution, pnp = Reduction()):
+    def __init__(self, nb_domain_grid_pts, pnp = Reduction()):
         raise NotImplementedError("Need to implement communication")
         comm = pnp.comm
         nprocs = comm.Get_size()
         rank = comm.Get_rank()
 
-        step = domain_resolution // nprocs
+        step = nb_domain_grid_pts // nprocs
 
         if rank == nprocs - 1:
-            self.subdomain_slice = slice(rank * step, None)
-            self.subdomain_location = rank * step
-            self.subdomain_resolution = domain_resolution - rank * step
+            self.subdomain_slices = slice(rank * step, None)
+            self.subdomain_locations = rank * step
+            self.nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
         else:
-            self.subdomain_slice  = slice(rank * step, (rank + 1) * step)
-            self.subdomain_location = rank * step
-            self.subdomain_resolution = step
+            self.subdomain_slices  = slice(rank * step, (rank + 1) * step)
+            self.subdomain_locations = rank * step
+            self.nb_subdomain_grid_pts = step
 
         #helps to select the data that has odd or even index in the global array
-        self._sl_odd  = slice(self.subdomain_location%2,None,2)
-        self._sl_even = slice((self.subdomain_location+1)%2,None,2)
+        self._sl_odd  = slice(self.subdomain_locations%2,None,2)
+        self._sl_even = slice((self.subdomain_locations+1)%2,None,2)
         self.pnp = pnp
         self.nfeval = 0
         self.ngradeval = 0
@@ -95,7 +95,7 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         :param n:
         :return: array of shape (1,n)
         """
-        x0 = np.zeros(self.subdomain_resolution, dtype=float)
+        x0 = np.zeros(self.nb_subdomain_grid_pts, dtype=float)
         x0.shape = (-1, 1)
 
         x0[self._sl_even]= -1.2
@@ -119,7 +119,7 @@ class MPI_Extended_Rosenbrock(): #TODO: This doesn't work
         :return: array of size n
         """
 
-        return np.ones((self.subdomain_resolution, 1), dtype=float)
+        return np.ones((self.nb_subdomain_grid_pts, 1), dtype=float)
 
 class MPI_Quadratic():
     """
@@ -130,34 +130,34 @@ class MPI_Quadratic():
     """
     bounds = (-4, 4)
 
-    def __init__(self, domain_resolution, pnp = Reduction(), factors = None, startpoint = None):
+    def __init__(self, nb_domain_grid_pts, pnp = Reduction(), factors = None, startpoint = None):
         comm = pnp.comm
         nprocs = comm.Get_size()
         rank = comm.Get_rank()
 
-        step = domain_resolution // nprocs
+        step = nb_domain_grid_pts // nprocs
 
         if rank == nprocs - 1:
-            self.subdomain_slice = slice(rank * step, None)
-            self.subdomain_location = rank * step
-            self.subdomain_resolution = domain_resolution - rank * step
+            self.subdomain_slices = slice(rank * step, None)
+            self.subdomain_locations = rank * step
+            self.nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
         else:
-            self.subdomain_slice  = slice(rank * step, (rank + 1) * step)
-            self.subdomain_location = rank * step
-            self.subdomain_resolution = step
+            self.subdomain_slices  = slice(rank * step, (rank + 1) * step)
+            self.subdomain_locations = rank * step
+            self.nb_subdomain_grid_pts = step
 
         #helps to select the data that has odd or even index in the global array
         self.pnp = pnp
 
         if factors is not None:
-            self.factors = factors[self.subdomain_slice]
+            self.factors = factors[self.subdomain_slices]
         else:
-            self.factors = np.random.random(self.subdomain_resolution)+0.1
+            self.factors = np.random.random(self.nb_subdomain_grid_pts)+0.1
 
         if startpoint is not None:
-            self._startpoint = startpoint[self.subdomain_slice]
+            self._startpoint = startpoint[self.subdomain_slices]
         else :
-            self._startpoint = np.random.normal(size= self.subdomain_resolution)
+            self._startpoint = np.random.normal(size= self.nb_subdomain_grid_pts)
 
         self.nfeval = 0
         self.ngradeval = 0
@@ -195,7 +195,7 @@ class MPI_Quadratic():
         :param n: number of DOF
         :return: array of size n
         """
-        return np.zeros(self.subdomain_resolution, dtype=float)
+        return np.zeros(self.nb_subdomain_grid_pts, dtype=float)
 
 
 class MPI_Objective_Interface():
@@ -205,7 +205,7 @@ class MPI_Objective_Interface():
     That means the gradient is not the full vector but only the components corresponding to the subdomain
 
     """
-    def __init__(self, Objective,domain_resolution, comm=MPI.COMM_WORLD):
+    def __init__(self, Objective,nb_domain_grid_pts, comm=MPI.COMM_WORLD):
 
         # define the partition between the processors
 
@@ -213,29 +213,29 @@ class MPI_Objective_Interface():
         nprocs = comm.Get_size()
         rank = comm.Get_rank()
 
-        step = domain_resolution // nprocs
+        step = nb_domain_grid_pts // nprocs
 
         if rank == nprocs - 1:
-            self.subdomain_slice = slice(rank * step, None)
-            self.subdomain_location = rank * step
-            self.subdomain_resolution = domain_resolution - rank * step
+            self.subdomain_slices = slice(rank * step, None)
+            self.subdomain_locations = rank * step
+            self.nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
         else:
-            self.subdomain_slice = slice(rank * step, (rank + 1) * step)
-            self.subdomain_location = rank * step
-            self.subdomain_resolution = step
+            self.subdomain_slices = slice(rank * step, (rank + 1) * step)
+            self.subdomain_locations = rank * step
+            self.nb_subdomain_grid_pts = step
 
         self.counts = [step] * nprocs
-        self.counts[-1]=domain_resolution - (nprocs-1) * step
+        self.counts[-1]=nb_domain_grid_pts - (nprocs-1) * step
 
         self.Objective = Objective
-        self.domain_resolution = domain_resolution
+        self.nb_domain_grid_pts = nb_domain_grid_pts
 
     def f_grad(self,x):
         x_ = x.reshape(-1)
-        fullx = np.zeros(self.domain_resolution, dtype = x.dtype )
+        fullx = np.zeros(self.nb_domain_grid_pts, dtype = x.dtype )
         self.comm.Allgatherv(x_,[fullx,self.counts])
         f, fullgrad = self.Objective.f_grad(fullx)
-        return f, fullgrad[self.subdomain_slice].reshape(x.shape)
+        return f, fullgrad[self.subdomain_slices].reshape(x.shape)
 
     def f(self, x):
         return self.f_grad(x)[0]
@@ -244,8 +244,8 @@ class MPI_Objective_Interface():
         return self.f_grad(x)[1]
 
     def startpoint(self):
-        return self.Objective.startpoint(self.domain_resolution)[self.subdomain_slice]
+        return self.Objective.startpoint(self.nb_domain_grid_pts)[self.subdomain_slices]
 
     def xmin(self):
-        return self.Objective.xmin(self.domain_resolution)[self.subdomain_slice]
+        return self.Objective.xmin(self.nb_domain_grid_pts)[self.subdomain_slices]
 

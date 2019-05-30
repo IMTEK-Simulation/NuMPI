@@ -59,15 +59,15 @@ def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interfa
                 print("Proc {}: {}".format(i, msg))
     n = 10
 
-    par = MPI_Objective_Interface(mp.Extended_Rosenbrock,domain_resolution=n,comm=comm)
+    par = MPI_Objective_Interface(mp.Extended_Rosenbrock,nb_domain_grid_pts=n,comm=comm)
 
     printMPI(par.counts)
 
     ref = mp.Extended_Rosenbrock
 
-    np.testing.assert_array_equal(mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slice], par.startpoint())
+    np.testing.assert_array_equal(mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices], par.startpoint())
     np.testing.assert_almost_equal(mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),par.f(par.startpoint()),err_msg="Different Function Value at startpoint")
-    np.testing.assert_allclose(mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[par.subdomain_slice],
+    np.testing.assert_allclose(mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[par.subdomain_slices],
                                    par.grad(par.startpoint()), err_msg="Different Gradient Value at startpoint")
 
 
@@ -90,7 +90,7 @@ def test_analytical_min(comm):
 
     Objective = mp.Extended_Rosenbrock
 
-    PObjective=MPI_Objective_Interface(Objective, domain_resolution=n, comm=comm)
+    PObjective=MPI_Objective_Interface(Objective, nb_domain_grid_pts=n, comm=comm)
 
     x0 = PObjective.startpoint()
 
@@ -124,7 +124,7 @@ def test_time_complexity(comm):
     res = [None] * len(n)
     pnp = Reduction(comm)
     for i in range(len(n)):
-        PObjective = MPI_Objective_Interface(Objective, domain_resolution=n[i], comm=comm)
+        PObjective = MPI_Objective_Interface(Objective, nb_domain_grid_pts=n[i], comm=comm)
         x0 = PObjective.startpoint()
 
         res[i],t[i] = timer(LBFGS,PObjective.f_grad, x0, jac=True, maxcor=maxcor, maxiter=100000, gtol=(1e-5), pnp=pnp)

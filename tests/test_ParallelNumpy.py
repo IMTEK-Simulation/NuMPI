@@ -61,25 +61,25 @@ def test_sum_boolean(pnp):
     assert res == pnp.comm.Get_size()*3
 
 def test_sum_along_axis_decomp(pnp):
-    domain_resolution = (128, 65)
+    nb_domain_grid_pts = (128, 65)
     np.random.seed(2)
-    globaldata = np.random.random(domain_resolution)
+    globaldata = np.random.random(nb_domain_grid_pts)
 
     nprocs = pnp.comm.Get_size()
     rank = pnp.comm.Get_rank()
 
-    step = domain_resolution[0] // nprocs
+    step = nb_domain_grid_pts[0] // nprocs
 
     if rank == nprocs - 1:
-        subdomain_slice = (slice(rank * step, None), slice(None, None))
-        subdomain_location = [rank * step, 0]
-        subdomain_resolution = [domain_resolution[0] - rank * step, domain_resolution[1]]
+        subdomain_slices = (slice(rank * step, None), slice(None, None))
+        subdomain_locations = [rank * step, 0]
+        nb_subdomain_grid_pts = [nb_domain_grid_pts[0] - rank * step, nb_domain_grid_pts[1]]
     else:
-        subdomain_slice = (slice(rank * step, (rank + 1) * step), slice(None, None))
-        subdomain_location = [rank * step, 0]
-        subdomain_resolution = [step, domain_resolution[1]]
+        subdomain_slices = (slice(rank * step, (rank + 1) * step), slice(None, None))
+        subdomain_locations = [rank * step, 0]
+        nb_subdomain_grid_pts = [step, nb_domain_grid_pts[1]]
 
-    localdata = globaldata[subdomain_slice]
+    localdata = globaldata[subdomain_slices]
 
     np.testing.assert_allclose(pnp.sum(localdata,axis=0), np.sum(globaldata,axis=0),rtol = 1e-12)
     # Why are they not perfectly equal ?

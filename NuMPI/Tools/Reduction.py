@@ -81,7 +81,7 @@ class Reduction :
 
         absmin = get_dtypeInfo(arr.dtype).min # most negative value that can be stored in this datatype
         mpitype = MPI._typedict[arr.dtype.char]
-        self.comm.Allreduce([np.max(arr) if arr.size > 0 else np.array([absmin],dtype=arr.dtype),mpitype], [result,mpitype], op=MPI.MAX)
+        self.comm.Allreduce([np.max(arr) if arr.size > 0 else np.array([absmin], dtype=arr.dtype), mpitype], [result, mpitype], op=MPI.MAX)
         # FIXME: use the max of the dtype because np.inf only float
         #TODO: Not elegant, but following options didn't work
         #self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(None, dtype=arr.dtype), result, op=MPI.MAX)
@@ -106,7 +106,7 @@ class Reduction :
         result = np.asarray(0, dtype=arr.dtype)
         absmax = get_dtypeInfo(arr.dtype).max # most positive value that can be stored in this datatype
         mpitype = MPI._typedict[arr.dtype.char]
-        self.comm.Allreduce([np.min(arr) if arr.size > 0 else np.array([absmax],dtype=arr.dtype),mpitype] ,[ result,mpitype], op=MPI.MIN)
+        self.comm.Allreduce([np.min(arr) if arr.size > 0 else np.array([absmax], dtype=arr.dtype), mpitype], [result, mpitype], op=MPI.MIN)
         return result
 
     def dot(self,a,b):

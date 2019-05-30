@@ -80,8 +80,8 @@ def show_parallel_speedup():
                 comm = MPI.COMM_WORLD.Split(color)
 
             pnp = Reduction(comm)
-            #PObjective = MPI_Objective_Interface(Objective, domain_resolution=n, comm=comm)
-            PObjective = MPI_Quadratic(domain_resolution=n, pnp=pnp,factors = factors, startpoint=startpoint)
+            #PObjective = MPI_Objective_Interface(Objective, nb_domain_grid_pts=n, comm=comm)
+            PObjective = MPI_Quadratic(nb_domain_grid_pts=n, pnp=pnp,factors = factors, startpoint=startpoint)
             x0 = PObjective.startpoint()
 
             if MPI.COMM_WORLD.Get_rank() == 0: print(" Before min n = {}".format(n))
