@@ -252,3 +252,4 @@ class File(object):
 
 
 COMM_WORLD = Intracomm()
+COMM_SELF = Intracomm()
