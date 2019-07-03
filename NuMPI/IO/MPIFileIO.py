@@ -53,7 +53,13 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     -------
 
     """
-    if len(data.shape) != 2: raise ValueError
+    data = np.asarray(data)
+    ndims = len(data.shape)
+    if ndims==1:
+        data = data.reshape((-1,1))
+        subdomain_locations = (subdomain_locations, 0)
+        nb_grid_pts = (nb_grid_pts, 1)
+
     nb_subdomain_grid_pts = data.shape
     if subdomain_locations is None:
         subdomain_locations = (0,0)
@@ -65,7 +71,7 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     magic_str = magic(1, 0)
     arr_dict_str = str({'descr': dtype_to_descr(data.dtype),
                         'fortran_order': fortran_order,
-                        'shape': nb_grid_pts})
+                        'shape': (nb_grid_pts[0],) if ndims==1 else nb_grid_pts})
 
     while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
         arr_dict_str += ' '
