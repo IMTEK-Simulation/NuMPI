@@ -58,8 +58,8 @@ def steepest_descent_wolfe2(x0,f,fprime,**kwargs):
 
 
 
-def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None,g2tol=1e-10, maxiter=10000,
-          maxls=20, store_iterates="iterate", printdb=donothing,linesearch_options = {}):
+def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=5, gtol = None, g2tol=1e-10, maxiter=10000,
+          maxls=20, store_iterates="iterate", printdb=donothing, linesearch_options={}):
     """
         This implementation follows
 
