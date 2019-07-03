@@ -94,8 +94,11 @@ def test_analytical_min(comm):
 
     x0 = PObjective.startpoint()
 
-    res = LBFGS(PObjective.f_grad, x0, jac=True, maxcor=5, maxiter=100, gtol=1e-12, pnp= Reduction(comm))
-
+    res = LBFGS(PObjective.f_grad, x0, jac=True, maxcor=5, maxiter=100,
+                gtol=1e-12, ftol=0, pnp= Reduction(comm))
+    #                        ^ only terminates if gradient condition is satisfied
+    assert res.success
+    assert res.message=="CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL"
     np.testing.assert_allclose(res.x,PObjective.xmin(),atol=1e-16,rtol = 1e-7)
 
     assert np.abs(res.fun-Objective.minVal(n))< 1e-7
