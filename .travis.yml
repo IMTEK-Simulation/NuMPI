@@ -15,9 +15,9 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - if [ "$WITH_MPI" == "yes" ]; then MPI4PY=mpi4py; else MPI4PY=""; fi
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy $MPI4PY
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy
   - source activate test-environment
+  - if [ "$WITH_MPI" == "yes" ]; then python -m pip install mpi4py; fi
   - python -m pip install -r requirements.txt
   - python setup.py install
 script:
