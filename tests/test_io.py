@@ -68,35 +68,17 @@ def test_FileSave_1D(comm):
 
 @pytest.mark.skipif(MPI.COMM_WORLD.Get_size()> 1,
         reason="test is only serial")
-def test_FileSave_1D_list(comm):
+def test_FileSave_1D_list():
     nb_domain_grid_pts = 8
-    np.random.seed(2)
+    np.random.seed(2) 
     globaldata = np.random.random(nb_domain_grid_pts).tolist()
 
-    nprocs = comm.Get_size()
-    rank = comm.Get_rank()
-
-    step = nb_domain_grid_pts // nprocs
-
-    if rank == nprocs - 1:
-        subdomain_slices = slice(rank * step, None)
-        subdomain_locations =rank * step
-        nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
-    else:
-        subdomain_slices = slice(rank * step, (rank + 1) * step)
-        subdomain_locations = rank * step
-        nb_subdomain_grid_pts = step
-
-    localdata = globaldata[subdomain_slices]
-
-    save_npy("test_Filesave_1D_list.npy",localdata,subdomain_locations,nb_domain_grid_pts,comm)
+    save_npy("test_Filesave_1D_list.npy",globaldata)
 
     loaded_data = np.load("test_Filesave_1D_list.npy")
     np.testing.assert_array_equal(loaded_data,globaldata)
 
-    comm.barrier()
-    if rank == 0:
-        os.remove("test_Filesave_1D_list.npy")
+    os.remove("test_Filesave_1D_list.npy")
 
 @pytest.mark.parametrize('order', )
 @pytest.fixture(scope="module", params=("C", "F"))

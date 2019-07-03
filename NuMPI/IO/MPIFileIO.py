@@ -55,16 +55,23 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     """
     data = np.asarray(data)
     ndims = len(data.shape)
+
+
+
     if ndims==1:
         data = data.reshape((-1,1))
-        subdomain_locations = (subdomain_locations, 0)
-        nb_grid_pts = (nb_grid_pts, 1)
 
-    nb_subdomain_grid_pts = data.shape
     if subdomain_locations is None:
         subdomain_locations = (0,0)
+    elif ndims ==1:
+        subdomain_locations = (subdomain_locations, 0)
+    nb_subdomain_grid_pts = data.shape
+
     if nb_grid_pts is None:
         nb_grid_pts = nb_subdomain_grid_pts
+    elif ndims ==1:
+        nb_grid_pts = (nb_grid_pts, 1)
+
     fortran_order = np.isfortran(data)
 
     from numpy.lib.format import dtype_to_descr, magic
