@@ -230,8 +230,9 @@ class MPIFileViewNPY(MPIFileView):
             self.dtype = np.dtype(d['descr'])
             self.fortran_order = d['fortran_order']
             self.nb_grid_pts = d['shape']
-        finally:
+        except Exception as err:
             self.file.Close()
+            raise err
 
     def read(self, subdomain_locations=None, nb_subdomain_grid_pts=None):
 
