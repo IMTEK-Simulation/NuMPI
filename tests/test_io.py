@@ -27,6 +27,7 @@
 
 import numpy as np
 import os
+import warnings
 
 from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY, MPIFileTypeError
 from NuMPI import MPI
@@ -78,7 +79,6 @@ def test_FileSave_1D_list():
 
     os.remove("test_Filesave_1D_list.npy")
 
-@pytest.mark.parametrize('order', )
 @pytest.fixture(scope="module", params=("C", "F"))
 def globaldata(request, comm):
     order = request.param
@@ -286,6 +286,15 @@ def test_same_numpy_save_transposed(comm_self, npyfile):
 
 #@pytest.mark.filterwarnings("error: ResourceWarnings")
 # unfortunately the ResourceWarnings are never raised even when the files are not closed
-def test_raises(comm_self):
-    with pytest.raises(MPIFileTypeError):
-        load_npy(os.path.join(testdir, "wrongnpyfile.npy"), comm=comm_self)
+def test_raises_and_no_resourcewarnings(comm_self):
+    with warnings.catch_warnings(record=True) as w:
+        # Cause all warnings to always be triggered.
+        warnings.simplefilter(
+            "always")  # deactivate hiding of ResourceWarnings
+
+        with pytest.raises(MPIFileTypeError):
+            load_npy(os.path.join(testdir, "wrongnpyfile.npy"), comm=comm_self)
+
+        # assert no warning is a ResourceWarning
+        for wi in w:
+            assert not issubclass(wi.category, ResourceWarning)
