@@ -205,34 +205,33 @@ class MPIFileViewNPY(MPIFileView):
             return False
 
     def _read_header(self):
-        magic_str = magic(1, 0)
-        self.file = MPI.File.Open(self.comm, self.fn, MPI.MODE_RDONLY)  #
-        magic_str = mpi_read_bytes(self.file, len(magic_str))
-        if magic_str[:-2] != MAGIC_PREFIX:
-            raise MPIFileTypeError("MAGIC_PREFIX missing at the beginning of file {}".format(self.fn))
+        try:
+            magic_str = magic(1, 0)
+            self.file = MPI.File.Open(self.comm, self.fn, MPI.MODE_RDONLY)  #
+            magic_str = mpi_read_bytes(self.file, len(magic_str))
+            if magic_str[:-2] != MAGIC_PREFIX:
+                raise MPIFileTypeError("MAGIC_PREFIX missing at the beginning of file {}".format(self.fn))
 
-        version = magic_str[-2:]
+            version = magic_str[-2:]
 
-        if version == b'\x01\x00':
-            hlength_type = '<H'
-        elif version == b'\x02\x00':
-            hlength_type = '<I'
-        else:
-            raise MPIFileTypeError("Invalid version %r" % version)
+            if version == b'\x01\x00':
+                hlength_type = '<H'
+            elif version == b'\x02\x00':
+                hlength_type = '<I'
+            else:
+                raise MPIFileTypeError("Invalid version %r" % version)
 
-        hlength_str = mpi_read_bytes(self.file, struct.calcsize(hlength_type))
-        header_length = struct.unpack(hlength_type, hlength_str)[0]
-        header = mpi_read_bytes(self.file, header_length)
+            hlength_str = mpi_read_bytes(self.file, struct.calcsize(hlength_type))
+            header_length = struct.unpack(hlength_type, hlength_str)[0]
+            header = mpi_read_bytes(self.file, header_length)
 
-        header = _filter_header(header)
-
-        d = safe_eval(header)  # TODO: Copy from _read_array_header  with all the assertions
-
-        self.dtype = np.dtype(d['descr'])
-
-        self.fortran_order = d['fortran_order']
-
-        self.nb_grid_pts = d['shape']
+            header = _filter_header(header)
+            d = safe_eval(header)  # TODO: Copy from _read_array_header  with all the assertions
+            self.dtype = np.dtype(d['descr'])
+            self.fortran_order = d['fortran_order']
+            self.nb_grid_pts = d['shape']
+        finally:
+            self.file.Close()
 
     def read(self, subdomain_locations=None, nb_subdomain_grid_pts=None):
 

@@ -25,16 +25,14 @@
 
 
 
-
 import numpy as np
 import os
 
-from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY
+from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY, MPIFileTypeError
 from NuMPI import MPI
 import pytest
 
-
-
+testdir = os.path.dirname(os.path.realpath(__file__))
 
 def test_FileSave_1D(comm):
     nb_domain_grid_pts = 128
@@ -219,11 +217,19 @@ def test_FileLoad_2D(decompfun, comm, globaldata):
 
 @pytest.fixture
 def npyfile():
+    """
+    defines a filename and makes a cleanup once the test was executed
+    Yields
+    ------
+    filename
+
+    """
     yield "test_same_numpy.npy"
     try:
         os.remove("test_same_numpy.npy")
     except FileNotFoundError:
         pass
+
 
 
 @pytest.mark.skip(reason="just some statements on numpy behaviour")
@@ -278,3 +284,8 @@ def test_same_numpy_save_transposed(comm_self, npyfile):
     assert np.isfortran(data) == np.isfortran(loaded_data)
 
 
+#@pytest.mark.filterwarnings("error: ResourceWarnings")
+# unfortunately the ResourceWarnings are never raised even when the files are not closed
+def test_raises(comm_self):
+    with pytest.raises(MPIFileTypeError):
+        load_npy(os.path.join(testdir, "wrongnpyfile.npy"), comm=comm_self)
