@@ -12,16 +12,30 @@ Build status
 
 [![Build Status](https://www.travis-ci.org/IMTEK-Simulation/NuMPI.svg?branch=master)](https://www.travis-ci.org/IMTEK-Simulation/NuMPI)
 
+Installation
+------------
+
+```
+python3 -m pip install git+https://github.com/IMTEK-Simulation/NuMPI.git
+```
+
+Development Installation
+------------------------
+
+Clone the repository.
+
+To use the code, use the env.sh script to set the environment:
+
+```
+source /path/to/PyCo/env.sh [python3]
+```
+
 Testing
 -------
 
-We use [runtests](https://github.com/bccp/runtests). 
+You have to do a development installation to be able to run the tests.
 
-We had to add some modifications so presently you should install it directly from my fork: 
-
-```
-pip install -e  git+git@github.com:AntoineSIMTEK/runtests.git#egg=runtests
-```
+We use [runtests](https://github.com/bccp/runtests). At the moment a slight modification in my [fork](https://github.com/AntoineSIMTEK/runtests).
 
 From the main installation directory:
 ```bash
@@ -39,5 +53,5 @@ Testing on the cluster
 On NEMO for example
 
 ```bash
-msub -q expresss -l walltime=15:00,nodes=1:ppn=20 NEMO_test_job.sh -m bea
+msub -q express -l walltime=15:00,nodes=1:ppn=20 NEMO_test_job.sh -m bea
 ```
