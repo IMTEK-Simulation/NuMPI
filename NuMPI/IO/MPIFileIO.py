@@ -139,7 +139,6 @@ def mpi_read_bytes(file, nbytes):
     return buf.tobytes()
 
 
-# TODO:
 def load_npy(fn, subdomain_locations=None, nb_subdomain_grid_pts=None, comm=MPI.COMM_WORLD):
     file = MPIFileViewNPY(fn, comm)
     #if file.nb_grid_pts != nb_domain_grid_pts:
