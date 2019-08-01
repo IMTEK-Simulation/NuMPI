@@ -22,11 +22,10 @@
 # SOFTWARE.
 #
 
-
-
-
 import numpy as np
+
 from .. import MPI
+
 
 def get_dtypeInfo(dtype):
     if dtype.kind == 'i': return np.iinfo(dtype)
@@ -34,11 +33,11 @@ def get_dtypeInfo(dtype):
     raise ValueError
 
 
-class Reduction :
-    def __init__(self,comm=MPI.COMM_WORLD):
+class Reduction:
+    def __init__(self, comm=MPI.COMM_WORLD):
         self.comm = comm
 
-    def sum(self,arr,*args,**kwargs):
+    def sum(self, arr, *args, **kwargs):
         """
         take care that the input arrays have the same datatype on all Processors !
 
@@ -55,17 +54,17 @@ class Reduction :
         scalar np.ndarray , the sum of all Elements of the Array over all the Processors
         """
 
-        locresult= np.sum(arr,*args,**kwargs)
+        locresult = np.sum(arr, *args, **kwargs)
         result = np.zeros_like(locresult)
-        #print("Proc{}: result.dtype={}, locresult.dtype={} arr.dtype={}".format(self.comm.Get_rank(),result.dtype,locresult.dtype,arr.dtype))
+        # print("Proc{}: result.dtype={}, locresult.dtype={} arr.dtype={}".format(self.comm.Get_rank(),result.dtype,locresult.dtype,arr.dtype))
         mpitype = MPI._typedict[locresult.dtype.char]
-        self.comm.Allreduce([locresult,mpitype],[result,mpitype],op = MPI.SUM)
-        if type(locresult) == type(result):#TODO:Why is this done again ? 
+        self.comm.Allreduce([locresult, mpitype], [result, mpitype], op=MPI.SUM)
+        if type(locresult) == type(result):  # TODO:Why is this done again ?
             return result
-        else :
+        else:
             return type(locresult)(result)
 
-    def max(self,arr):
+    def max(self, arr):
         """
         take care that the input arrays have the same datatype on all Processors !
         Parameters
@@ -79,19 +78,20 @@ class Reduction :
         """
         result = np.asarray(0, dtype=arr.dtype)
 
-        absmin = get_dtypeInfo(arr.dtype).min # most negative value that can be stored in this datatype
+        absmin = get_dtypeInfo(arr.dtype).min  # most negative value that can be stored in this datatype
         mpitype = MPI._typedict[arr.dtype.char]
-        self.comm.Allreduce([np.max(arr) if arr.size > 0 else np.array([absmin], dtype=arr.dtype), mpitype], [result, mpitype], op=MPI.MAX)
+        self.comm.Allreduce([np.max(arr) if arr.size > 0 else np.array([absmin], dtype=arr.dtype), mpitype],
+                            [result, mpitype], op=MPI.MAX)
         # FIXME: use the max of the dtype because np.inf only float
-        #TODO: Not elegant, but following options didn't work
-        #self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(None, dtype=arr.dtype), result, op=MPI.MAX)
+        # TODO: Not elegant, but following options didn't work
+        # self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(None, dtype=arr.dtype), result, op=MPI.MAX)
         # Here when the first array isn't empty it is fine, but otherwise the result will be nan
         #
-        #self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([], dtype=arr.dtype), result, op=MPI.MAX)
+        # self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([], dtype=arr.dtype), result, op=MPI.MAX)
         # Her MPI claims that the input and output array have not the same datatype
         return result
 
-    def min(self,arr):
+    def min(self, arr):
         """
         take care that the input arrays have the same datatype on all Processors !
         Parameters
@@ -104,16 +104,17 @@ class Reduction :
 
         """
         result = np.asarray(0, dtype=arr.dtype)
-        absmax = get_dtypeInfo(arr.dtype).max # most positive value that can be stored in this datatype
+        absmax = get_dtypeInfo(arr.dtype).max  # most positive value that can be stored in this datatype
         mpitype = MPI._typedict[arr.dtype.char]
-        self.comm.Allreduce([np.min(arr) if arr.size > 0 else np.array([absmax], dtype=arr.dtype), mpitype], [result, mpitype], op=MPI.MIN)
+        self.comm.Allreduce([np.min(arr) if arr.size > 0 else np.array([absmax], dtype=arr.dtype), mpitype],
+                            [result, mpitype], op=MPI.MIN)
         return result
 
-    def dot(self,a,b):
-        locresult = np.dot(a,b)
+    def dot(self, a, b):
+        locresult = np.dot(a, b)
         result = np.zeros_like(locresult)
         mpitype = MPI._typedict[locresult.dtype.char]
-        self.comm.Allreduce([locresult,mpitype], [result, mpitype], op=MPI.SUM)
+        self.comm.Allreduce([locresult, mpitype], [result, mpitype], op=MPI.SUM)
         return result
 
     def any(self, arr):
