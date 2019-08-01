@@ -34,8 +34,11 @@ def get_dtypeInfo(dtype):
 
 
 class Reduction:
-    def __init__(self, comm=MPI.COMM_WORLD):
-        self.comm = comm
+    def __init__(self, comm=None):
+        if comm is None:
+            self.comm = MPI.COMM_SELF
+        else:
+            self.comm = comm
 
     def sum(self, arr, *args, **kwargs):
         """
