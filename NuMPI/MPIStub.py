@@ -165,9 +165,11 @@ class Intracomm(object):
 
     def Get_rank(self):
         return 0
+    rank = property(Get_rank)
 
     def Get_size(self):
         return 1
+    size = property(Get_size)
 
     def Reduce(self, sendbuf, recvbuf, op=Operations.SUM, root=0):
         if root != 0:
