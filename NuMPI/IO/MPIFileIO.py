@@ -204,6 +204,7 @@ class MPIFileViewNPY(MPIFileView):
             return False
 
     def _read_header(self):
+        self.file = None
         try:
             magic_str = magic(1, 0)
             self.file = MPI.File.Open(self.comm, self.fn, MPI.MODE_RDONLY)  #
@@ -230,7 +231,9 @@ class MPIFileViewNPY(MPIFileView):
             self.fortran_order = d['fortran_order']
             self.nb_grid_pts = d['shape']
         except Exception as err:
-            self.file.Close()
+            # FIXME! This should be handled through a resource manager
+            if self.file is not None:
+                self.file.Close()
             raise err
 
     def read(self, subdomain_locations=None, nb_subdomain_grid_pts=None):
