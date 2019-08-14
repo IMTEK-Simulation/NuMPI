@@ -61,7 +61,7 @@ def test_FileSave_1D(comm):
              subdomain_locations,
              nb_domain_grid_pts,
              comm)
-    comm.barrier()
+    comm.barrier() # The MPI_File reading and closing doesn't have to finish together
     loaded_data = np.load("test_Filesave_1D.npy")
     np.testing.assert_array_equal(loaded_data,globaldata)
 
