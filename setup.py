@@ -42,7 +42,7 @@ setup(
     # metadata for upload to PyPI
     author = "Antoine Sanner",
     author_email = "antoine.sanner@imtek.uni-freiburg.de",
-    description = "numerical tools for mpi parallelized code",
+    description = "Numerical tools for MPI-parallelized code",
     license = "MIT",
     test_suite = 'tests',
 )
