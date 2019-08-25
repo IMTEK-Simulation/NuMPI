@@ -35,6 +35,7 @@ import struct
 import os.path
 import abc
 
+from numpy.compat import asstr
 from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
 from numpy.lib.utils import safe_eval
 
@@ -225,7 +226,7 @@ class MPIFileViewNPY(MPIFileView):
             header_length = struct.unpack(hlength_type, hlength_str)[0]
             header = mpi_read_bytes(self.file, header_length)
 
-            header = _filter_header(header)
+            header = _filter_header(asstr(header))
             d = safe_eval(header)  # TODO: Copy from _read_array_header  with all the assertions
             self.dtype = np.dtype(d['descr'])
             self.fortran_order = d['fortran_order']
