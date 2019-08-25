@@ -25,8 +25,12 @@
 
 from setuptools import setup, find_packages
 
+import versioneer
+
 setup(
     name = "NuMPI",
+    version = versioneer.get_version(),
+    cmdclass = versioneer.get_cmdclass(),
     package_data = {'': ['ChangeLog.md']},
     include_package_data = True,
     packages = find_packages(),
