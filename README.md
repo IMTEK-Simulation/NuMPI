@@ -16,7 +16,7 @@ Installation
 ------------
 
 ```
-python3 -m pip install git+https://github.com/IMTEK-Simulation/NuMPI.git
+python3 -m pip install NuMPI
 ```
 
 Development Installation
