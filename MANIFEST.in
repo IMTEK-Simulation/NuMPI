@@ -1,1 +1,4 @@
+include versioneer.py
+include NuMPI/_version.py
+
 include tests/wrongnpyfile.npy
