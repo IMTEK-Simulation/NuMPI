@@ -319,5 +319,5 @@ def test_filestream(comm_self, npyfile):
 
     np.save(npyfile, data)
     with open(npyfile, mode="r") as f:
-        read_data = load_npy(npyfile)
+        read_data = load_npy(npyfile, comm=comm_self)
         np.testing.assert_allclose(read_data, data)
