@@ -234,8 +234,6 @@ def npyfile():
     except FileNotFoundError:
         pass
 
-
-
 @pytest.mark.skip(reason="just some statements on numpy behaviour")
 def test_detect_fortran_order(comm_self):
     # fix some statements on numpy behaviour
@@ -302,3 +300,24 @@ def test_raises_and_no_resourcewarnings(comm_self):
         # assert no warning is a ResourceWarning
         for wi in w:
             assert not issubclass(wi.category, ResourceWarning)
+
+def test_corrupted_file(comm_self):
+    """
+    tests that the reader behaves decently when trying to open a file having
+    the wrong format see issue #23
+    """
+    # create test corrupted file
+
+    with open("corrupted.dummy", "w") as f:
+        f.write("dfgdfghlkjhgiuhdfg")
+
+    with pytest.raises(MPIFileTypeError):
+        MPIFileViewNPY("corrupted.dummy", comm=comm_self)
+
+def test_filestream(comm_self, npyfile):
+    data = np.random.normal(size=(4,6))
+
+    np.save(npyfile, data)
+    with open(npyfile, mode="r") as f:
+        read_data = load_npy(npyfile)
+        np.testing.assert_allclose(read_data, data)

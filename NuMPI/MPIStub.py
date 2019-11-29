@@ -225,7 +225,10 @@ class File(object):
     def __init__(self, comm, filename, amode):
         if not isinstance(comm, Intracomm):
             raise RuntimeError('Communicator object must be an instance of `Intracomm`.')
-        self._file = open(filename, amode.std_mode())
+        if not hasattr(filename, 'read'):
+            self._file = open(filename, amode.std_mode())
+        else:
+            self._file = filename
         self._disp = 0
         self._etype = _typedict['i1']
         self._filetype = None
