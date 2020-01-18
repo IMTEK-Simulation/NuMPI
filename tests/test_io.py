@@ -321,3 +321,6 @@ def test_filestream(comm_self, npyfile):
     with open(npyfile, mode="r") as f:
         read_data = load_npy(f, comm=comm_self)
         np.testing.assert_allclose(read_data, data)
+    with open(npyfile, mode="rb") as f:
+        read_data = load_npy(f, comm=comm_self)
+        np.testing.assert_allclose(read_data, data)
