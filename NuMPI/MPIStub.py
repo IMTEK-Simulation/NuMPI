@@ -34,6 +34,7 @@ implement it and submit it back to us.
 from enum import Enum
 
 import numpy as np
+from io import TextIOBase
 
 
 ### Data types
@@ -222,6 +223,7 @@ class File(object):
     def Open(cls, comm, filename, amode=MODE_RDONLY):  # FIXME: This method has an optional info argument
         return File(comm, filename, amode)
 
+    """
     def __init__(self, comm, filename, amode):
         if not isinstance(comm, Intracomm):
             raise RuntimeError('Communicator object must be an instance of `Intracomm`.')
@@ -233,6 +235,25 @@ class File(object):
         self._etype = _typedict['i1']
         self._filetype = None
 
+    """
+    def __init__(self, comm, filename, amode):
+        if not isinstance(comm, Intracomm):
+            raise RuntimeError('Communicator object must be an instance of `Intracomm`.')
+
+        self.already_open = False
+        if not hasattr(filename, 'read'):
+            self._file = open(filename, amode.std_mode())
+        else:
+            self.already_open = True
+            if isinstance(filename, TextIOBase):
+                self._file = filename.buffer
+            else:
+                self._file = filename
+        self._disp = 0
+        self._etype = _typedict['i1']
+        self._filetype = None
+    # """
+
     def Close(self):
         self._file.close()
 
@@ -240,8 +261,12 @@ class File(object):
         return self._file.tell() - self._disp
 
     def Read(self, buf):
-        data = self._file.read(buf.size * buf.itemsize)
-        buf[...] = np.frombuffer(data, count=buf.size, dtype=buf.dtype).reshape(buf.shape)
+        try:
+            data = self._file.read(buf.size * buf.itemsize)
+            buf[...] = np.frombuffer(data, count=buf.size, dtype=buf.dtype).reshape(buf.shape)
+        except:
+            if not self.already_open:
+                self.Close
 
     Read_all = Read
 
