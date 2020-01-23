@@ -166,10 +166,12 @@ class Intracomm(object):
 
     def Get_rank(self):
         return 0
+
     rank = property(Get_rank)
 
     def Get_size(self):
         return 1
+
     size = property(Get_size)
 
     def Reduce(self, sendbuf, recvbuf, op=Operations.SUM, root=0):
@@ -223,19 +225,6 @@ class File(object):
     def Open(cls, comm, filename, amode=MODE_RDONLY):  # FIXME: This method has an optional info argument
         return File(comm, filename, amode)
 
-    """
-    def __init__(self, comm, filename, amode):
-        if not isinstance(comm, Intracomm):
-            raise RuntimeError('Communicator object must be an instance of `Intracomm`.')
-        if not hasattr(filename, 'read'):
-            self._file = open(filename, amode.std_mode())
-        else:
-            self._file = filename
-        self._disp = 0
-        self._etype = _typedict['i1']
-        self._filetype = None
-
-    """
     def __init__(self, comm, filename, amode):
         if not isinstance(comm, Intracomm):
             raise RuntimeError('Communicator object must be an instance of `Intracomm`.')
@@ -252,7 +241,6 @@ class File(object):
         self._disp = 0
         self._etype = _typedict['i1']
         self._filetype = None
-    # """
 
     def Close(self):
         self._file.close()
