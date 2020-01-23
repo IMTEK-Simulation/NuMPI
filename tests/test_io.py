@@ -31,6 +31,7 @@ import warnings
 
 from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY, MPIFileTypeError
 from NuMPI import MPI
+import NuMPI
 import pytest
 
 testdir = os.path.dirname(os.path.realpath(__file__))
@@ -314,10 +315,15 @@ def test_corrupted_file(comm_self):
     with pytest.raises(MPIFileTypeError):
         MPIFileViewNPY("corrupted.dummy", comm=comm_self)
 
+@pytest.mark.skipif(NuMPI._has_mpi4py, reason="filestreams are not supported when "
+"                                         NuMPI is using with mpi4py")
 def test_filestream(comm_self, npyfile):
     data = np.random.normal(size=(4,6))
 
     np.save(npyfile, data)
     with open(npyfile, mode="r") as f:
-        read_data = load_npy(npyfile, comm=comm_self)
+        read_data = load_npy(f, comm=comm_self)
+        np.testing.assert_allclose(read_data, data)
+    with open(npyfile, mode="rb") as f:
+        read_data = load_npy(f, comm=comm_self)
         np.testing.assert_allclose(read_data, data)
