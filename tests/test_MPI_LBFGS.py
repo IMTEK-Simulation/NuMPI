@@ -104,17 +104,17 @@ def test_analytical_min(comm):
     assert np.abs(res.fun-Objective.minVal(n))< 1e-7
 
 
-def test_ftol(comm):
-    pass
+#def test_ftol(comm):
+#    pass
 
-def test_gtol(comm):
-    pass
+#def test_gtol(comm):
+#    pass
 
-def test_g2tol(comm):
-    pass
+#def test_g2tol(comm):
+#    pass
 
-def test_alltol(comm):
-    pass
+#def test_alltol(comm):
+#    pass
 
 @pytest.mark.skip(reason="just plotting")
 def test_time_complexity(comm):
