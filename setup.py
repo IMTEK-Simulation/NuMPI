@@ -35,8 +35,7 @@ setup(
     include_package_data = True,
     packages = find_packages(),
     python_requires='>3.5.0',
-    install_requires=['runtests',
-                      'numpy',
+    install_requires=['numpy',
                       'pytest',
                       ],
     # metadata for upload to PyPI
