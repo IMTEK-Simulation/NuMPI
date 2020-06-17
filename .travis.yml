@@ -4,7 +4,7 @@ python:
   - 3.6
 env:
   - WITH_MPI=no
-  - WITH_MPI=yes
+  - WITH_MPI=yes MPI4PY_VERSION=3.0.3
 install:
   - sudo apt-get update
   - if [ "$WITH_MPI" == "yes" ]; then sudo apt-get install openmpi-bin libopenmpi-dev; fi
