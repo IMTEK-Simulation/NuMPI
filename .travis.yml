@@ -8,6 +8,7 @@ env:
 install:
   - sudo apt-get update
   - if [ "$WITH_MPI" == "yes" ]; then sudo apt-get install openmpi-bin libopenmpi-dev; fi
+  - python -m pip install --upgrade -r requirements.txt
   - python setup.py install
   - if [ "$WITH_MPI" == "yes" ]; then python -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION}; fi
 script:
