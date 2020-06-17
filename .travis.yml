@@ -4,22 +4,13 @@ python:
   - 3.6
 env:
   - WITH_MPI=no
-  - WITH_MPI=yes
+  - WITH_MPI=yes MPI4PY_VERSION=3.0.3
 install:
   - sudo apt-get update
   - if [ "$WITH_MPI" == "yes" ]; then sudo apt-get install openmpi-bin libopenmpi-dev; fi
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda3
-  - export PATH="$HOME/miniconda3/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy
-  - source activate test-environment
-  - if [ "$WITH_MPI" == "yes" ]; then python -m pip install mpi4py; fi
-  - python -m pip install -r requirements.txt
+  - python -m pip install --upgrade -r requirements.txt
   - python setup.py install
+  - if [ "$WITH_MPI" == "yes" ]; then python -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION}; fi
 script:
   - if [ "$WITH_MPI" == "yes" ]; then python run-tests.py --verbose --full-trace -s; else pytest --verbose --full-trace -s; fi
 notifications:

@@ -34,10 +34,9 @@ setup(
     package_data = {'': ['ChangeLog.md']},
     include_package_data = True,
     packages = find_packages(),
-    python_requires='>3.5.0',
-    install_requires=['runtests',
-                      'numpy',
-                      'pytest',
+    python_requires='>=3.5.0',
+    install_requires=['numpy',
+                      'scipy>=1.1.0',
                       ],
     # metadata for upload to PyPI
     author = "Antoine Sanner",
