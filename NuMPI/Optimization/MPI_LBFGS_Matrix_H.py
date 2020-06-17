@@ -261,7 +261,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
         #YTgrad = pnp.dot(Y.T, grad)
 
         if k > maxcor:
-            #w = np.vstack([STgrad_prev, gamma * YTgrad_prev]) #TODO: vstack
             S_now_T_grad_prev = np.roll(STgrad_prev,-1)
             S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * (STgrad_prev.T.dot(p1) + gamma * YTgrad_prev.T.dot(p2))
         else : # straightforward Version
