@@ -36,7 +36,7 @@ setup(
     packages = find_packages(),
     python_requires='>3.5.0',
     install_requires=['numpy',
-                      'pytest',
+                      'scipy>=1.1.0',
                       ],
     # metadata for upload to PyPI
     author = "Antoine Sanner",
