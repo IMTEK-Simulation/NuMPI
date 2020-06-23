@@ -28,9 +28,13 @@ serial test
 import numpy as np
 import scipy.optimize
 from NuMPI.Optimization import LBFGS
+from NuMPI import MPI
 import tests.minimization_problems as mp
 
 import pytest
+pytestmark = pytest.mark.skipif(
+    MPI.COMM_WORLD.Get_size() > 1,
+    reason="tests only serial funcionalities, please execute with pytest")
 
 @pytest.mark.parametrize("Objective",[mp.Trigonometric])
 @pytest.mark.parametrize("n",[10,30])

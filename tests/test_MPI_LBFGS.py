@@ -27,10 +27,9 @@ import pytest
 
 import numpy as np
 from NuMPI.Tools import  Reduction
-from runtests.mpi import MPITest
 from tests.MPI_minimization_problems import MPI_Objective_Interface
-import scipy.optimize
-import  time
+
+import time
 import tests.minimization_problems as mp
 
 from NuMPI.Optimization.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
@@ -48,8 +47,6 @@ def test_linesearch():
 def test_MPI_Parallel_Interface(comm): # TODO: Duplicate with test_LBFGS_interface ?
     """ Tests the parallel wrapping of objectives
     Test if parallel Version gives the same as the serial Version
-    :param comm:
-    :return:
     """
 
     def printMPI(msg):

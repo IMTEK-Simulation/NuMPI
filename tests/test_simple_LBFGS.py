@@ -27,9 +27,13 @@
 import numpy as np
 import scipy.optimize
 from NuMPI.Optimization import LBFGS
-
 from NuMPI.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
+from NuMPI import MPI
 import pytest
+
+pytestmark = pytest.mark.skipif(
+    MPI.COMM_WORLD.Get_size() > 1,
+    reason="tests only serial funcionalities, please execute with pytest")
 
 def my_print(*args):
     #print(*args) # uncomment this line to enable debug prints.

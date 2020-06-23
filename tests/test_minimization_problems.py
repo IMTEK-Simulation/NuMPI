@@ -26,8 +26,13 @@
 import tests.minimization_problems as mp
 import numpy as np
 import scipy.optimize
+from NuMPI import MPI
 
 import pytest
+pytestmark = pytest.mark.skipif(
+    MPI.COMM_WORLD.Get_size() > 1,
+    reason="tests only serial funcionalities, please execute with pytest")
+
 @pytest.mark.parametrize("Objective",[mp.Trigonometric,mp.Extended_Rosenbrock])
 @pytest.mark.parametrize("n",[2,4,10])
 def test_directional_derivative(Objective,n) :
@@ -69,6 +74,7 @@ def test_directional_derivative(Objective,n) :
         assert (errorratios < 10).all(), "error_ratios".format(abs(der_numerical- der_analytical)/der_analytical)
     if _verbose:
         plt.show(block=True)
+
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock,mp.Trigonometric])
 @pytest.mark.parametrize("n",[2,4,10,20])
 def test_Gradient(Objective,n) :
