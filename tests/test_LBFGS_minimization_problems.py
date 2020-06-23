@@ -32,8 +32,6 @@ import tests.minimization_problems as mp
 
 import pytest
 
-
-
 @pytest.mark.parametrize("Objective",[mp.Trigonometric])
 @pytest.mark.parametrize("n",[10,30])
 def test_compare_scipy(Objective,n):
@@ -48,5 +46,5 @@ def test_compare_scipy(Objective,n):
                                       options=dict(gtol = 1e-8))
     assert resScipy.success
 
-    np.testing.assert_allclose( np.reshape(resLBGFS.x,(-1,)),resScipy.x, rtol= 1e-2, atol = 1e-5)  #TODO: The location of the minimumseems o be hard to find
+    np.testing.assert_allclose( np.reshape(resLBGFS.x,(-1,)),resScipy.x, rtol= 1e-2, atol = 1e-5)  #TODO: The location of the minimum seems o be hard to find
     assert np.abs(Objective.f(resScipy.x) - Objective.f(resLBGFS.x)) < 1e-8

@@ -26,10 +26,14 @@
 
 import numpy as np
 import scipy.optimize
-from NuMPI.Optimization.LBFGS_Matrix_H import LBFGS
+from NuMPI.Optimization import LBFGS
 
 from NuMPI.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
 import pytest
+
+def my_print(*args):
+    #print(*args) # uncomment this line to enable debug prints.
+    pass
 
 def test_3D():
     # Gaussian Potential
@@ -61,14 +65,13 @@ def test_3D():
     ## plot
     if toPlot:
         import matplotlib
-        #matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         X, Y = np.meshgrid(xg, yg)
         ax.contour(X, Y, mat_fun(xg, yg))
         fig.show()
 
-        print(ex_fun(np.array((0, 0, 0))))
+        my_print(ex_fun(np.array((0, 0, 0))))
         fig2, ax2 = plt.subplots()
         for z in [0]:
             for y in [0, 1, 2]:
@@ -86,27 +89,29 @@ def test_3D():
     reslinesearch = scipy.optimize.minimize_scalar(fun=lambda alpha: ex_fun(x_old - grad_old * alpha), bounds=(0, 2000),
                                           method="bounded")
     assert reslinesearch.success
-    print("alpha {}".format(reslinesearch.x))
+    my_print("alpha {}".format(reslinesearch.x))
     x = x_old - grad_old * reslinesearch.x
     assert ex_fun(x) < ex_fun(x_old)
     grad = ex_jac(x)
-    print("x first_linesearch {}".format(x))
+    my_print("x first_linesearch {}".format(x))
     k = 1
-    print("Wolfe")
+    my_print("Wolfe")
 
-    print("1st: {}".format(first_wolfe_condition(ex_fun, x_old, ex_jac, -grad_old, reslinesearch.x, beta1=1e-4)))
-    print("2nd {}".format(second_wolfe_condition(x_old,ex_jac,-grad_old,reslinesearch.x,beta2=0.9)))
+    my_print("1st: {}".format(first_wolfe_condition(ex_fun, x_old, ex_jac, -grad_old, reslinesearch.x, beta1=1e-4)))
+    my_print("2nd {}".format(second_wolfe_condition(x_old,ex_jac,-grad_old,reslinesearch.x,beta2=0.9)))
 
 
-    resscipy = scipy.optimize.minimize(ex_fun,x,jac = ex_jac)
-    print("schipy success: {}".format(resscipy.success))
+    resscipy = scipy.optimize.minimize(ex_fun,x,jac = ex_jac, options=dict(gtol=1e-10, ftol=0))
+    my_print("scipy success: {}".format(resscipy.success))
+    my_print("scipy nit {}".format(resscipy.nit))
+    my_print("scipy result: {}".format(resscipy.x))
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=3, maxiter=10)
-    print("nit {}".format(res.nit))
+    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=3, maxiter=100, gtol=1e-10, ftol=0)
+    assert res.success
+    my_print("nit {}".format(res.nit))
 
     if toPlot:
         import matplotlib
-        #matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
         fig3d = plt.figure()
         ax3d = fig3d.add_subplot(111, projection='3d')
@@ -117,7 +122,7 @@ def test_3D():
         fig3d.show()
         plt.show(block=True)
 
-    np.testing.assert_almost_equal(res.x,np.zeros(res.x.shape),decimal = 5)
+    np.testing.assert_almost_equal(res.x,np.zeros(res.x.shape), decimal=5)
 
 def test_quadratic_nD():
 
@@ -152,17 +157,17 @@ def test_quadratic_nD():
     x = x_old - grad_old * alpha
     assert ex_fun(x) < ex_fun(x_old)
     grad = ex_jac(x)
-    print("x first_linesearch {}".format(x))
+    my_print("x first_linesearch {}".format(x))
     k = 1
 
     resscipy = scipy.optimize.minimize(ex_fun, x, jac=ex_jac)
-    print("schipy success: {}".format(resscipy.success))
+    my_print("schipy success: {}".format(resscipy.success))
 
-    #print(x)
-    #print(ex_jac(x))
+    #my_print(x)
+    #my_print(ex_jac(x))
 
     res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=100,g2tol=1e-10)
-    print("nit {}".format(res.nit))
+    my_print("nit {}".format(res.nit))
 
     if False:
         import matplotlib
@@ -204,15 +209,14 @@ def test_gaussian_nD(n):
 
 
     #resscipy = scipy.optimize.minimize(ex_fun, x, jac=ex_jac)
-    #print("schipy success: {}".format(resscipy.success))
+    #my_print("schipy success: {}".format(resscipy.success))
 
 
     res = LBFGS(ex_fun, x, jac=ex_jac, maxcor=2, gtol=1e-5, maxiter=10000)
-    print("nit {}".format(res.nit))
+    my_print("nit {}".format(res.nit))
 
     if False:
         import matplotlib
-        matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
         fig3d = plt.figure()
         ax3d = fig3d.add_subplot(111, projection='3d')
@@ -226,8 +230,6 @@ def test_gaussian_nD(n):
     np.testing.assert_allclose(res.x, shift, atol = 1e-3)
 
 def test_x2_xcosy():
-
-
     def ex_fun(x_):
         x=x_.reshape((-1,1))
         return .5 * x[0, 0] ** 2 + x[0, 0] * np.cos(x[1, 0])
@@ -247,7 +249,7 @@ def test_x2_xcosy():
     k = 1
 
     res = LBFGS(ex_fun, x, jac=ex_jac, gtol = 1e-5 ,maxcor=5, maxiter=10000,linesearch_options=dict(c1 = 1e-4,c2 = 0.999))
-    print("nit {}".format(res.nit))
+    my_print("nit {}".format(res.nit))
 
     ref = scipy.optimize.minimize(ex_fun, x.reshape(-1), jac=lambda x: ex_jac(x).reshape(-1))
 
@@ -255,7 +257,6 @@ def test_x2_xcosy():
 
     if False:
         import matplotlib
-        matplotlib.use("MACOSX")
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         xg, yg = np.linspace(-5, 5, 51), np.linspace(-6, 6, 51)
