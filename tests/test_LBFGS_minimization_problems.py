@@ -36,14 +36,12 @@ import pytest
 def test_analytical_min(Objective,n):
     """
     Compares the result with the analyticaly known posistion of the minimum
-    :return:
     """
 
     x0 = Objective.startpoint(n)
 
     res = LBFGS(Objective.f, x0, jac=Objective.grad, maxcor=5, gtol=1e-6, maxiter=1000)
-    print(np.reshape(res.x, (-1,)))
-    #np.testing.assert_almost_equal( res.x,Objective.xmin(n))
+
     np.testing.assert_allclose(np.reshape(res.x, (-1,)), np.reshape(Objective.xmin(n),(-1,)), rtol=1e-6)
 
 @pytest.mark.parametrize("Objective",[mp.Trigonometric])
