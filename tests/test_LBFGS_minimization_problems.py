@@ -27,7 +27,7 @@ serial test
 
 import numpy as np
 import scipy.optimize
-from NuMPI.Optimization.LBFGS_Matrix_H import LBFGS
+from NuMPI.Optimization import LBFGS
 import tests.minimization_problems as mp
 
 import pytest
