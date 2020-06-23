@@ -2,6 +2,8 @@ language: python
 python:
   - 3.5
   - 3.6
+  - 3.7
+  - 3.8
 env:
   - WITH_MPI=no
   - WITH_MPI=yes MPI4PY_VERSION=3.0.3
