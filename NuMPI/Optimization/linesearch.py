@@ -43,8 +43,6 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” 
 
 import numpy as np
 from warnings import warn
-from scipy._lib.six import xrange
-
 
 class LineSearchWarning(RuntimeWarning):
     pass
@@ -132,7 +130,7 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
     if extra_condition is None:
         extra_condition = lambda alpha, phi: True
 
-    for i in xrange(maxiter):
+    for i in range(maxiter):
         if alpha1 == 0 or (amax is not None and alpha0 == amax):
             # alpha1 == 0: This shouldn't happen. Perhaps the increment has
             # slipped below machine precision?
