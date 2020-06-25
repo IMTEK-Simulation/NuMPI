@@ -52,7 +52,9 @@ class decorated_fun():
         return self.fun(x_)
 
 dec = decorated_fun(ex_fun)
-res = scipy.optimize.minimize(dec, x ,jac = ex_jac, options=dict(gtol=1e-10, ftol=0))
+res = scipy.optimize.minimize(dec, x.copy() ,jac = ex_jac, options=dict(gtol=1e-10, ftol=0))
+print(res.message)
+print("max abs gradient: {}".format(np.max(abs(ex_jac(res.x)))))
 print("scipy success: {}".format(res.success))
 print("scipy nit {}".format(res.nit))
 print("scipy result: {}".format(res.x))
@@ -66,7 +68,9 @@ plot(dec.evaluated_xs, label="scipy")
 
 
 dec = decorated_fun(ex_fun)
-res = mpi_lbfgs(dec, x, jac=ex_jac, maxcor=3, maxiter=100, gtol=1e-10, ftol=0,  printdb=print)
+res = mpi_lbfgs(dec, x.copy(), jac=ex_jac, maxcor=3, maxiter=100, gtol=1e-10, ftol=0,  printdb=print)
+print(res.message)
+print("max abs gradient: {}".format(np.max(abs(ex_jac(res.x)))))
 assert res.success
 print("nit {}".format(res.nit))
 plot(dec.evaluated_xs, "+r", label="mpi_lbfgs")
