@@ -274,12 +274,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             R[:, -1] = STym1.flat  #O(m x n)
 
         elif k == 1:
-            #Rm = np.triu(pnp.dot(S.T, Y))
             R = np.triu(np.array([[pnp.dot(si.T, yi).item() for yi in Ylist] for si in Slist]))
-            #print(R)
         else:
-            #Rm = np.vstack([Rm, np.zeros(k - 1)])
-            #Rm = np.hstack([Rm, pnp.dot(S.T, Y[:, -1]).reshape(k, 1)])
             R = np.vstack([R, np.zeros(k - 1)])
             R = np.hstack([R, np.array([pnp.dot(si.T, Ylist[-1]) for si in Slist]).reshape(k, 1)])
         if k > maxcor:
@@ -296,7 +292,6 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             YTY[-1, :-1] = YTY[:-1, -1] = (YTgrad[:-1] - YTgrad_prev[1:]).flat
             YTY[-1, -1] = grad2prev - grad2 + 2 * YTgrad[-1]
         else:
-            #YTYm = pnp.dot(Y.T, Y)
             YTY = np.array([[pnp.dot(yi1.T, yi2).item() for yi2 in Ylist] for yi1 in Ylist])
         # Step 5.
         gamma = D[-1, -1] / YTY[-1, -1]  # n.b. D[-1,-1] = sk-1T yk-1 = yk-1T sk-1
