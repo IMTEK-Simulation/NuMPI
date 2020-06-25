@@ -323,13 +323,12 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol = 1e-5, ftol=2.
             phiprime = pnp.dot(grad.T, -Hgrad).item()
             return phi, phiprime
 
-        #TODO: oldphi0: is it allowed to stay outside of the search direction ?
+        # TODO: oldphi0: is it allowed to stay outside of the search direction ?
         alpha, phi, phi0, derphi = scalar_search_wolfe2(_phi_phiprime, phi0=phi,
                                                         derphi0=pnp.dot(grad.T, -Hgrad).item(), maxiter=maxls, **linesearch_options)
 
         printdb("derphi: {}".format(derphi))
         assert derphi is not None, "line-search did not converge"
-
 
         x = x - Hgrad * alpha
 

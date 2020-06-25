@@ -40,8 +40,8 @@ def getLogfile():
 
 def steepest_descent_wolfe2(x0,f,fprime,**kwargs):
     """
-    For first Iteration there is no history. We make a steepest descent satisfying strong Wolfe Condition
-    :return:
+    For first Iteration there is no history. We make a steepest descent
+    satisfying strong Wolfe Condition
     """
 
     # x_old.shape=(-1,1)
