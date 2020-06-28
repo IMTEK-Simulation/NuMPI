@@ -1,6 +1,10 @@
 Change log for NuMPI
 ===================
 
+v0.1.2 (29Jun20)
+----------------
+- Remove usage of xrange (#29)
+
 v0.1.1 (02Dec19)
 ----------------
 
