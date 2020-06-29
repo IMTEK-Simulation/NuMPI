@@ -45,33 +45,6 @@ def timer(fun, *args, **kwargs):
 def test_linesearch():
     pass
 
-
-def test_MPI_Parallel_Interface(comm):  # TODO: Duplicate with test_LBFGS_interface ?
-    """ Tests the parallel wrapping of objectives
-    Test if parallel Version gives the same as the serial Version
-    """
-
-    def printMPI(msg):
-        for i in range(comm.Get_size()):
-            comm.barrier()
-            if comm.Get_rank() == i:
-                print("Proc {}: {}".format(i, msg))
-
-    n = 10
-
-    par = MPI_Objective_Interface(mp.Extended_Rosenbrock, nb_domain_grid_pts=n, comm=comm)
-
-    printMPI(par.counts)
-
-    ref = mp.Extended_Rosenbrock
-
-    np.testing.assert_array_equal(mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices], par.startpoint())
-    np.testing.assert_almost_equal(mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),
-                                   par.f(par.startpoint()), err_msg="Different Function Value at startpoint")
-    np.testing.assert_allclose(mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[par.subdomain_slices],
-                               par.grad(par.startpoint()), err_msg="Different Gradient Value at startpoint")
-
-
 @pytest.mark.parametrize("n", [10, 20, 50])
 def test_rosenbrock_analytical_min(comm, n):
     """

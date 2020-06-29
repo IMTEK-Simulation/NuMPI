@@ -21,8 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-
+"""
+serial test
+"""
 
 import numpy as np
 import scipy.optimize
@@ -30,6 +31,7 @@ from NuMPI.Optimization import LBFGS
 from NuMPI.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
 from NuMPI import MPI
 import pytest
+import tests.Optimization.minimization_problems as mp
 
 pytestmark = pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,
@@ -38,6 +40,23 @@ pytestmark = pytest.mark.skipif(
 def my_print(*args):
     #print(*args) # uncomment this line to enable debug prints.
     pass
+
+@pytest.mark.parametrize("Objective",[mp.Trigonometric])
+@pytest.mark.parametrize("n",[10,30])
+def test_compare_scipy(Objective,n):
+    x0 = Objective.startpoint(n)
+
+    resLBGFS = LBFGS(Objective.f, x0, jac=Objective.grad, maxcor=5, gtol=1e-8, maxiter=1000)
+    assert resLBGFS.success
+    #Patch
+    #resScipy = scipy.optimize.minimize(lambda x: Objective.f(np.reshape(x,(-1,1))),np.reshape(x0,(-1,)), jac = lambda x : np.reshape(Objective.grad(np.reshape(x,(-1,1))),(-1,)),method='L-BFGS-B',tol = 1e-4)
+    resScipy = scipy.optimize.minimize(Objective.f, np.reshape(x0, (-1,)),
+                                      jac= Objective.grad,method="L-BFGS-B",
+                                      options=dict(gtol = 1e-8))
+    assert resScipy.success
+
+    np.testing.assert_allclose( np.reshape(resLBGFS.x,(-1,)),resScipy.x, rtol= 1e-2, atol = 1e-5)  #TODO: The location of the minimum seems o be hard to find
+    assert np.abs(Objective.f(resScipy.x) - Objective.f(resLBGFS.x)) < 1e-8
 
 def test_3D():
     # Gaussian Potential
