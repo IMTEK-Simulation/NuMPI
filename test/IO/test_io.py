@@ -25,19 +25,21 @@
 #
 
 
-
 import numpy as np
 import os
 import warnings
 
-from NuMPI.IO.MPIFileIO import save_npy, load_npy,  MPIFileIncompatibleResolutionError, MPIFileViewNPY, MPIFileTypeError
+from NuMPI.IO.MPIFileIO import (
+    save_npy, load_npy, MPIFileViewNPY, MPIFileTypeError
+)
 from NuMPI import MPI
 import NuMPI
 import pytest
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 
-def test_FileSave_1D(comm):
+
+def test_filesave_1D(comm):
     nb_domain_grid_pts = 128
     np.random.seed(2)
     globaldata = np.random.random(nb_domain_grid_pts)
@@ -49,12 +51,12 @@ def test_FileSave_1D(comm):
 
     if rank == nprocs - 1:
         subdomain_slices = slice(rank * step, None)
-        subdomain_locations =rank * step
-        nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
+        subdomain_locations = rank * step
+        # nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
     else:
         subdomain_slices = slice(rank * step, (rank + 1) * step)
         subdomain_locations = rank * step
-        nb_subdomain_grid_pts = step
+        # nb_subdomain_grid_pts = step
 
     localdata = globaldata[subdomain_slices]
 
@@ -63,41 +65,43 @@ def test_FileSave_1D(comm):
              subdomain_locations,
              nb_domain_grid_pts,
              comm)
-    comm.barrier() # The MPI_File reading and closing doesn't have to finish together
+    comm.barrier()  # The MPI_File reading and closing doesn't have to
+    # finish together
     loaded_data = np.load("test_Filesave_1D.npy")
-    np.testing.assert_array_equal(loaded_data,globaldata)
+    np.testing.assert_array_equal(loaded_data, globaldata)
 
     comm.barrier()
     if rank == 0:
         os.remove("test_Filesave_1D.npy")
 
-@pytest.mark.skipif(MPI.COMM_WORLD.Get_size()> 1,
-        reason="test is only serial")
-def test_FileSave_1D_list():
+
+@pytest.mark.skipif(MPI.COMM_WORLD.Get_size() > 1,
+                    reason="test is only serial")
+def test_filesave_1D_list():
     nb_domain_grid_pts = 8
-    np.random.seed(2) 
+    np.random.seed(2)
     globaldata = np.random.random(nb_domain_grid_pts).tolist()
 
-    save_npy("test_Filesave_1D_list.npy",globaldata)
+    save_npy("test_Filesave_1D_list.npy", globaldata)
 
     loaded_data = np.load("test_Filesave_1D_list.npy")
-    np.testing.assert_array_equal(loaded_data,globaldata)
+    np.testing.assert_array_equal(loaded_data, globaldata)
 
     os.remove("test_Filesave_1D_list.npy")
+
 
 @pytest.fixture(scope="module", params=("C", "F"))
 def globaldata(request, comm):
     order = request.param
 
     rank = comm.Get_rank()
-    nprocs = comm.Get_size()
 
-    nb_domain_grid_pts = (128,128)
+    nb_domain_grid_pts = (128, 128)
     np.random.seed(2)
-    if order=="C":
+    if order == "C":
         globaldata = np.random.random(nb_domain_grid_pts)
         assert globaldata.flags["C_CONTIGUOUS"]
-    elif order=="F":
+    elif order == "F":
         globaldata = np.random.random(nb_domain_grid_pts[::-1]).transpose()
         assert globaldata.flags["F_CONTIGUOUS"]
     if rank == 0:
@@ -111,7 +115,7 @@ def globaldata(request, comm):
         os.remove("test_FileLoad_2D.npy")
 
 
-### Helper function:
+# ## Helper function:
 
 class DistributedData:
     def __init__(self, data, nb_domain_grid_pts, subdomain_locations):
@@ -123,10 +127,11 @@ class DistributedData:
     @property
     def subdomain_slices(self):
         return tuple([slice(s, s + n) for s, n in
-                      zip(self.subdomain_locations, self.nb_subdomain_grid_pts)])
+                      zip(self.subdomain_locations,
+                          self.nb_subdomain_grid_pts)])
+
 
 def make_2d_slab_y(comm, globaldata):
-
     nprocs = comm.Get_size()
     rank = comm.Get_rank()
 
@@ -136,17 +141,23 @@ def make_2d_slab_y(comm, globaldata):
     if rank == nprocs - 1:
         subdomain_slices = (slice(None, None), slice(rank * step, None))
         subdomain_locations = [0, rank * step]
-        nb_subdomain_grid_pts = [nb_domain_grid_pts[0], nb_domain_grid_pts[1] - rank * step]
+        # nb_subdomain_grid_pts = [nb_domain_grid_pts[0],
+        #                          nb_domain_grid_pts[1] - rank * step]
     else:
-        subdomain_slices = (slice(None, None), slice(rank * step, (rank + 1) * step))
+        subdomain_slices = (
+            slice(None, None), slice(rank * step, (rank + 1) * step))
         subdomain_locations = [0, rank * step]
-        nb_subdomain_grid_pts = [nb_domain_grid_pts[1], step]
+        # nb_subdomain_grid_pts = [nb_domain_grid_pts[1], step]
 
-    return DistributedData(globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations)
+    return DistributedData(globaldata[subdomain_slices],
+                           nb_domain_grid_pts,
+                           subdomain_locations)
+
 
 def make_2d_slab_x(comm, globaldata):
     """
-    returns the part of globaldata attribute to the present rank in 2D data decomposition
+    returns the part of globaldata attribute to the present rank in 2D data
+    decomposition
     Parameters
     ----------
     comm : communicator
@@ -166,15 +177,19 @@ def make_2d_slab_x(comm, globaldata):
     if rank == nprocs - 1:
         subdomain_slices = (slice(rank * step, None), slice(None, None))
         subdomain_locations = [rank * step, 0]
-        nb_subdomain_grid_pts = [nb_domain_grid_pts[0] - rank * step, nb_domain_grid_pts[1]]
+        # nb_subdomain_grid_pts = [nb_domain_grid_pts[0] - rank * step,
+        #                          nb_domain_grid_pts[1]]
     else:
-        subdomain_slices = (slice(rank * step, (rank + 1) * step), slice(None, None))
+        subdomain_slices = (
+            slice(rank * step, (rank + 1) * step), slice(None, None))
         subdomain_locations = [rank * step, 0]
-        nb_subdomain_grid_pts = [step, nb_domain_grid_pts[1]]
+        # nb_subdomain_grid_pts = [step, nb_domain_grid_pts[1]]
 
-    return DistributedData(globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations)
+    return DistributedData(globaldata[subdomain_slices], nb_domain_grid_pts,
+                           subdomain_locations)
 
-@pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
+
+@pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
 def test_FileSave_2D(decompfun, comm, globaldata):
     distdata = decompfun(comm, globaldata)
 
@@ -190,33 +205,35 @@ def test_FileSave_2D(decompfun, comm, globaldata):
         os.remove("test_Filesave_2D.npy")
     comm.barrier()
 
-@pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
+
+@pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
 def test_FileView_2D(decompfun, comm, globaldata):
     distdata = decompfun(comm, globaldata)
 
-    #arr = np.load("test_FileLoad_2D.npy")
-    #assert arr.shape == self.nb_domain_grid_pts
+    # arr = np.load("test_FileLoad_2D.npy")
+    # assert arr.shape == self.nb_domain_grid_pts
 
     file = MPIFileViewNPY("test_FileLoad_2D.npy", comm=comm)
 
     assert file.nb_grid_pts == distdata.nb_domain_grid_pts
     assert file.dtype == globaldata.dtype
 
-    loaded_data = file.read(nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
-                            subdomain_locations= distdata.subdomain_locations)
-
+    loaded_data = file.read(
+        nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
+        subdomain_locations=distdata.subdomain_locations)
 
     np.testing.assert_array_equal(loaded_data, distdata.data)
 
 
-@pytest.mark.parametrize("decompfun",[make_2d_slab_x, make_2d_slab_y])
+@pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
 def test_FileLoad_2D(decompfun, comm, globaldata):
     distdata = decompfun(comm, globaldata)
 
-    loaded_data = load_npy("test_FileLoad_2D.npy",
-                           nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
-                           subdomain_locations=distdata.subdomain_locations,
-                           comm=comm)
+    loaded_data = load_npy(
+        "test_FileLoad_2D.npy",
+        nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
+        subdomain_locations=distdata.subdomain_locations,
+        comm=comm)
 
     np.testing.assert_array_equal(loaded_data, distdata.data)
 
@@ -235,6 +252,7 @@ def npyfile():
         os.remove("test_same_numpy.npy")
     except FileNotFoundError:
         pass
+
 
 @pytest.mark.skip(reason="just some statements on numpy behaviour")
 def test_detect_fortran_order(comm_self):
@@ -272,7 +290,7 @@ def test_same_numpy_load_transposed(comm_self, npyfile):
     np.testing.assert_allclose(loaded_data, data)
 
 
-def test_load_same_numpy_save(comm_self,npyfile):
+def test_load_same_numpy_save(comm_self, npyfile):
     data = np.random.random(size=(2, 3))
     save_npy(npyfile, data, comm=comm_self)
     loaded_data = np.load(npyfile)
@@ -288,8 +306,9 @@ def test_same_numpy_save_transposed(comm_self, npyfile):
     assert np.isfortran(data) == np.isfortran(loaded_data)
 
 
-#@pytest.mark.filterwarnings("error: ResourceWarnings")
-# unfortunately the ResourceWarnings are never raised even when the files are not closed
+# @pytest.mark.filterwarnings("error: ResourceWarnings")
+# unfortunately the ResourceWarnings are never raised even when the files
+# are not closed
 def test_raises_and_no_resourcewarnings(comm_self):
     with warnings.catch_warnings(record=True) as w:
         # Cause all warnings to always be triggered.
@@ -302,6 +321,7 @@ def test_raises_and_no_resourcewarnings(comm_self):
         # assert no warning is a ResourceWarning
         for wi in w:
             assert not issubclass(wi.category, ResourceWarning)
+
 
 def test_corrupted_file(comm_self):
     """
@@ -316,10 +336,13 @@ def test_corrupted_file(comm_self):
     with pytest.raises(MPIFileTypeError):
         MPIFileViewNPY("corrupted.dummy", comm=comm_self)
 
-@pytest.mark.skipif(NuMPI._has_mpi4py, reason="filestreams are not supported when "
-"                                         NuMPI is using with mpi4py")
+
+@pytest.mark.skipif(NuMPI._has_mpi4py,
+                    reason="filestreams are not supported when "
+                           "                                         NuMPI "
+                           "is using with mpi4py")
 def test_filestream(comm_self, npyfile):
-    data = np.random.normal(size=(4,6))
+    data = np.random.normal(size=(4, 6))
 
     np.save(npyfile, data)
     with open(npyfile, mode="r") as f:

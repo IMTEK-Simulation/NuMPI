@@ -27,16 +27,20 @@
 import warnings
 
 try:
-    #raise ImportError()
+    # raise ImportError()
     from mpi4py import MPI
+
     _has_mpi4py = True
 except ImportError:
-    warnings.warn('Could not import mpi4py; falling back to MPI stub implementation.', ImportWarning)
-    import NuMPI.MPIStub as MPI
+    warnings.warn('Could not import mpi4py; '
+                  'falling back to MPI stub implementation.', ImportWarning)
+    import NuMPI.MPIStub as MPI  # noqa: F401
+
     _has_mpi4py = False
 
-from . import Tools, Optimization
+from . import Tools, Optimization  # noqa: F401
 
 from ._version import get_versions
+
 __version__ = get_versions()['version']
 del get_versions

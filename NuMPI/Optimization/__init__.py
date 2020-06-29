@@ -24,5 +24,4 @@
 #
 
 
-
-from .MPI_LBFGS_Matrix_H import LBFGS
+from .MPI_LBFGS_Matrix_H import LBFGS  # noqa F401

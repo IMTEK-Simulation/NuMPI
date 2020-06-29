@@ -23,5 +23,4 @@
 #
 
 
-
-from . import Optimization
+from . import Optimization  # noqa F401

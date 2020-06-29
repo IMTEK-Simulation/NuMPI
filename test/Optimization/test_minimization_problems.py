@@ -36,12 +36,14 @@ from NuMPI import MPI
 
 import pytest
 
+
 @pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,
     reason="tests only serial funcionalities, please execute with pytest")
-@pytest.mark.parametrize("Objective",[mp.Trigonometric,mp.Extended_Rosenbrock])
-@pytest.mark.parametrize("n",[2,4,10])
-def test_directional_derivative(Objective,n) :
+@pytest.mark.parametrize("Objective",
+                         [mp.Trigonometric, mp.Extended_Rosenbrock])
+@pytest.mark.parametrize("n", [2, 4, 10])
+def test_directional_derivative(Objective, n):
     """
     Asserts the nmerical and the Gradient provided by Objective are close
     :param Objective: which function to minimize
@@ -56,39 +58,44 @@ def test_directional_derivative(Objective,n) :
         ax.set_yscale("log")
 
     for i in range(12):
-        x= Objective.bounds[0] + (Objective.bounds[1] - Objective.bounds[0]) * np.random.random(n)
-        x.shape = (-1,1)
-        u=np.random.normal(size=n) # Direction
-        u /= np.linalg.norm(u,2) # normalize
-        u.shape = (-1,1)
+        x = Objective.bounds[0] + (Objective.bounds[1] - Objective.bounds[
+            0]) * np.random.random(n)
+        x.shape = (-1, 1)
+        u = np.random.normal(size=n)  # Direction
+        u /= np.linalg.norm(u, 2)  # normalize
+        u.shape = (-1, 1)
 
         # TODO: Don't know which Tolerance to associate with which eps
-        epsilons = np.array([1e-3,1e-5,1e-6])
-        #der_numerical = np.zeros_like(epsilons)
-        #der_analytical = np.zeros_like(epsilons)
+        epsilons = np.array([1e-3, 1e-5, 1e-6])
+        # der_numerical = np.zeros_like(epsilons)
+        # der_analytical = np.zeros_like(epsilons)
         errorratios = np.zeros_like(epsilons)
         for eps, i in zip(epsilons, range(len(epsilons))):
-            #print((Objective.f(x + u * eps) - Objective.f(x)) / eps)
-            der_numerical  = (Objective.f(x + u * eps) - Objective.f(x)) / eps
-            der_analytical = (Objective.grad(x).T@u).item()
+            # print((Objective.f(x + u * eps) - Objective.f(x)) / eps)
+            der_numerical = (Objective.f(x + u * eps) - Objective.f(x)) / eps
+            der_analytical = (Objective.grad(x).T @ u).item()
 
-            errorratios[i] =  np.abs(der_numerical - der_analytical) /eps
+            errorratios[i] = np.abs(der_numerical - der_analytical) / eps
         errorratios /= errorratios[0]
         if _verbose:
-            ax.plot(epsilons,errorratios)
+            ax.plot(epsilons, errorratios)
 
-        assert (errorratios < 10).all(), "error_ratios".format(abs(der_numerical- der_analytical)/der_analytical)
+        assert (errorratios < 10).all(), "error_ratios {}".format(
+            abs(der_numerical - der_analytical) / der_analytical)
     if _verbose:
         plt.show(block=True)
+
 
 @pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,
     reason="tests only serial funcionalities, please execute with pytest")
-@pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock,mp.Trigonometric])
-@pytest.mark.parametrize("n",[2,4,10,20])
-def test_Gradient(Objective,n) :
+@pytest.mark.parametrize("Objective",
+                         [mp.Extended_Rosenbrock, mp.Trigonometric])
+@pytest.mark.parametrize("n", [2, 4, 10, 20])
+def test_Gradient(Objective, n):
     """
-    Asserts the numerical Gradient converges with order of the step to the analyitical one.
+    Asserts the numerical Gradient converges with order of the step to the
+    analyitical one.
 
     This uses check_gradient from scipy
 
@@ -99,24 +106,29 @@ def test_Gradient(Objective,n) :
     _verbose = False
     if _verbose:
         import matplotlib.pyplot as plt
-        fig,ax = plt.subplots()
+        fig, ax = plt.subplots()
         ax.set_xscale("log")
         ax.set_yscale("log")
 
-    for i in range(12): # reproduce to have a bit of statistics
-        x= Objective.bounds[0] + (Objective.bounds[1] - Objective.bounds[0]) * np.random.random(n)
-        #x.shape = (-1,1)
+    for i in range(12):  # reproduce to have a bit of statistics
+        x = Objective.bounds[0] + (Objective.bounds[1] - Objective.bounds[
+            0]) * np.random.random(n)
 
-        epsilons = np.array([1e-3,1e-5,1e-6])
-        errors = np.array([scipy.optimize.check_grad(Objective.f,Objective.grad,x,epsilon = eps) for eps in epsilons ]) # should be O(epsilon)
-        errorratios = errors / epsilons # should be O(1)
+        # x.shape = (-1,1)
+
+        epsilons = np.array([1e-3, 1e-5, 1e-6])
+        errors = np.array([scipy.optimize.check_grad(Objective.f,
+                                                     Objective.grad, x,
+                                                     epsilon=eps) for eps in
+                           epsilons])  # should be O(epsilon)
+        errorratios = errors / epsilons  # should be O(1)
         errorratios /= errorratios[0]
         if _verbose:
-            ax.plot(epsilons,errorratios)
+            ax.plot(epsilons, errorratios)
 
-
-        #print(errorratios)
-        assert np.prod(errorratios < 10), "errorratios = {}".format(errorratios)
+        # print(errorratios)
+        assert np.prod(errorratios < 10), "errorratios = {}".format(
+            errorratios)
     if _verbose:
         plt.show(block=True)
 
@@ -137,14 +149,22 @@ def test_MPI_Parallel_Interface(comm):
 
     n = 10
 
-    par = MPI_Objective_Interface(mp.Extended_Rosenbrock, nb_domain_grid_pts=n, comm=comm)
+    par = MPI_Objective_Interface(mp.Extended_Rosenbrock, nb_domain_grid_pts=n,
+                                  comm=comm)
 
     printMPI(par.counts)
 
-    ref = mp.Extended_Rosenbrock
+    # ref = mp.Extended_Rosenbrock
 
-    np.testing.assert_array_equal(mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices], par.startpoint())
-    np.testing.assert_almost_equal(mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),
-                                   par.f(par.startpoint()), err_msg="Different Function Value at startpoint")
-    np.testing.assert_allclose(mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[par.subdomain_slices],
-                               par.grad(par.startpoint()), err_msg="Different Gradient Value at startpoint")
+    np.testing.assert_array_equal(
+        mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices],
+        par.startpoint())
+    np.testing.assert_almost_equal(
+        mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),
+        par.f(par.startpoint()),
+        err_msg="Different Function Value at startpoint")
+    np.testing.assert_allclose(
+        mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[
+            par.subdomain_slices],
+        par.grad(par.startpoint()),
+        err_msg="Different Gradient Value at startpoint")

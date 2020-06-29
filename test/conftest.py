@@ -32,13 +32,13 @@ if NuMPI._has_mpi4py:
     from runtests.mpi import MPITestFixture
 
     comm = MPITestFixture([1, 2, 3, 4, 10], scope='session')
-    comm_self = MPITestFixture([1], scope='session') # pass this to a test that
+    comm_self = MPITestFixture([1],
+                               scope='session')  # pass this to a test that
     # should only be run on one processor
 else:
     @pytest.fixture(scope='session')
     def comm():
         return NuMPI.MPI.COMM_WORLD
-
 
     @pytest.fixture(scope='session')
     def comm_self():

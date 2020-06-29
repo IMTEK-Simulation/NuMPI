@@ -32,17 +32,34 @@ All rights reserved.
 
 Copyright © 2003-2013 SciPy Developers.
 All rights reserved.
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
-Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-Neither the name of Enthought nor the names of the SciPy Developers may be used to endorse or promote products derived from this software without specific prior written permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+Neither the name of Enthought nor the names of the SciPy Developers may be
+used to endorse or promote products derived from this software without
+specific prior written permission.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY,
+OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
 
 """
 
 import numpy as np
 from warnings import warn
+
 
 class LineSearchWarning(RuntimeWarning):
     pass
@@ -50,7 +67,7 @@ class LineSearchWarning(RuntimeWarning):
 
 def scalar_search_wolfe2(phi_derphi, phi0=None,
                          old_phi0=None, derphi0=None,
-                         c1=1e-4, c2=0.9, amax=None,step = None,
+                         c1=1e-4, c2=0.9, amax=None, step=None,
                          extra_condition=None, maxiter=10):
     """Find alpha that satisfies strong Wolfe conditions.
 
@@ -115,7 +132,7 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
         alpha1 = step
     else:
         if old_phi0 is not None and derphi0 != 0:
-            alpha1 = min(1.0, 1.01*2*(phi0 - old_phi0)/derphi0)
+            alpha1 = min(1.0, 1.01 * 2 * (phi0 - old_phi0) / derphi0)
         else:
             alpha1 = 1.0
 
@@ -128,7 +145,8 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
     derphi_a0 = derphi0
 
     if extra_condition is None:
-        extra_condition = lambda alpha, phi: True
+        def extra_condition(alpha, phi):
+            return True
 
     for i in range(maxiter):
         if alpha1 == 0 or (amax is not None and alpha0 == amax):
@@ -142,22 +160,22 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
             if alpha1 == 0:
                 msg = 'Rounding errors prevent the line search from converging'
             else:
-                msg = "The line search algorithm could not find a solution " + \
+                msg = "The line search algorithm could not find a solution " \
+                      + \
                       "less than or equal to amax: %s" % amax
 
             warn(msg, LineSearchWarning)
             break
 
         if (phi_a1 > phi0 + c1 * alpha1 * derphi0) or \
-           ((phi_a1 >= phi_a0) and (i > 1)):
+                ((phi_a1 >= phi_a0) and (i > 1)):
             alpha_star, phi_star, derphi_star = \
-                        _zoom(alpha0, alpha1, phi_a0,
-                              phi_a1, derphi_a0, phi_derphi,
-                              phi0, derphi0, c1, c2, extra_condition)
+                _zoom(alpha0, alpha1, phi_a0,
+                      phi_a1, derphi_a0, phi_derphi,
+                      phi0, derphi0, c1, c2, extra_condition)
             break
 
-
-        if (abs(derphi_a1) <= -c2*derphi0):
+        if (abs(derphi_a1) <= -c2 * derphi0):
             if extra_condition(alpha1, phi_a1):
                 alpha_star = alpha1
                 phi_star = phi_a1
@@ -166,9 +184,9 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
 
         if (derphi_a1 >= 0):
             alpha_star, phi_star, derphi_star = \
-                        _zoom(alpha1, alpha0, phi_a1,
-                              phi_a0, derphi_a1, phi_derphi,
-                              phi0, derphi0, c1, c2, extra_condition)
+                _zoom(alpha1, alpha0, phi_a1,
+                      phi_a0, derphi_a1, phi_derphi,
+                      phi0, derphi0, c1, c2, extra_condition)
             break
 
         alpha2 = 2 * alpha1  # increase by factor of two on each iteration
@@ -188,6 +206,7 @@ def scalar_search_wolfe2(phi_derphi, phi0=None,
         warn('The line search algorithm did not converge', LineSearchWarning)
 
     return alpha_star, phi_star, phi0, derphi_star
+
 
 def _cubicmin(a, fa, fpa, b, fb, c, fc):
     """
@@ -285,24 +304,25 @@ def _zoom(a_lo, a_hi, phi_lo, phi_hi, derphi_lo,
         if (i == 0) or (a_j is None) or (a_j > b - cchk) or (a_j < a + cchk):
             qchk = delta2 * dalpha
             a_j = _quadmin(a_lo, phi_lo, derphi_lo, a_hi, phi_hi)
-            if (a_j is None) or (a_j > b-qchk) or (a_j < a+qchk):
-                a_j = a_lo + 0.5*dalpha
+            if (a_j is None) or (a_j > b - qchk) or (a_j < a + qchk):
+                a_j = a_lo + 0.5 * dalpha
 
         # Check new value of a_j
 
         phi_aj, derphi_aj = phi_derphi(a_j)
-        if (phi_aj > phi0 + c1*a_j*derphi0) or (phi_aj >= phi_lo):
+        if (phi_aj > phi0 + c1 * a_j * derphi0) or (phi_aj >= phi_lo):
             phi_rec = phi_hi
             a_rec = a_hi
             a_hi = a_j
             phi_hi = phi_aj
         else:
-            if abs(derphi_aj) <= -c2*derphi0 and extra_condition(a_j, phi_aj):
+            if abs(derphi_aj) <= -c2 * derphi0 and extra_condition(a_j,
+                                                                   phi_aj):
                 a_star = a_j
                 val_star = phi_aj
                 valprime_star = derphi_aj
                 break
-            if derphi_aj*(a_hi - a_lo) >= 0:
+            if derphi_aj * (a_hi - a_lo) >= 0:
                 phi_rec = phi_hi
                 a_rec = a_hi
                 a_hi = a_lo

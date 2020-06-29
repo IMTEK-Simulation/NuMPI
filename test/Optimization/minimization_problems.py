@@ -24,23 +24,23 @@
 #
 
 
-
 import numpy as np
 
 """
 These are Testfunctions extracted from
 
-Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained Optimization Software. 25 (1981).
+Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained
+ Optimization Software. 25 (1981).
 
 In future I may use Scipy's example functions, see 
-https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.rosen.html#scipy.optimize.rosen
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.rosen
+.html#scipy.optimize.rosen
 """
 
-
-
 import abc
-class ObjectiveFunction(object,metaclass=abc.ABCMeta):
 
+
+class ObjectiveFunction(object, metaclass=abc.ABCMeta):
 
     @staticmethod
     @abc.abstractmethod
@@ -48,11 +48,11 @@ class ObjectiveFunction(object,metaclass=abc.ABCMeta):
         pass
 
     @classmethod
-    def f(cls,x):
+    def f(cls, x):
         return cls.f_grad(x)[0]
 
     @classmethod
-    def grad(cls,x):
+    def grad(cls, x):
         return cls.f_grad(x)[1]
 
     @classmethod
@@ -60,8 +60,6 @@ class ObjectiveFunction(object,metaclass=abc.ABCMeta):
         import matplotlib.pyplot as plt
         from helpers.plot_helpers import draw_npArrow2D
         fun = cls.f
-
-        npts = 100
 
         xg, yg = np.linspace(*cls.bounds, 51), np.linspace(*cls.bounds, 51)
 
@@ -75,7 +73,9 @@ class ObjectiveFunction(object,metaclass=abc.ABCMeta):
 
         X, Y = np.meshgrid(xg, yg)
 
-        plt.colorbar(plt.pcolormesh(X, Y, np.log10(mat_fun(xg, yg, fun)))).set_label(r"log10($\phi$)")
+        plt.colorbar(
+            plt.pcolormesh(X, Y, np.log10(mat_fun(xg, yg, fun)))).set_label(
+            r"log10($\phi$)")
         plt.plot(1 / 2, 1 / 2, '+')  # standart starting point
         ax = plt.gca()
         for x in [np.array([[0], [1]]),
@@ -102,17 +102,19 @@ class Trigonometric(ObjectiveFunction):
     :param x: 1d array
     :return:
     """
-    bounds=(-np.pi,np.pi)
+    bounds = (-np.pi, np.pi)
+
     @staticmethod
     def f_grad(x_):
         n = x_.size
         old_shape = x_.shape
-        x=np.reshape(x_,(-1,1))
+        x = np.reshape(x_, (-1, 1))
         idxVector = np.reshape(np.arange(1, n + 1), (-1, 1))
-        f = n - np.sum(np.cos(x)) +  idxVector * (1 - np.cos(x)) - np.sin(x)
+        f = n - np.sum(np.cos(x)) + idxVector * (1 - np.cos(x)) - np.sin(x)
 
-        jac = np.reshape(np.sin(x),(1,-1)) + np.diag((-np.cos(x) + idxVector * np.sin(x)).flat)
-        return np.sum(f**2).item(), np.reshape(2*jac.T@f,old_shape)
+        jac = np.reshape(np.sin(x), (1, -1)) + np.diag(
+            (-np.cos(x) + idxVector * np.sin(x)).flat)
+        return np.sum(f ** 2).item(), np.reshape(2 * jac.T @ f, old_shape)
 
     @staticmethod
     def startpoint(n):
@@ -122,15 +124,13 @@ class Trigonometric(ObjectiveFunction):
         :return:
         """
 
-        return np.reshape(np.ones(n)/n,(-1,1))
+        return np.reshape(np.ones(n) / n, (-1, 1))
 
     @staticmethod
     def plot_2D():
         import matplotlib.pyplot as plt
         from helpers.plot_helpers import draw_npArrow2D
         fun = Trigonometric.f
-
-        npts = 100
 
         xg, yg = np.linspace(-np.pi, np.pi, 51), np.linspace(-np.pi, np.pi, 51)
 
@@ -148,47 +148,49 @@ class Trigonometric(ObjectiveFunction):
         plt.plot(1 / 2, 1 / 2, '+')  # standart starting point
         ax = plt.gca()
         for x in [np.array([[0], [1]]),
-                  np.array([[-2],[-2]]),
+                  np.array([[-2], [-2]]),
                   np.array([[2], [-3]]),
                   np.array([[-3], [1]])]:
-            draw_npArrow2D(ax, x, delta=Trigonometric.grad(x)/10)
+            draw_npArrow2D(ax, x, delta=Trigonometric.grad(x) / 10)
 
             eps = 1e-4
             # unit Vector with random Direction
-            phi = (np.random.random(1)* 2* np.pi).item()
-            u = np.array([[np.cos(phi)],[np.sin(phi)]])
+            phi = (np.random.random(1) * 2 * np.pi).item()
+            u = np.array([[np.cos(phi)], [np.sin(phi)]])
 
             print((Trigonometric.f(x + u * eps) - Trigonometric.f(x)) / eps)
-            print(Trigonometric.grad(x).T@u)
+            print(Trigonometric.grad(x).T @ u)
 
             Trigonometric.grad(x)
 
+        plt.show(block=True)
 
-        plt.show(block = True)
 
 class Extended_Rosenbrock(ObjectiveFunction):
     """
 
-    https://github.com/cjtonde/optimize_rosenbrock/blob/master/src/optimize_rosenbrock.py
+    https://github.com/cjtonde/optimize_rosenbrock/blob/master/src
+    /optimize_rosenbrock.py
 
     n should be even
 
     :param x: 1d array
     :return:
     """
-    bounds=(-4,4)
+    bounds = (-4, 4)
+
     @staticmethod
     def f_grad(x):
-        n = x.size
 
-
-        sumf2  = (np.sum(100 * (x[1::2] - x[:-1:2]**2)**2 + (1 - x[:-1:2])**2 )).item()
+        sumf2 = (np.sum(
+            100 * (x[1::2] - x[:-1:2] ** 2) ** 2 + (1 - x[:-1:2]) ** 2)).item()
 
         grad = np.zeros_like(x)
-        grad[1::2]  = 200 * (x[1::2] - x[:-1:2]**2)
-        grad[:-1:2] = -400 * x[:-1:2] * (x[1::2] - x[:-1:2]**2) - 2 * (1-x[:-1:2]) # # d / dx2l-1
+        grad[1::2] = 200 * (x[1::2] - x[:-1:2] ** 2)
+        grad[:-1:2] = -400 * x[:-1:2] * (x[1::2] - x[:-1:2] ** 2) - 2 * (
+                1 - x[:-1:2])  # # d / dx2l-1
 
-        return sumf2,grad
+        return sumf2, grad
 
     @staticmethod
     def startpoint(n):
@@ -197,8 +199,8 @@ class Extended_Rosenbrock(ObjectiveFunction):
         :param n:
         :return: array of shape (1,n)
         """
-        x0 = np.zeros( n,dtype = float)
-        x0.shape = (-1,1)
+        x0 = np.zeros(n, dtype=float)
+        x0.shape = (-1, 1)
         x0[:-1:2] = -1.2
         x0[1::2] = 1
 
@@ -213,16 +215,19 @@ class Extended_Rosenbrock(ObjectiveFunction):
         """
         Location of minimum according to
 
-        Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained Optimization Software. 25 (1981).
+        Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained
+        Optimization Software. 25 (1981).
 
-        This function not necessarily have only one Minimum in higher dimensional Space: see e.g. 10.1162/evco.2006.14.1.119
+        This function not necessarily have only one Minimum in higher
+        dimensional Space: see e.g. 10.1162/evco.2006.14.1.119
 
         :param n: number of DOF
         :return: array of size n
         """
 
-        return np.ones((n,1),dtype = float)
+        return np.ones((n, 1), dtype=float)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     Extended_Rosenbrock.plot_2D()
     Trigonometric.plot_2D()

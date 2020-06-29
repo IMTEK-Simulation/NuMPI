@@ -24,5 +24,4 @@
 #
 
 
-
-from .Reduction import Reduction
+from .Reduction import Reduction  # noqa F401
