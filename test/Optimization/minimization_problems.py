@@ -32,8 +32,8 @@ These are Testfunctions extracted from
 Mori, J. J., Garbow, B. S. & Hillstrom, K. E. Testing Unconstrained
  Optimization Software. 25 (1981).
 
-In future I may use Scipy's example functions, see 
-https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.rosen
+In future I may use Scipy's example functions, see
+ https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.rosen
 .html#scipy.optimize.rosen
 """
 
