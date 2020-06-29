@@ -27,7 +27,7 @@ This runs LBFGS and scipy L-BFGS-B in serial and compare the number of iteration
 
 import os
 from NuMPI.Optimization import LBFGS
-from tests.minimization_problems import Trigonometric, Extended_Rosenbrock
+from tests.Optimization.minimization_problems import Trigonometric, Extended_Rosenbrock
 import numpy as np
 import scipy
 

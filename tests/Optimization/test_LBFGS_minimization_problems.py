@@ -29,7 +29,7 @@ import numpy as np
 import scipy.optimize
 from NuMPI.Optimization import LBFGS
 from NuMPI import MPI
-import tests.minimization_problems as mp
+import tests.Optimization.minimization_problems as mp
 
 import pytest
 pytestmark = pytest.mark.skipif(

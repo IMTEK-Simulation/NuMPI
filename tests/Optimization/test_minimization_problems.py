@@ -23,7 +23,7 @@
 #
 
 
-import tests.minimization_problems as mp
+import tests.Optimization.minimization_problems as mp
 import numpy as np
 import scipy.optimize
 from NuMPI import MPI

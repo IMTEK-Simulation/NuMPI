@@ -1,11 +1,11 @@
 import numpy as np
 from NuMPI import MPI
 from NuMPI.Tools.Reduction import Reduction
-from tests.MPI_minimization_problems import MPI_Objective_Interface, \
+from tests.Optimization.MPI_minimization_problems import MPI_Objective_Interface, \
     MPI_Quadratic
 import scipy.optimize
 import time
-import tests.minimization_problems as mp
+import tests.Optimization.minimization_problems as mp
 
 from NuMPI.Optimization.MPI_LBFGS_Matrix_H import LBFGS
 

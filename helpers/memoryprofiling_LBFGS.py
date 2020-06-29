@@ -1,6 +1,6 @@
 
 from NuMPI.Optimization import LBFGS
-from tests.MPI_minimization_problems import MPI_Quadratic
+from tests.Optimization.MPI_minimization_problems import MPI_Quadratic
 import numpy as np
 import scipy
 from NuMPI import MPI
