@@ -27,10 +27,10 @@ import pytest
 
 import numpy as np
 from NuMPI.Tools import Reduction
-from tests.Optimization.MPI_minimization_problems import MPI_Objective_Interface
+from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
 
 import time
-import tests.Optimization.minimization_problems as mp
+import test.Optimization.minimization_problems as mp
 
 from NuMPI.Optimization.MPI_LBFGS_Matrix_H import steepest_descent_wolfe2, LBFGS
 

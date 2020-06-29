@@ -31,7 +31,7 @@ from NuMPI.Optimization import LBFGS
 from NuMPI.Optimization.Wolfe import second_wolfe_condition,first_wolfe_condition
 from NuMPI import MPI
 import pytest
-import tests.Optimization.minimization_problems as mp
+import test.Optimization.minimization_problems as mp
 
 pytestmark = pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,

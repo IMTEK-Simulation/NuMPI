@@ -28,8 +28,8 @@ import pytest
 from NuMPI.Optimization import LBFGS
 from NuMPI.Tools import Reduction
 from runtests.mpi import MPITestFixture
-import tests.Optimization.minimization_problems as mp
-import tests.Optimization.MPI_minimization_problems as mpi_mp
+import test.Optimization.minimization_problems as mp
+import test.Optimization.MPI_minimization_problems as mpi_mp
 
 @pytest.fixture
 def pnp(comm):

@@ -27,8 +27,8 @@ Tests the that the objective functions provided for the tests are
 correctly implemented
 """
 
-import tests.Optimization.minimization_problems as mp
-from tests.Optimization.MPI_minimization_problems import MPI_Objective_Interface
+import test.Optimization.minimization_problems as mp
+from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
 import numpy as np
 import scipy.optimize
 from NuMPI import MPI
