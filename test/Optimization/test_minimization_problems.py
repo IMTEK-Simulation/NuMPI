@@ -22,12 +22,22 @@
 # SOFTWARE.
 #
 
+"""
+Tests the that the objective functions provided for the tests are
+correctly implemented
+"""
 
-import tests.minimization_problems as mp
+import test.Optimization.minimization_problems as mp
+from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
 import numpy as np
 import scipy.optimize
+from NuMPI import MPI
 
 import pytest
+
+@pytest.mark.skipif(
+    MPI.COMM_WORLD.Get_size() > 1,
+    reason="tests only serial funcionalities, please execute with pytest")
 @pytest.mark.parametrize("Objective",[mp.Trigonometric,mp.Extended_Rosenbrock])
 @pytest.mark.parametrize("n",[2,4,10])
 def test_directional_derivative(Objective,n) :
@@ -69,6 +79,10 @@ def test_directional_derivative(Objective,n) :
         assert (errorratios < 10).all(), "error_ratios".format(abs(der_numerical- der_analytical)/der_analytical)
     if _verbose:
         plt.show(block=True)
+
+@pytest.mark.skipif(
+    MPI.COMM_WORLD.Get_size() > 1,
+    reason="tests only serial funcionalities, please execute with pytest")
 @pytest.mark.parametrize("Objective",[mp.Extended_Rosenbrock,mp.Trigonometric])
 @pytest.mark.parametrize("n",[2,4,10,20])
 def test_Gradient(Objective,n) :
@@ -104,3 +118,32 @@ def test_Gradient(Objective,n) :
         assert np.prod(errorratios < 10), "errorratios = {}".format(errorratios)
     if _verbose:
         plt.show(block=True)
+
+
+@pytest.mark.skipif(
+    MPI.COMM_WORLD.Get_size() > 1,
+    reason="tests only serial funcionalities, please execute with pytest")
+def test_MPI_Parallel_Interface(comm):
+    """ Tests the parallel wrapping of objectives
+    Test if parallel Version gives the same as the serial Version
+    """
+
+    def printMPI(msg):
+        for i in range(comm.Get_size()):
+            comm.barrier()
+            if comm.Get_rank() == i:
+                print("Proc {}: {}".format(i, msg))
+
+    n = 10
+
+    par = MPI_Objective_Interface(mp.Extended_Rosenbrock, nb_domain_grid_pts=n, comm=comm)
+
+    printMPI(par.counts)
+
+    ref = mp.Extended_Rosenbrock
+
+    np.testing.assert_array_equal(mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices], par.startpoint())
+    np.testing.assert_almost_equal(mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),
+                                   par.f(par.startpoint()), err_msg="Different Function Value at startpoint")
+    np.testing.assert_allclose(mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[par.subdomain_slices],
+                               par.grad(par.startpoint()), err_msg="Different Gradient Value at startpoint")
