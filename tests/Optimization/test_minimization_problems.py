@@ -123,7 +123,7 @@ def test_Gradient(Objective,n) :
 @pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,
     reason="tests only serial funcionalities, please execute with pytest")
-def test_MPI_Parallel_Interface(comm):  # TODO: Duplicate with test_LBFGS_interface ?
+def test_MPI_Parallel_Interface(comm):
     """ Tests the parallel wrapping of objectives
     Test if parallel Version gives the same as the serial Version
     """
