@@ -14,7 +14,7 @@ install:
   - python setup.py install
   - if [ "$WITH_MPI" == "yes" ]; then python -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION}; fi
 script:
-  - if [ "$WITH_MPI" == "yes" ]; then python run-tests.py --verbose --full-trace -s; else pytest --verbose --full-trace -s; fi
+  - if [ "$WITH_MPI" == "yes" ]; then python run-tests.py --verbose --full-trace -s; else python -m pytest --flake8 --verbose --full-trace -s; fi
 notifications:
   email:
     - antoine.sanner@imtek.uni-freiburg.de
