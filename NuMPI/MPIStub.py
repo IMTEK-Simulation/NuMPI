@@ -1,19 +1,20 @@
 #
-# Copyright 2019 Lars Pastewka
-#           2019 Antoine Sanner
-# 
+# Copyright 2019-2020 Antoine Sanner
+#           2020 k.o.haase@googlemail.com
+#           2019 Lars Pastewka
+#
 # ### MIT license
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,13 +38,15 @@ import numpy as np
 from io import TextIOBase
 
 
-### Data types
+# ## Data types
 
 class VectorDatatype(object):
     def __init__(self, oldtype, count, blocklength, stride):
         if stride != blocklength:
-            raise NotImplementedError('Only vector datatypes with stride == blocklength are presently supported by '
-                                      'the MPI stub interface.')
+            raise NotImplementedError(
+                'Only vector datatypes with stride == blocklength are '
+                'presently supported by '
+                'the MPI stub interface.')
         self._oldtype = oldtype
         self._count = count
         self._blocklength = blocklength
@@ -84,7 +87,7 @@ class Typedict(object):
 _typedict = Typedict()
 
 
-### Operations
+# ## Operations
 
 class Operations(Enum):
     MIN = 1
@@ -115,7 +118,7 @@ MAXLOC = Operations.MAXLOC
 MINLOC = Operations.MINLOC
 
 
-### Opening modes
+# ## Opening modes
 
 class OpeningMode(Enum):
     MODE_RDONLY = 1
@@ -156,7 +159,7 @@ MODE_CREATE = OpeningMode.MODE_CREATE
 # MODE_APPEND = OpeningModes.MODE_APPEND
 
 
-### Stub communicator object
+# ## Stub communicator object
 
 class Intracomm(object):
     def Barrier(self):
@@ -180,18 +183,20 @@ class Intracomm(object):
 
         try:
             senddata, sendtype = sendbuf
-        except:
+        except Exception:
             senddata = sendbuf
             sendtype = sendbuf.dtype
 
         try:
             recvdata, recvtype = recvbuf
-        except:
+        except Exception:
             recvdata = recvbuf
             recvtype = recvbuf.dtype
 
         if sendtype != recvtype:
-            raise TypeError('Mismatch in send and receive MPI datatypes in MPI stub implementation.')
+            raise TypeError(
+                'Mismatch in send and receive MPI datatypes in MPI stub '
+                'implementation.')
 
         recvdata[...] = senddata
 
@@ -200,34 +205,38 @@ class Intracomm(object):
     def Allgather(self, sendbuf, recvbuf_counts):
         try:
             senddata, sendtype = sendbuf
-        except:
+        except Exception:
             senddata = sendbuf
             sendtype = sendbuf.dtype
 
         try:
             recvdata, counts, recvtype = recvbuf_counts
-        except:
+        except Exception:
             recvdata, counts = recvbuf_counts
             recvtype = recvdata.dtype
 
         if sendtype != recvtype:
-            raise TypeError('Mismatch in send and receive MPI datatypes in MPI stub implementation.')
+            raise TypeError(
+                'Mismatch in send and receive MPI datatypes in MPI stub '
+                'implementation.')
 
         recvdata[...] = senddata
 
     Allgatherv = Allgather
 
 
-### Stub file I/O object
+# ## Stub file I/O object
 
 class File(object):
     @classmethod
-    def Open(cls, comm, filename, amode=MODE_RDONLY):  # FIXME: This method has an optional info argument
+    def Open(cls, comm, filename, amode=MODE_RDONLY):
+        # FIXME: This method has an optional info argument
         return File(comm, filename, amode)
 
     def __init__(self, comm, filename, amode):
         if not isinstance(comm, Intracomm):
-            raise RuntimeError('Communicator object must be an instance of `Intracomm`.')
+            raise RuntimeError(
+                'Communicator object must be an instance of `Intracomm`.')
 
         self.already_open = False
         if not hasattr(filename, 'read'):
@@ -251,8 +260,9 @@ class File(object):
     def Read(self, buf):
         try:
             data = self._file.read(buf.size * buf.itemsize)
-            buf[...] = np.frombuffer(data, count=buf.size, dtype=buf.dtype).reshape(buf.shape)
-        except:
+            buf[...] = np.frombuffer(data, count=buf.size,
+                                     dtype=buf.dtype).reshape(buf.shape)
+        except Exception:
             if not self.already_open:
                 self.Close
 

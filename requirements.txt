@@ -1,4 +1,7 @@
 numpy
 scipy>=1.1.0
+pylint>0.25
+pep8>=0.6
 pytest
+pytest-flake8
 git+https://github.com/AntoineSIMTEK/runtests.git

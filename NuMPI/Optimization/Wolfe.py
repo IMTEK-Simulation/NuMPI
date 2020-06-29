@@ -1,18 +1,19 @@
 #
 # Copyright 2019 Lars Pastewka
-# 
+#           2018 Antoine Sanner
+#
 # ### MIT license
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-# 
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,8 +24,8 @@
 #
 
 
-
 import numpy as np
+
 
 def first_wolfe_condition(fun, x0, fprime, direction, alpha, beta1):
     """
@@ -38,8 +39,9 @@ def first_wolfe_condition(fun, x0, fprime, direction, alpha, beta1):
     alpha       -- step size
     beta1       -- lower wolfe bound
     """
-    return fun(x0+alpha*direction) <= fun(x0) + \
-        alpha * beta1 * float(np.dot(fprime(x0).T ,direction))
+    return (fun(x0 + alpha * direction) <= fun(x0) +
+            alpha * beta1 * float(np.dot(fprime(x0).T, direction)))
+
 
 def second_wolfe_condition(x0, fprime, direction, alpha, beta2):
     """
@@ -52,5 +54,5 @@ def second_wolfe_condition(x0, fprime, direction, alpha, beta2):
     alpha     -- step size
     beta2     -- upper wolfe bound
     """
-    return (float(np.dot(fprime(x0 + alpha*direction).T ,direction)) >=
-            beta2*float(np.dot(fprime(x0).T , direction) ))
+    return (float(np.dot(fprime(x0 + alpha * direction).T, direction)) >=
+            beta2 * float(np.dot(fprime(x0).T, direction)))
