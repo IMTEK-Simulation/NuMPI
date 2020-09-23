@@ -57,3 +57,8 @@ On NEMO for example
 ```bash
 msub -q express -l walltime=15:00,nodes=1:ppn=20 NEMO_test_job.sh -m bea
 ```
+
+Funding
+-------
+
+Development of this project is funded by the [European Research Council](https://erc.europa.eu) within [Starting Grant 757343](https://cordis.europa.eu/project/id/757343) and by the [Deutsche Forschungsgemeinschaft](https://www.dfg.de/en) within project [EXC 2193](https://gepris.dfg.de/gepris/projekt/390951807).
