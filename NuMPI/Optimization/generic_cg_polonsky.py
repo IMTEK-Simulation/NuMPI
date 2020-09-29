@@ -198,7 +198,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         denom = np.sum(des_dir.T * hessp_val)
 
         if bugnicourt and not polonskykeer:
-            alpha = np.sum(residual.T * des_dir) / denom
+            alpha = -np.sum(residual.T * des_dir) / denom
         elif not bugnicourt and polonskykeer:
             if mean_value is not None:
                 '''Here hessp_val is used as r_ij in original algorithm'''
@@ -215,8 +215,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
 
         if polonskykeer and not bugnicourt:
             x[mask_c] += alpha * des_dir[mask_c]
-        elif bugnicourt and not polonskykeer:
-            x -= alpha * des_dir
+        # elif bugnicourt and not polonskykeer:
+        #     x -= alpha * des_dir
         else:
             '''Updating the objective variable'''
             x += alpha * des_dir
