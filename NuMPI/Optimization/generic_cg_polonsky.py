@@ -206,7 +206,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             if mask_c.sum() != 0:
                 '''alpha is TAU from algorithm'''
                 alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                        / np.sum(hessp_val[mask_c] * des_dir[mask_c])
+                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
             else:
                 alpha = 0.0
             assert alpha >= 0
@@ -221,12 +221,12 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             '''Updating the objective variable'''
             x += alpha * des_dir
 
-        '''If mean gap is constant then enforce an extra condition on gap 
+        '''If mean gap is constant then enforce an extra condition on gap
         "x". '''
         if mean_value is not None and not polonskykeer:
             x = (mean_value / np.mean(x)) * x
 
-        '''If mean gap is constant then enforce an extra condition on 
+        '''If mean gap is constant then enforce an extra condition on
         residual'''
         if mean_value is not None and not polonskykeer:
             mask_nc = x > 0
@@ -344,7 +344,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         if polonskykeer:
             if mask_c.sum() != 0:
                 if np.max(abs(residual[mask_c])) <= gtol:
-                    res_cnvg = True
+                    res_cnvg = True  # noqa: F841
+                    # FIXME
                 else:
                     res_convg = False
             if (res_convg or (rms_pen <= gtol)) and n_iterations >= 10:
@@ -354,7 +355,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 else:
                     hessp_val = hessp(des_dir)
                 alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                        / np.sum(hessp_val[mask_c] * des_dir[mask_c])
+                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
                 assert alpha > 0
                 x[mask_c] += alpha * des_dir[mask_c]
                 mask_neg = x <= 0
@@ -404,8 +405,9 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                                            'fun': fun(x)[0],
                                            'jac': residual,
                                            'nit': n_iterations,
-                                           'message': 'CONVERGENCE: '
-                                                      'NORM_OF_GRADIENT_<=_GTOL',
+                                           'message':
+                                           'CONVERGENCE: '
+                                           'NORM_OF_GRADIENT_<=_GTOL',
                                            })
             return result
 
