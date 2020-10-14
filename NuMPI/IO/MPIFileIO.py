@@ -163,6 +163,9 @@ class MPIFileView(metaclass=abc.ABCMeta):
     def __init__(self, fn, comm):
         self.fn = fn
         self.comm = comm
+        # if hasattr read, it is a stream and it should not close the file
+        self.close_file_on_error = not hasattr(fn, 'read')
+
 
     @abc.abstractmethod
     def _read_header(self):
@@ -248,9 +251,10 @@ class MPIFileViewNPY(MPIFileView):
             self.dtype = np.dtype(d['descr'])
             self.fortran_order = d['fortran_order']
             self.nb_grid_pts = d['shape']
+            self.data_start = self.file.Get_position()
         except Exception as err:
             # FIXME! This should be handled through a resource manager
-            if self.file is not None:
+            if self.file is not None and self.close_file_on_error:
                 self.file.Close()
             raise err
 
@@ -292,7 +296,7 @@ class MPIFileViewNPY(MPIFileView):
 
         filetype.Commit()  # verification if type is OK
         self.file.Set_view(
-            self.file.Get_position() + (
+            self.data_start + (
                     subdomain_locations[ix] * self.nb_grid_pts[iy] +
                     subdomain_locations[iy]) * mpitype.Get_size(),
             filetype=filetype)
