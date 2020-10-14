@@ -1,6 +1,10 @@
 Change log for NuMPI
 ===================
 
+v0.1.3 (14Oct20)
+----------------
+- BUG: make_mpi_file_view was not compatible with filestreams
+
 v0.1.2 (29Jun20)
 ----------------
 - Remove usage of xrange (#29)

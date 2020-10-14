@@ -31,7 +31,6 @@ MPI-parallel writing of matrices in numpy's 'npy' format.
 from .. import MPI
 import numpy as np
 import struct
-import os.path
 import abc
 
 from numpy.compat import asstr
@@ -180,10 +179,6 @@ def make_mpi_file_view(fn, comm,
     readers = {
         "npy": MPIFileViewNPY
     }
-
-    if not os.path.isfile(fn):
-        raise FileExistsError("file {} not found".format(fn))
-    # TODO: chack existence of file also with parallel reader.
 
     if format is not None:
         try:
