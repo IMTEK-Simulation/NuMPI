@@ -166,7 +166,6 @@ class MPIFileView(metaclass=abc.ABCMeta):
         # if hasattr read, it is a stream and it should not close the file
         self.close_file_on_error = not hasattr(fn, 'read')
 
-
     @abc.abstractmethod
     def _read_header(self):
         pass
