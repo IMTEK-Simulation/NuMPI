@@ -356,11 +356,16 @@ def test_filestream(comm_self, npyfile):
 @pytest.mark.skipif(NuMPI._has_mpi4py,
                     reason="filestreams are not supported when NuMPI "
                            "is using with mpi4py")
-@pytest.mark.parametrize("mode", ["r", "rb"])
-def test_filestream_make_mpi_file_view(comm_self, npyfile, mode):
+@pytest.mark.parametrize("mode", ["r"] if NuMPI._has_mpi4py else ["r", "rb"])
+def test_make_mpi_file_view(comm_self, npyfile, mode):
     data = np.random.normal(size=(4, 6))
 
     np.save(npyfile, data)
     with open(npyfile, mode=mode) as f:
-        read_data = make_mpi_file_view(f, comm=comm_self).read()
+        fileview = make_mpi_file_view(f, comm=comm_self)
+        read_data = fileview.read()
+        np.testing.assert_allclose(read_data, data)
+
+        # assert data can be read several times
+        read_data = fileview.read()
         np.testing.assert_allclose(read_data, data)
