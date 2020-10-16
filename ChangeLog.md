@@ -1,5 +1,8 @@
 Change log for NuMPI
 ===================
+v0.1.4 (16Oct20)
+----------------
+- BUG: don't close filestream on failure
 
 v0.1.3 (14Oct20)
 ----------------
