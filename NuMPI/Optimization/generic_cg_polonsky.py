@@ -273,7 +273,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         residual_mag = np.sum(residual ** 2) ** (1.0 / 2.0)
         if polonskykeer:
             if mean_value is not None:
-                P = np.sum(x)
+                # P = np.sum(x)
+                P = np.mean(x)
                 P0 = mean_value
                 x *= (P0 / P)
 
@@ -373,7 +374,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                         mask_overlap]
 
                 if mean_value is not None:
-                    P = np.sum(x)
+                    # P = np.sum(x)
+                    P = np.mean(x)
                     P0 = mean_value
                     x *= (P0 / P)
 
@@ -390,15 +392,16 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             else:
                 converged = False
 
-        elif (np.max(abs(residual)) <= gtol) and n_iterations >= 3:
+        elif (np.max(abs(residual)) <= gtol) and n_iterations >= 10:
             converged = True
             rms_pen_ = 0.0
             if residual_plot:
-                plt.pyplot.plot(range(n_iterations), np.log10(grads),
+                import matplotlib.pyplot as plt
+                plt.plot(range(n_iterations), np.log10(grads),
                                 label='residuals')
-                plt.pyplot.xlabel('iterations')
-                plt.pyplot.ylabel('residuals')
-                plt.pyplot.show()
+                plt.xlabel('iterations')
+                plt.ylabel('residuals')
+                plt.show()
 
         if converged:
 
@@ -435,10 +438,11 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 logger.st(log_headers, log_values, force_print=True)
 
             if residual_plot:
-                plt.pyplot.plot(range(n_iterations), np.log10(grads),
+                import matplotlib.pyplot as plt
+                plt.plot(range(n_iterations), np.log10(grads),
                                 label='residuals')
-                plt.pyplot.xlabel('iterations')
-                plt.pyplot.ylabel('residuals')
-                plt.pyplot.show()
+                plt.xlabel('iterations')
+                plt.ylabel('residuals')
+                plt.show()
 
             return result
