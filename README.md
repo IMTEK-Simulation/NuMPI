@@ -35,9 +35,7 @@ Testing
 
 You have to do a development installation to be able to run the tests.
 
-We use [runtests](https://github.com/bccp/runtests). At the moment a slight modification in my [fork](https://github.com/AntoineSIMTEK/runtests). 
-
-(To install with pip: `python3 -m pip install https://github.com/AntoineSIMTEK/runtests.git`)
+We use [runtests](https://github.com/bccp/runtests). 
 
 From the main installation directory:
 ```bash

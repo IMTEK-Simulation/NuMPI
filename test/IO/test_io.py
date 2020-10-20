@@ -30,8 +30,8 @@ import os
 import warnings
 
 from NuMPI.IO.MPIFileIO import (
-    save_npy, load_npy, MPIFileViewNPY, MPIFileTypeError
-)
+    save_npy, load_npy, MPIFileViewNPY, MPIFileTypeError, make_mpi_file_view
+    )
 from NuMPI import MPI
 import NuMPI
 import pytest
@@ -350,4 +350,22 @@ def test_filestream(comm_self, npyfile):
         np.testing.assert_allclose(read_data, data)
     with open(npyfile, mode="rb") as f:
         read_data = load_npy(f, comm=comm_self)
+        np.testing.assert_allclose(read_data, data)
+
+
+@pytest.mark.skipif(NuMPI._has_mpi4py,
+                    reason="filestreams are not supported when NuMPI "
+                           "is using with mpi4py")
+@pytest.mark.parametrize("mode", ["r"] if NuMPI._has_mpi4py else ["r", "rb"])
+def test_make_mpi_file_view(comm_self, npyfile, mode):
+    data = np.random.normal(size=(4, 6))
+
+    np.save(npyfile, data)
+    with open(npyfile, mode=mode) as f:
+        fileview = make_mpi_file_view(f, comm=comm_self)
+        read_data = fileview.read()
+        np.testing.assert_allclose(read_data, data)
+
+        # assert data can be read several times
+        read_data = fileview.read()
         np.testing.assert_allclose(read_data, data)
