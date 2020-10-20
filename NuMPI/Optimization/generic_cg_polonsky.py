@@ -20,6 +20,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 The objective function to be minimized.
                             fun(x) -> float(energy),ndarray(gradient)
                 where x is the input ndarray.
+                Energy is never used in the computations. Only for scipy
+                friendly interface.
     hessp : callable
             Function to evaluate the hessian product of the objective.
             Hessp should accept either 1 argument (desscent direction) or
@@ -36,7 +38,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
     gtol : float, optional
            Default value : 1e-8
 
-    mean_value : int/float, optional
+    mean_value : float, optional
                If you want to apply the mean_value constraint then provide an
                int/float value to the mean_value.
 
@@ -59,6 +61,9 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
 
     Returns
     -------
+
+    A scipy OptimizeResult Object with,
+
     success : bool
               True if convergence else False.
     x : array
@@ -92,8 +97,11 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                          'a bool \
                          is expected'.format(type(residual_plot)))
 
-    if np.max(abs(x0)) == 0:
+    if np.max(abs(x0)) == 0 or x0 is None:
         raise ValueError('This is not a reasonable initial guess. x0>0 !!')
+
+    # TODO:  convert bugnicourt and polonskykeer flags to string and check the
+    #  string here to give bool output.
 
     gtol = gtol
     fun = objective
@@ -105,7 +113,6 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         x = x0.copy()
         if polonskykeer:
             '''Take care of constraint a_x*a_y*sum(p_ij)=P0'''
-            # print("Total force is  :: {}".format(np.sum(x)))
             delta = 0
             G_old = 1
             delta_str = 'sd'
@@ -114,7 +121,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
 
     'Mask to truncate the negative values'
     mask_neg = x <= 0  # TODO: find a more explicit name, like active set:
-    # where the constraint is actuve. Not sure what is the appropriate name
+    # where the constraint is active. Not sure what is the appropriate name
     x[mask_neg] = 0.0
 
     'Initial residual or GAP for polonsky-keer'
@@ -213,7 +220,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         else:
             alpha = np.sum(residual.T * residual) / denom
 
-        if polonskykeer and not bugnicourt:
+        if polonskykeer:
             x[mask_c] += alpha * des_dir[mask_c]
         # elif bugnicourt and not polonskykeer:
         #     x -= alpha * des_dir
@@ -226,8 +233,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         if mean_value is not None and not polonskykeer:
             x = (mean_value / np.mean(x)) * x
 
-        '''If mean gap is constant then enforce an extra condition on
-        residual'''
+        '''If mean gap is constant then enforce an extra condition on residual.
+        '''
         if mean_value is not None and not polonskykeer:
             mask_nc = x > 0
             residual = residual - np.mean(residual[mask_nc])
@@ -266,7 +273,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         residual_mag = np.sum(residual ** 2) ** (1.0 / 2.0)
         if polonskykeer:
             if mean_value is not None:
-                P = np.sum(x)
+                # P = np.sum(x)
+                P = np.mean(x)
                 P0 = mean_value
                 x *= (P0 / P)
 
@@ -344,8 +352,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         if polonskykeer:
             if mask_c.sum() != 0:
                 if np.max(abs(residual[mask_c])) <= gtol:
-                    res_cnvg = True  # noqa: F841
-                    # FIXME
+                    res_convg = True
                 else:
                     res_convg = False
             if (res_convg or (rms_pen <= gtol)) and n_iterations >= 10:
@@ -367,7 +374,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                         mask_overlap]
 
                 if mean_value is not None:
-                    P = np.sum(x)
+                    # P = np.sum(x)
+                    P = np.mean(x)
                     P0 = mean_value
                     x *= (P0 / P)
 
@@ -384,15 +392,16 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             else:
                 converged = False
 
-        elif (np.max(abs(residual)) <= gtol) and n_iterations >= 3:
+        elif (np.max(abs(residual)) <= gtol) and n_iterations >= 10:
             converged = True
             rms_pen_ = 0.0
             if residual_plot:
-                plt.pyplot.plot(range(n_iterations), np.log10(grads),
+                import matplotlib.pyplot as plt
+                plt.plot(range(n_iterations), np.log10(grads),
                                 label='residuals')
-                plt.pyplot.xlabel('iterations')
-                plt.pyplot.ylabel('residuals')
-                plt.pyplot.show()
+                plt.xlabel('iterations')
+                plt.ylabel('residuals')
+                plt.show()
 
         if converged:
 
@@ -405,9 +414,9 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                                            'fun': fun(x)[0],
                                            'jac': residual,
                                            'nit': n_iterations,
-                                           'message':
-                                           'CONVERGENCE: '
-                                           'NORM_OF_GRADIENT_<=_GTOL',
+                                           'message': 'CONVERGENCE: '
+                                                      'NORM_OF_GRADIENT <= '
+                                                      'GTOL',
                                            })
             return result
 
@@ -429,10 +438,11 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 logger.st(log_headers, log_values, force_print=True)
 
             if residual_plot:
-                plt.pyplot.plot(range(n_iterations), np.log10(grads),
+                import matplotlib.pyplot as plt
+                plt.plot(range(n_iterations), np.log10(grads),
                                 label='residuals')
-                plt.pyplot.xlabel('iterations')
-                plt.pyplot.ylabel('residuals')
-                plt.pyplot.show()
+                plt.xlabel('iterations')
+                plt.ylabel('residuals')
+                plt.show()
 
             return result
