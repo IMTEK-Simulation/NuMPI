@@ -1,6 +1,5 @@
 import numpy as np
 import scipy.optimize as optim
-import matplotlib as plt
 from inspect import signature
 
 
@@ -20,8 +19,6 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 The objective function to be minimized.
                             fun(x) -> float(energy),ndarray(gradient)
                 where x is the input ndarray.
-                Energy is never used in the computations. Only for scipy
-                friendly interface.
     hessp : callable
             Function to evaluate the hessian product of the objective.
             Hessp should accept either 1 argument (desscent direction) or
@@ -38,7 +35,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
     gtol : float, optional
            Default value : 1e-8
 
-    mean_value : float, optional
+    mean_value : int/float, optional
                If you want to apply the mean_value constraint then provide an
                int/float value to the mean_value.
 
@@ -61,9 +58,6 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
 
     Returns
     -------
-
-    A scipy OptimizeResult Object with,
-
     success : bool
               True if convergence else False.
     x : array
@@ -97,11 +91,8 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                          'a bool \
                          is expected'.format(type(residual_plot)))
 
-    if np.max(abs(x0)) == 0 or x0 is None:
+    if np.max(abs(x0)) == 0:
         raise ValueError('This is not a reasonable initial guess. x0>0 !!')
-
-    # TODO:  convert bugnicourt and polonskykeer flags to string and check the
-    #  string here to give bool output.
 
     gtol = gtol
     fun = objective
@@ -113,29 +104,36 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
         x = x0.copy()
         if polonskykeer:
             '''Take care of constraint a_x*a_y*sum(p_ij)=P0'''
+            # print("Total force is  :: {}".format(np.sum(x)))
             delta = 0
             G_old = 1
             delta_str = 'sd'
     else:
         raise ValueError('Input required for x0/initial value !!')
 
+    mask_c = x > 0
+
     'Mask to truncate the negative values'
-    mask_neg = x <= 0  # TODO: find a more explicit name, like active set:
-    # where the constraint is active. Not sure what is the appropriate name
-    x[mask_neg] = 0.0
+    # mask_not_c = x <= 0  # TODO: find a more explicit name, like active set:
+    # where the constraint is actuve. Not sure what is the appropriate name
+    x[np.logical_not(mask_c)] = 0.0
 
     'Initial residual or GAP for polonsky-keer'
     residual = fun(x)[1]
     residual = residual
 
+    if mean_value is not None:
+        residual = residual - np.mean(residual[mask_c])
+
     if polonskykeer:
         mask_c = x > 0
-        if mean_value is not None:
-            residual = residual - np.mean(residual[mask_c])
+        # if mean_value is not None:
+        #     residual = residual - np.mean(residual[mask_c])
         G = np.sum(residual[mask_c] ** 2)
     else:
-        mask_res = residual >= 0
-        residual[np.logical_and(mask_neg, mask_res)] = 0.0
+        mask_res = residual > 0
+        mask_bounded = np.logical_and(np.logical_not(mask_c), mask_res)
+        residual[mask_bounded] = 0.0
 
     residual_mag = np.sum(residual ** 2) ** (1.0 / 2.0)
     des_dir = np.zeros(np.shape(x))
@@ -143,23 +141,18 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
     if polonskykeer:
 
         des_dir[mask_c] = -residual[mask_c]
-        # + delta * (G / G_old) * des_dir[mask_c]
-        # des_dir[np.logical_not(
-        #     mask_c)] = 0  # TODO: this is superflous since it has been
-        # # initialised to an array of zeros
-
-        des_dir[mask_c] = -residual[mask_c]
         des_dir[np.logical_not(mask_c)] = 0
 
         G_old = G
-        if mask_neg.sum() > 0:
-            rms_pen = np.sqrt(G / mask_neg.sum())
+        if np.logical_not(mask_c).sum() > 0:
+            rms_pen = np.sqrt(G / np.logical_not(mask_c).sum())
         else:
             rms_pen = np.sqrt(G)  # TODO: I guess in this case G is one anyway.
             #       Is this line actually ever executed ?
     else:
         '''Set descent direction initially to steepest descent'''
-        des_dir = -residual
+        des_dir[np.logical_not(mask_bounded)] = -residual[
+            np.logical_not(mask_bounded)]
 
     residual_old = residual
     des_dir_old = des_dir
@@ -212,37 +205,29 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 hessp_val = hessp_val - np.mean(hessp_val[mask_c])
             if mask_c.sum() != 0:
                 '''alpha is TAU from algorithm'''
-                alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
+                alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) / np.sum(
+                    hessp_val[mask_c] * des_dir[mask_c])
             else:
                 alpha = 0.0
             assert alpha >= 0
         else:
             alpha = np.sum(residual.T * residual) / denom
 
-        if polonskykeer:
+        if polonskykeer and not bugnicourt:
             x[mask_c] += alpha * des_dir[mask_c]
-        # elif bugnicourt and not polonskykeer:
-        #     x -= alpha * des_dir
         else:
             '''Updating the objective variable'''
             x += alpha * des_dir
 
-        '''If mean gap is constant then enforce an extra condition on gap
-        "x". '''
+        '''mask for contact'''
+        mask_c = x > 0
+        '''truncating negative values'''
+        x[np.logical_not(mask_c)] = 0.0
+
+        '''If mean gap is constant then enforce an extra condition on gap "x".
+         '''
         if mean_value is not None and not polonskykeer:
             x = (mean_value / np.mean(x)) * x
-
-        '''If mean gap is constant then enforce an extra condition on residual.
-        '''
-        if mean_value is not None and not polonskykeer:
-            mask_nc = x > 0
-            residual = residual - np.mean(residual[mask_nc])
-
-        '''mask for contact'''
-        mask_neg = x <= 0
-        '''truncating negative values'''
-        x[mask_neg] = 0.0
 
         if not polonskykeer:
             '''Updating old residual'''
@@ -251,9 +236,15 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             '''Updating the new residual as gradient of objective'''
             residual = fun(x)[1]
 
+        '''If mean gap is constant then enforce an extra condition on residual
+        '''
+        if mean_value is not None and not polonskykeer:
+            mask_c = x > 0
+            residual = residual - np.mean(residual[mask_c])
+
         if polonskykeer:
             mask_res = residual < 0
-            mask_overlap = np.logical_and(mask_neg, mask_res)
+            mask_overlap = np.logical_and(np.logical_not(mask_c), mask_res)
             if mask_overlap.sum() == 0:
                 delta = 1
                 delta_str = 'cg'
@@ -263,25 +254,29 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                     mask_overlap]
                 delta_str = 'sd'
         else:
-            mask_res = residual >= 0
+            mask_res = residual > 0
             '''Updating residual as per NA region'''
-            mask_na = np.logical_and(mask_neg, mask_res)
-            residual[mask_na] = 0.0
+            mask_bounded = np.logical_and(np.logical_not(mask_c), mask_res)
+            residual[mask_bounded] = 0.0
+
+        '''If mean gap is constant then enforce an extra condition on residual
+        '''
+        if mean_value is not None and not polonskykeer:
+            mask_nonzero = residual != 0
+            residual[mask_nonzero] = residual[mask_nonzero] - np.mean(
+                residual[mask_nonzero])
 
         # '''updating old residual magnitude value and new one'''
         res_mag_old = residual_mag
         residual_mag = np.sum(residual ** 2) ** (1.0 / 2.0)
+
         if polonskykeer:
             if mean_value is not None:
-                # P = np.sum(x)
-                P = np.mean(x)
-                P0 = mean_value
-                x *= (P0 / P)
-
+                x *= (mean_value / np.mean(x))
             mask_neg = x <= 0
             x[mask_neg] = 0.0
             residual = fun(x)[1]
-            residual = residual.reshape(np.shape(x))
+            # residual = residual.reshape(np.shape(x))
             mask_c = x > 0
             if mean_value is not None:
                 residual = residual - np.mean(residual[mask_c])
@@ -291,16 +286,17 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             beta = np.sum(residual.T * residual) / np.sum(
                 residual_old.T * residual_old)
         elif bugnicourt and not polonskykeer:
-            # beta = -np.sum(residual.T*(residual - residual_old)) / np.sum(
-            # alpha*denom)
-            beta = np.sum(residual.T * hessp_val) / denom
+            beta = np.sum(residual.T * (residual - residual_old)) / np.sum(
+                alpha * denom)
+            # beta = np.sum(residual.T * hessp_val) / denom
         elif polonskykeer and not bugnicourt:
             '''Take care of constraint a_x*a_y*sum(p_ij)=P0'''
             beta = delta * (G / G_old)
         else:
             # beta = np.sum(residual.T * (residual - residual_old)) / denom
             '''Use this beta whe solving primal!!!'''
-            beta = np.sum(residual.T * (residual - residual_old)) / res_mag_old
+            beta = -np.sum(
+                residual.T * (residual - residual_old)) / res_mag_old
 
         des_dir_old = des_dir
 
@@ -308,12 +304,17 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             des_dir[mask_c] = -residual[mask_c] + beta * des_dir[mask_c]
             des_dir[np.logical_not(mask_c)] = 0
             G_old = G
-            if mask_neg.sum() > 0:
-                rms_pen = np.sqrt(G / mask_neg.sum())
+            if np.logical_not(mask_c).sum() > 0:
+                rms_pen = np.sqrt(G / np.logical_not(mask_c).sum())
             else:
                 rms_pen = np.sqrt(G)
         else:
             des_dir = -residual + beta * des_dir_old
+            des_dir[np.logical_not(mask_bounded)] = -residual[
+                np.logical_not(mask_bounded)] + beta * des_dir_old[
+                                                        np.logical_not(
+                                                            mask_bounded)]
+            des_dir[mask_bounded] = 0
 
         if residual_plot:
             if polonskykeer:
@@ -357,51 +358,31 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                     res_convg = False
             if (res_convg or (rms_pen <= gtol)) and n_iterations >= 10:
                 converged = True
-                if len(sig.parameters) == 2:
-                    hessp_val = hessp(x, des_dir)
-                else:
-                    hessp_val = hessp(des_dir)
-                alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
-                assert alpha > 0
-                x[mask_c] += alpha * des_dir[mask_c]
-                mask_neg = x <= 0
-                x[mask_neg] = 0.0
-                mask_res = residual < 0
-                mask_overlap = np.logical_and(mask_neg, mask_res)
-                if mask_overlap.sum() != 0:
-                    x[mask_overlap] = x[mask_overlap] + alpha * residual[
-                        mask_overlap]
-
-                if mean_value is not None:
-                    # P = np.sum(x)
-                    P = np.mean(x)
-                    P0 = mean_value
-                    x *= (P0 / P)
 
                 if residual_plot:
-                    plt.pyplot.plot(range(n_iterations), np.log10(grads),
-                                    label='residuals')
-                    plt.pyplot.plot(range(n_iterations), np.log10(rms_pen_),
-                                    label='rms_pen')
-                    plt.pyplot.xlabel('iterations')
-                    plt.pyplot.ylabel('residuals')
-                    plt.pyplot.legend()
-                    plt.pyplot.show()
+                    import matplotlib.pyplot as plt
+                    plt.plot(range(n_iterations), np.log10(grads),
+                             label='residuals')
+                    plt.plot(range(n_iterations), np.log10(rms_pen_),
+                             label='rms_pen')
+                    plt.xlabel('iterations')
+                    plt.ylabel('residuals')
+                    plt.legend()
+                    plt.show()
 
             else:
                 converged = False
 
-        elif (np.max(abs(residual)) <= gtol) and n_iterations >= 10:
+        elif (np.max(abs(residual)) <= gtol) and n_iterations >= 3:
             converged = True
             rms_pen_ = 0.0
             if residual_plot:
                 import matplotlib.pyplot as plt
                 plt.plot(range(n_iterations), np.log10(grads),
-                                label='residuals')
+                         label='residuals')
                 plt.xlabel('iterations')
                 plt.ylabel('residuals')
-                plt.show()
+                plt.show(block=True)
 
         if converged:
 
@@ -414,9 +395,9 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                                            'fun': fun(x)[0],
                                            'jac': residual,
                                            'nit': n_iterations,
-                                           'message': 'CONVERGENCE: '
-                                                      'NORM_OF_GRADIENT <= '
-                                                      'GTOL',
+                                           'message':
+                                               'CONVERGENCE: '
+                                               'NORM_OF_GRADIENT_<=_GTOL',
                                            })
             return result
 
@@ -440,9 +421,9 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
             if residual_plot:
                 import matplotlib.pyplot as plt
                 plt.plot(range(n_iterations), np.log10(grads),
-                                label='residuals')
+                         label='residuals')
                 plt.xlabel('iterations')
                 plt.ylabel('residuals')
-                plt.show()
+                plt.show(block=True)
 
             return result
