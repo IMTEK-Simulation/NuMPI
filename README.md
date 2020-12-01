@@ -35,9 +35,7 @@ Testing
 
 You have to do a development installation to be able to run the tests.
 
-We use [runtests](https://github.com/bccp/runtests). At the moment a slight modification in my [fork](https://github.com/AntoineSIMTEK/runtests). 
-
-(To install with pip: `python3 -m pip install https://github.com/AntoineSIMTEK/runtests.git`)
+We use [runtests](https://github.com/bccp/runtests). 
 
 From the main installation directory:
 ```bash
@@ -57,3 +55,8 @@ On NEMO for example
 ```bash
 msub -q express -l walltime=15:00,nodes=1:ppn=20 NEMO_test_job.sh -m bea
 ```
+
+Funding
+-------
+
+Development of this project is funded by the [European Research Council](https://erc.europa.eu) within [Starting Grant 757343](https://cordis.europa.eu/project/id/757343) and by the [Deutsche Forschungsgemeinschaft](https://www.dfg.de/en) within project [EXC 2193](https://gepris.dfg.de/gepris/projekt/390951807).
