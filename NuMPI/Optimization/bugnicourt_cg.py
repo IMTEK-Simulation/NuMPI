@@ -12,7 +12,9 @@ from inspect import signature
 def constrained_conjugate_gradients(fun, hessp,
                                     disp0=None, mean_val=None,
                                     gtol=1e-8,
-                                    maxiter=3000, callback=None):
+                                    maxiter=3000, callback=None,
+                                    residual_plot=False
+                                    ):
     fun = fun
     gtol = gtol
 
@@ -171,11 +173,12 @@ def constrained_conjugate_gradients(fun, hessp,
                         'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
                         })
 
-                # import matplotlib.pyplot as plt
-                # plt.plot(range(n_iterations), np.log10(grads),
-                #         label='residuals')
-                # plt.xlabel('iterations')
-                # plt.ylabel('residuals')
-                # plt.show(block=True)
-                # plt.savefig('max_iter_bugnicourt.png')
+                if residual_plot:
+                    import matplotlib.pyplot as plt
+                    plt.plot(range(n_iterations), np.log10(grads),
+                            label='residuals')
+                    plt.xlabel('iterations')
+                    plt.ylabel('residuals')
+                    plt.show(block=True)
+                    plt.savefig('max_iter_bugnicourt.png')
                 return result
