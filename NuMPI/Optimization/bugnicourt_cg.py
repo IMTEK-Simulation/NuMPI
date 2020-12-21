@@ -177,7 +177,7 @@ def constrained_conjugate_gradients(fun, hessp,
                 if residual_plot:
                     import matplotlib.pyplot as plt
                     plt.plot(range(n_iterations), np.log10(grads),
-                            label='residuals')
+                             label='residuals')
                     plt.xlabel('iterations')
                     plt.ylabel('residuals')
                     plt.show(block=True)
