@@ -55,7 +55,16 @@ def constrained_conjugate_gradients(fun, hessp,
                              'dir)\
                                     or 2 args (x, descent direction)')
         denominator_temp = np.sum(des_dir.T * hessp_val)
+        # TODO: here we could spare one FFT
+
+        if denominator_temp == 0:
+            print("denominator for alpha is 0")
+
         alpha = -np.sum(residual.T * des_dir) / denominator_temp
+
+        if alpha < 0 :
+            print("hessian is negative along the descent direction. You will "
+                  "probably need linesearch or trust region")
 
         x += alpha * des_dir
 
@@ -160,13 +169,13 @@ def constrained_conjugate_gradients(fun, hessp,
                                                'message': 'NO CONVERGENCE: '
                                                           'MAXITERATIONS '
                                                           'REACHED'
-                                               })
+                                                  })
 
-                import matplotlib.pyplot as plt
-                plt.plot(range(n_iterations), np.log10(grads),
-                         label='residuals')
-                plt.xlabel('iterations')
-                plt.ylabel('residuals')
-                plt.show(block=True)
-                plt.savefig('max_iter_bugnicourt.png')
+                # import matplotlib.pyplot as plt
+                # plt.plot(range(n_iterations), np.log10(grads),
+                #         label='residuals')
+                # plt.xlabel('iterations')
+                # plt.ylabel('residuals')
+                # plt.show(block=True)
+                # plt.savefig('max_iter_bugnicourt.png')
                 return result
