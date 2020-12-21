@@ -60,13 +60,14 @@ def constrained_conjugate_gradients(fun, hessp,
         # TODO: here we could spare one FFT
 
         if denominator_temp == 0:
-            print("denominator for alpha is 0")
+            print("it {}: denominator for alpha is 0".format(i))
 
         alpha = -np.sum(residual.T * des_dir) / denominator_temp
 
         if alpha < 0:
-            print("hessian is negative along the descent direction. You will "
-                  "probably need linesearch or trust region")
+            print("it {} : hessian is negative along the descent direction. "
+                  "You will probably need linesearch "
+                  "or trust region".format(i))
 
         x += alpha * des_dir
 
