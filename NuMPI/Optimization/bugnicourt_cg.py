@@ -62,7 +62,7 @@ def constrained_conjugate_gradients(fun, hessp,
 
         alpha = -np.sum(residual.T * des_dir) / denominator_temp
 
-        if alpha < 0 :
+        if alpha < 0:
             print("hessian is negative along the descent direction. You will "
                   "probably need linesearch or trust region")
 
@@ -161,15 +161,15 @@ def constrained_conjugate_gradients(fun, hessp,
                 return result
 
             elif i == maxiter - 1:
-                result = optim.OptimizeResult({'success': False,
-                                               'x': x,
-                                               'fun': fun,
-                                               'jac': residual,
-                                               'nit': i,
-                                               'message': 'NO CONVERGENCE: '
-                                                          'MAXITERATIONS '
-                                                          'REACHED'
-                                                  })
+                result = optim.OptimizeResult(
+                    {
+                        'success': False,
+                        'x': x,
+                        'fun': fun,
+                        'jac': residual,
+                        'nit': i,
+                        'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
+                        })
 
                 # import matplotlib.pyplot as plt
                 # plt.plot(range(n_iterations), np.log10(grads),
