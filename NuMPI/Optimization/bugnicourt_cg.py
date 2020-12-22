@@ -10,7 +10,7 @@ from inspect import signature
 
 
 def constrained_conjugate_gradients(fun, hessp,
-                                    disp0=None, mean_val=None,
+                                    x0=None, mean_val=None,
                                     gtol=1e-8,
                                     maxiter=3000, callback=None,
                                     residual_plot=False
@@ -18,7 +18,7 @@ def constrained_conjugate_gradients(fun, hessp,
     fun = fun
     gtol = gtol
 
-    x = disp0.copy()
+    x = x0.copy()
     x = x.flatten()
 
     '''Initial Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g'''
