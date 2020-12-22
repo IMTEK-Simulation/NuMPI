@@ -28,7 +28,7 @@ import pytest
 
 import numpy as np
 from NuMPI.Tools import Reduction
-from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
+from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface, MPI_Quadratic
 
 import time
 import test.Optimization.minimization_problems as mp
@@ -45,6 +45,33 @@ def timer(fun, *args, **kwargs):
 
 def test_linesearch():
     pass
+
+@pytest.mark.parametrize("n", [10, 20, 50])
+def test_quadratic_analytical_min(comm, n):
+    """
+    Compares the result with the analyticaly known posistion of the minimum
+    :return:
+    """
+
+    def printMPI(msg):
+        for i in range(comm.Get_size()):
+            comm.barrier()
+            if comm.Get_rank() == i:
+                print("Proc {}: {}".format(i, msg))
+
+    PObjective = MPI_Quadratic(nb_domain_grid_pts=n, pnp=Reduction(comm))
+
+    x0 = PObjective.startpoint()
+
+    res = LBFGS(PObjective.f_grad, x0, jac=True, maxcor=5, maxiter=100,
+                gtol=1e-14, ftol=0, pnp=Reduction(comm))
+    #                        ^ only terminates if gradient condition is
+    #                        satisfied
+    assert res.success
+    assert res.message == "CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL"
+    np.testing.assert_allclose(res.x, PObjective.xmin(), atol=1e-13)
+
+    assert np.abs(res.fun - PObjective.minVal(n)) < 1e-7
 
 
 @pytest.mark.parametrize("n", [10, 20, 50])
@@ -127,3 +154,4 @@ def test_time_complexity(comm):
         ax2.legend()
         # ax.plot(n,n,c='gray')
         plt.show(block=True)
+
