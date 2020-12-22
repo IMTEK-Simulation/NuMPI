@@ -28,7 +28,9 @@ import pytest
 
 import numpy as np
 from NuMPI.Tools import Reduction
-from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface, MPI_Quadratic
+from test.Optimization.MPI_minimization_problems import (
+    MPI_Objective_Interface, MPI_Quadratic
+    )
 
 import time
 import test.Optimization.minimization_problems as mp
@@ -45,6 +47,7 @@ def timer(fun, *args, **kwargs):
 
 def test_linesearch():
     pass
+
 
 @pytest.mark.parametrize("n", [10, 20, 50])
 def test_quadratic_analytical_min(comm, n):
@@ -154,4 +157,3 @@ def test_time_complexity(comm):
         ax2.legend()
         # ax.plot(n,n,c='gray')
         plt.show(block=True)
-
