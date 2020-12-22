@@ -9,6 +9,7 @@ import scipy.optimize as optim
 from inspect import signature
 from NuMPI.Tools import Reduction
 
+
 def constrained_conjugate_gradients(fun, hessp,
                                     x0=None, mean_val=None,
                                     gtol=1e-8,
@@ -16,14 +17,11 @@ def constrained_conjugate_gradients(fun, hessp,
                                     callback=None,
                                     communicator=None,
                                     ):
-
     if communicator is None:
         comm = np
         nb_DOF = x0.size
-    else :
+    else:
         comm = Reduction(communicator)
-        #if mean_val is not None:
-        #    raise NotImplemented
         nb_DOF = comm.sum(x0.size)
 
     x = x0.copy()
@@ -92,7 +90,8 @@ def constrained_conjugate_gradients(fun, hessp,
             #
             mask_nonzero = x > 0
             N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
-            residual = residual - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
+            residual = residual \
+                - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
 
         '''Apply the admissible Lagrange multipliers.'''
         mask_res = residual >= 0
@@ -105,7 +104,7 @@ def constrained_conjugate_gradients(fun, hessp,
             N_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
             residual[mask_nonzero] = residual[mask_nonzero] - comm.sum(
                 residual[mask_nonzero]) / N_nonzero
-            #assert np.mean(residual) < 1e-14 * np.max(abs(residual))
+            # assert np.mean(residual) < 1e-14 * np.max(abs(residual))
 
         '''Computing beta for updating descent direction
             beta = num / denom
@@ -115,7 +114,7 @@ def constrained_conjugate_gradients(fun, hessp,
 
         # beta = np.sum(residual.T * hessp_val) / denominator_temp
         beta = comm.sum(residual * (residual - residual_old)) / (
-                    alpha * denominator_temp)
+                alpha * denominator_temp)
 
         des_dir_old = des_dir
         des_dir = -residual + beta * des_dir_old
@@ -130,7 +129,7 @@ def constrained_conjugate_gradients(fun, hessp,
         n_iterations += 1
         # TODO: this is not parallelization friendly
         # assert np.logical_not(np.isnan(x).any())
-        if i >=5 :
+        if i >= 5:
             if comm.max(abs(residual)) <= gtol:
                 result = optim.OptimizeResult(
                     {
@@ -152,9 +151,8 @@ def constrained_conjugate_gradients(fun, hessp,
                         'fun': fun,
                         'jac': residual,
                         'nit': i,
-                        'success':False,
+                        'success': False,
                         'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
                         })
 
                 return result
-

@@ -139,8 +139,6 @@ class MPI_Quadratic():
     def __init__(self, nb_domain_grid_pts, pnp=Reduction(), factors=None,
                  startpoint=None, xmin=None):
 
-
-
         comm = pnp.comm
         nprocs = comm.Get_size()
         rank = comm.Get_rank()
@@ -182,12 +180,14 @@ class MPI_Quadratic():
     def f_grad(self, x):
         self.nfeval += 1
         self.ngradeval += 1
-        factdotx = self.factors.reshape(x.shape) * (x - self._xmin.reshape(x.shape))
+        factdotx = self.factors.reshape(x.shape) \
+            * (x - self._xmin.reshape(x.shape))
         return self.pnp.sum(factdotx ** 2, axis=0).item(), 2 * factdotx
 
     def f(self, x):
         self.nfeval += 1
-        factdotx = self.factors.reshape(x.shape) * (x - self._xmin.reshape(x.shape))
+        factdotx = self.factors.reshape(x.shape) \
+            * (x - self._xmin.reshape(x.shape))
         return self.pnp.sum(factdotx ** 2, axis=0).item()
 
     def grad(self, x):

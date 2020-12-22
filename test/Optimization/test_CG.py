@@ -24,8 +24,8 @@ def test_bugnicourt_cg(comm):
     assert res.success, res.message
     print(res.nit)
 
-def test_bugnicourt_cg_active_bounds(comm):
 
+def test_bugnicourt_cg_active_bounds(comm):
     n = 128
     np.random.seed(0)
     obj = MPI_Quadratic(n, pnp=Reduction(comm), xmin=np.random.normal(size=n))
@@ -40,15 +40,13 @@ def test_bugnicourt_cg_active_bounds(comm):
         )
     assert res.success, res.message
     print(res.nit)
-    print(np.count_nonzero(res.x==0))
-
+    print(np.count_nonzero(res.x == 0))
 
 
 def test_bugnicourt_cg_mean_val(comm):
-
     n = 128
 
-    obj = MPI_Quadratic(n, pnp=Reduction(comm),)
+    obj = MPI_Quadratic(n, pnp=Reduction(comm), )
 
     xstart = np.random.normal(size=obj.nb_subdomain_grid_pts)
 
