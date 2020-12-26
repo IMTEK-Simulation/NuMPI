@@ -16,6 +16,7 @@ def constrained_conjugate_gradients(fun, hessp,
                                     maxiter=3000,
                                     callback=None,
                                     communicator=None,
+                                    bounds=None
                                     ):
     if communicator is None:
         comm = np
@@ -27,15 +28,27 @@ def constrained_conjugate_gradients(fun, hessp,
     x = x0.copy()
     x = x.flatten()
 
+    if bounds is None:
+        bounds = np.zeros_like(x)
+
+    mask_bounds = bounds > - np.infty
+    nb_bounds = comm.sum(np.count_nonzero(mask_bounds))
+    mean_bounds = comm.sum(bounds) / nb_bounds
+
+    if mean_val is not None and nb_bounds < nb_DOF:
+        raise ValueError("mean_value constrained mode not compatible "
+                         "with partially bound system")
+        # There are ambiguities on how to compute the mean values
+
     '''Initial Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g'''
     residual = fun(x)[1]
 
-    mask_neg = x <= 0
-    x[mask_neg] = 0.0
+    mask_neg = x <= bounds
+    x[mask_neg] = bounds[mask_neg]
 
     if mean_val is not None:
         #
-        mask_nonzero = x > 0
+        mask_nonzero = x > bounds
         N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
         residual = residual \
             - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
@@ -83,12 +96,13 @@ def constrained_conjugate_gradients(fun, hessp,
         '''finding new contact points and making the new_gap admissible
         according to these contact points.'''
 
-        mask_neg = x <= 0
-        x[mask_neg] = 0.0
+        mask_neg = x <= bounds
+        x[mask_neg] = bounds[mask_neg]
 
         if mean_val is not None:
-            x = (mean_val / comm.sum(x) * nb_DOF) * x
-
+            # x = (mean_val / comm.sum(x) * nb_DOF) * x
+            x = bounds + (mean_val - mean_bounds) \
+                / (comm.sum(x) / nb_DOF - mean_bounds) * (x - bounds)
         residual_old = residual
 
         '''Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g'''
@@ -96,7 +110,7 @@ def constrained_conjugate_gradients(fun, hessp,
 
         if mean_val is not None:
             #
-            mask_nonzero = x > 0
+            mask_nonzero = x > bounds
             N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
             residual = residual \
                 - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
