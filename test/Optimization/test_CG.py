@@ -48,13 +48,13 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
     if comm.size == 1:
         bnds = tuple([(b, None) for b in bounds])
 
-        res_ref = scipy.optimize.minimize(obj.f_grad,
-           x0=xstart, bounds=bnds, method="L-BFGS-B", jac=True,
-           options=dict(gtol=1e-8, ftol=0))
+        res_ref = scipy.optimize.minimize(
+            obj.f_grad,
+            x0=xstart, bounds=bnds, method="L-BFGS-B", jac=True,
+            options=dict(gtol=1e-8, ftol=0))
         assert res_ref.success, res_ref.message
 
         np.testing.assert_allclose(res.x, res_ref.x, atol=1e-6)
-
 
 
 def test_bugnicourt_cg_active_bounds(comm):
