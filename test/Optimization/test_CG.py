@@ -1,6 +1,7 @@
 from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 from NuMPI.Tools import Reduction
 import numpy as np
+import scipy.optimize
 
 from NuMPI.Optimization.bugnicourt_cg import constrained_conjugate_gradients
 
@@ -24,7 +25,7 @@ def test_bugnicourt_cg(comm):
 
 def test_bugnicourt_cg_arbitrary_bounds(comm):
     n = 128
-
+    np.random.seed(0)
     obj = MPI_Quadratic(n, pnp=Reduction(comm), )
 
     xstart = np.random.normal(size=obj.nb_subdomain_grid_pts)
@@ -35,12 +36,25 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
         obj.hessian_product,
         x0=xstart,
         communicator=comm,
-        bounds=bounds
+        bounds=bounds,
+        gtol=1e-8
         )
     assert res.success, res.message
 
     assert (res.x >= bounds).all()
     print(res.nit)
+
+    # TODO: we are not checking yet that the result is the same in parallel.
+    if comm.size == 1:
+        bnds = tuple([(b, None) for b in bounds])
+
+        res_ref = scipy.optimize.minimize(obj.f_grad,
+           x0=xstart, bounds=bnds, method="L-BFGS-B", jac=True,
+           options=dict(gtol=1e-8, ftol=0))
+        assert res_ref.success, res_ref.message
+
+        np.testing.assert_allclose(res.x, res_ref.x, atol=1e-6)
+
 
 
 def test_bugnicourt_cg_active_bounds(comm):
