@@ -1,5 +1,11 @@
 Change log for NuMPI
 ===================
+
+v0.1.5. (>210122)
+-----------------
+
+- Drop dupport for Python3.5
+
 v0.1.4 (16Oct20)
 ----------------
 - BUG: don't close filestream on failure
