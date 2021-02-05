@@ -163,7 +163,6 @@ def constrained_conjugate_gradients(fun, hessp,
                         'fun': fun,
                         'jac': residual,
                         'nit': i,
-                        'success': True,
                         'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
                         })
                 return result
@@ -176,7 +175,6 @@ def constrained_conjugate_gradients(fun, hessp,
                         'fun': fun,
                         'jac': residual,
                         'nit': i,
-                        'success': False,
                         'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
                         })
 

@@ -5,8 +5,9 @@ from inspect import signature
 import math
 
 
-def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
-           residual_plot=False, maxiter=5000):
+def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
+                                    mean_value=None, residual_plot=False,
+                                    maxiter=5000):
     """
     Implementation of constrained conjugate gradient algorithm as described in,
     I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999).
@@ -181,7 +182,7 @@ def min_cg(objective, hessp, x0=None, gtol=1e-8, mean_value=None,
                 result = optim.OptimizeResult({'success': True,
                                                'x': x,
                                                'fun': rms_pen_,
-                                               'jac': grads,
+                                               'jac': residual,
                                                'nit': n_iterations,
                                                'message': 'CONVERGENCE: '
                                                           'NORM_OF_GRADIENT_'
