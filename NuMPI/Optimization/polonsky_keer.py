@@ -2,7 +2,6 @@ import numpy as np
 import scipy.optimize as optim
 import matplotlib as plt
 from inspect import signature
-import math
 
 
 def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
@@ -123,7 +122,15 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
 
         '''Calculating alpha'''
 
-        hessp_val = hessp(des_dir)
+        sig = signature(hessp)
+        if len(sig.parameters) == 2:
+            hessp_val = hessp(x, des_dir)
+        elif len(sig.parameters) == 1:
+            hessp_val = hessp(des_dir)
+        else:
+            raise ValueError('hessp function has to take max 1 arg (descent '
+                             'dir) or 2 args (x, descent direction)')
+
         '''Here hessp_val is used as r_ij in original algorithm'''
         if mean_value is not None:
             hessp_val = hessp_val - np.mean(hessp_val[mask_c])
@@ -132,10 +139,15 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
         if mask_c.sum() != 0:
             '''alpha is TAU from algorithm'''
             alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
+                / np.sum(hessp_val[mask_c] * des_dir[mask_c])
         else:
             alpha = 0.0
-        assert alpha >= 0
+
+        if alpha < 0:
+            print("it {} : hessian is negative along the descent direction. "
+                  "You will probably need linesearch "
+                  "or trust region".format(n_iterations))
+        # assert alpha >= 0
 
         x[mask_c] += alpha * des_dir[mask_c]
 
@@ -206,7 +218,7 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
                                                'message': 'NO-CONVERGENCE:',
                                                })
 
-                if residual_plot == True:
+                if residual_plot:
                     plt.pyplot.plot(iterations, np.log10(grads))
                     plt.pyplot.xlabel('iterations')
                     plt.pyplot.ylabel('residuals')
