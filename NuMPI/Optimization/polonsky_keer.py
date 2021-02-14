@@ -1,10 +1,14 @@
+"""
+Implementation of constrained conjugate gradient algorithm as described in,
+    I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999).
+"""
 import numpy as np
 import scipy.optimize as optim
 import matplotlib as plt
 from inspect import signature
 
 
-def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
+def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
                                     mean_value=None, residual_plot=False,
                                     maxiter=5000):
     """
@@ -13,7 +17,7 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
 
     Parameters
     ----------
-    objective : callable.
+    fun : callable.
                 The objective function to be minimized.
                             fun(x) -> float(energy),ndarray(gradient)
                 where x is the input ndarray.
@@ -32,10 +36,12 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
 
     gtol : float, optional
            Default value : 1e-8
+           convergence criterion is max(abs) and norm2 of the projected
+           gradient < gtol.
 
-    mean_value : int/float, optional
+    mean_value :  float, optional
                If you want to apply the mean_value constraint then provide an
-               int/float value to the mean_value.
+               float value to the mean_value.
 
     residual_plot : bool, optional
                     Generates a plot between the residual and iterations.
@@ -51,7 +57,8 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
     x : array
         array of minimized x.
     jac : array
-          value of residual at convergence/non-convergence.
+          value of the gradient of Lagrangian at convergence/
+          non-convergence.
     nit : int
           Number of iterations
     message : string
@@ -72,9 +79,8 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
                          'a bool \
                          is expected'.format(type(residual_plot)))
 
-    gtol = gtol
-    fun = objective
     x0 = x0.flatten()
+
     if x0 is not None:
         x = x0.copy()
         # print("Total force is  :: {}".format(np.sum(x)))
@@ -83,14 +89,14 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
     else:
         raise ValueError('Input required for x0/initial value !!')
 
-    grads = np.array([])
+    gaps = np.array([])
     iterations = np.array([])
     rms_pen_ = np.array([])
 
     des_dir = np.zeros(np.shape(x))
 
     if residual_plot:
-        grads = np.append(grads, 0)
+        gaps = np.append(gaps, 0)
         iterations = np.append(iterations, 0)
 
     n_iterations = 1
@@ -101,7 +107,7 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
         mask_neg = x <= 0
         x[mask_neg] = 0.0
 
-        '''Initial residual or GAP for polonsky-keer'''
+        '''Initial residual or GAP'''
         residual = fun(x)[1]
 
         mask_c = x > 0
@@ -120,7 +126,7 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
         else:
             rms_pen = np.sqrt(G)
 
-        '''Calculating alpha'''
+        '''Calculating step-length alpha'''
 
         sig = signature(hessp)
         if len(sig.parameters) == 2:
@@ -135,7 +141,6 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
         if mean_value is not None:
             hessp_val = hessp_val - np.mean(hessp_val[mask_c])
 
-        '''alpha is TAU from algorithm'''
         if mask_c.sum() != 0:
             '''alpha is TAU from algorithm'''
             alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
@@ -174,9 +179,9 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
         if residual_plot:
             iterations = np.append(iterations, n_iterations)
             if mask_c.sum() != 0:
-                grads = np.append(grads, np.max(abs(residual[mask_c])))
+                gaps = np.append(gaps, np.max(abs(residual[mask_c])))
             else:
-                grads = np.append(grads, np.max(abs(residual)))
+                gaps = np.append(gaps, np.max(abs(residual)))
             rms_pen_ = np.append(rms_pen_, rms_pen)
 
         n_iterations += 1
@@ -201,7 +206,7 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
                                                           '<=_GTOL',
                                                })
                 if residual_plot:
-                    plt.pyplot.plot(iterations, np.log10(grads))
+                    plt.pyplot.plot(iterations, np.log10(gaps))
                     plt.pyplot.xlabel('iterations')
                     plt.pyplot.ylabel('residuals')
                     plt.pyplot.show()
@@ -219,7 +224,7 @@ def constrained_conjugate_gradients(objective, hessp, x0=None, gtol=1e-8,
                                                })
 
                 if residual_plot:
-                    plt.pyplot.plot(iterations, np.log10(grads))
+                    plt.pyplot.plot(iterations, np.log10(gaps))
                     plt.pyplot.xlabel('iterations')
                     plt.pyplot.ylabel('residuals')
                     plt.pyplot.show()

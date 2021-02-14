@@ -1,7 +1,7 @@
-"""For implementing a generic form of Constrained Conjugate Gradient for mainly
- use in calculating the optimized displacement when working with contact
- mechanics problem with adhesion. This implementation is mainly based upon
- Bugnicourt et. al. - 2018, OUT_LIN algorithm.
+"""
+Constrained Conjugate Gradient for moderately nonlinear problems.
+This implementation is mainly based upon Bugnicourt et. al. - 2018, OUT_LIN
+algorithm.
 """
 
 import numpy as np
@@ -18,6 +18,69 @@ def constrained_conjugate_gradients(fun, hessp,
                                     communicator=None,
                                     bounds=None
                                     ):
+
+    '''
+    A constrained conjugate gradients implementation that can handle both
+    force and ga as input variable.
+
+    Parameters
+    __________
+
+    fun :   callable.
+                The objective function to be minimized.
+                            fun(x) -> float(energy),ndarray(gradient)
+                where x is the input ndarray.
+
+    hessp : callable
+            Function to evaluate the hessian product of the objective.
+            Hessp should accept either 1 argument (descent direction) or
+            2 arguments (x,descent direction).
+                            hessp(des_dir)->ndarray
+                                    or
+                            hessp(x,des_dir)->ndarray
+            where x is the input ndarray and des_dir is the descent direction.
+
+    x0 : ndarray
+         Initial guess. Default value->None.
+         ValueError is raised if "None" is provided.
+
+    gtol : float, optional
+           Default value : 1e-8
+
+    mean_value : int/float, optional
+               If you want to apply the mean_value constraint then provide an
+               int/float value to the mean_value.
+
+    residual_plot : bool, optional
+                    Generates a plot between the residual and iterations.
+
+    maxiter : int,optional
+              Default, maxiter=5000
+              Maximum number of iterations after which the program will exit.
+
+    Returns
+    -------
+    success : bool
+              True if convergence else False.
+    x : array
+        array of minimized x.
+    jac : array
+          value of the gradient of Lagrangian at convergence/
+          non-convergence.
+    nit : int
+          Number of iterations
+    message : string
+              Convergence or Nodes_dir-Convergence
+
+    References
+    __________
+
+    ..[1]   :   Bugnicourt, Romain & Sainsot, Philippe & Dureisseix, David &
+                Gauthier, Catherine & Lubrecht, Ton. (2018). FFT-Based Methods
+                for Solving a Rough Adhesive Contact: Description and
+                Convergence Study.
+                Tribology Letters. 66. 10.1007/s11249-017-0980-z.
+    '''
     if communicator is None:
         comm = np
         nb_DOF = x0.size
@@ -79,7 +142,6 @@ def constrained_conjugate_gradients(fun, hessp,
             raise ValueError('hessp function has to take max 1 arg (descent '
                              'dir) or 2 args (x, descent direction)')
         denominator_temp = comm.sum(des_dir.T * hessp_val)
-        # TODO: here we could spare one FFT
 
         if denominator_temp == 0:
             print("it {}: denominator for alpha is 0".format(i))
@@ -152,8 +214,7 @@ def constrained_conjugate_gradients(fun, hessp,
             callback(x)
 
         n_iterations += 1
-        # TODO: this is not parallelization friendly
-        # assert np.logical_not(np.isnan(x).any())
+
         if i >= 5:
             if comm.max(abs(residual)) <= gtol:
                 result = optim.OptimizeResult(
