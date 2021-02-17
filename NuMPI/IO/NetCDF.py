@@ -4,14 +4,10 @@
 
 
 import numbers
-from functools import reduce
-from math import sqrt
-
 import numpy as np
 
-from netCDF4 import Dataset
+from NetCDF4 import Dataset
 
-###
 
 class NCStructuredGridFrame(object):
     def __init__(self, parent, index):
@@ -19,7 +15,6 @@ class NCStructuredGridFrame(object):
         self._index = index
         if self._index < 0:
             self._index += len(parent)
-
 
     def _create_variable(self, name, value):
         if isinstance(value, numbers.Integral):
@@ -29,7 +24,6 @@ class NCStructuredGridFrame(object):
         else:
             self.parent._create_variable(name, value, prefix=['frame'])
 
-
     def _variable(self, name, template):
         if name not in self.parent._data.variables:
             self._create_variable(name, template)
@@ -38,14 +32,13 @@ class NCStructuredGridFrame(object):
             pass
             # Collective I/O causes trouble on some configurations. Disable
             # for now.
-            #var.set_collective(True)
+            # var.set_collective(True)
         return var
-
 
     def __getattr__(self, name):
         if name[0] == '_':
-           # FIXME: Use getattr here?
-           return self.__dict__[name]
+            # FIXME: Use getattr here?
+            return self.__dict__[name]
 
         var = self.parent._data.variables[name]
         if var.dimensions[0] != 'frame':
@@ -55,7 +48,6 @@ class NCStructuredGridFrame(object):
             return var[self._index][self.subdomain_slices]
         else:
             return var[self._index]
-
 
     def __setattr__(self, name, value):
         if name[0] == '_':
@@ -70,49 +62,39 @@ class NCStructuredGridFrame(object):
             var = self._variable(name, value)
             var[self._index] = value
 
-
     def __getitem__(self, name):
         return self.__getattr__(name)
 
-
     def __setitem__(self, name, value):
         return self.__setattr__(name, value)
-
 
     @property
     def index(self):
         return self._index
 
-
     @property
     def parent(self):
         return self._parent
-
 
     @property
     def decomposition(self):
         return self.parent.decomposition
 
-
     @property
     def nb_domain_grid_pts(self):
         return self.parent.nb_domain_grid_pts
-
 
     @property
     def subdomain_locations(self):
         return self.parent.subdomain_locations
 
-
     @property
     def nb_subdomain_grid_pts(self):
         return self.parent.nb_subdomain_grid_pts
 
-
     @property
     def subdomain_slices(self):
         return self.parent.subdomain_slices
-
 
     def sync(self):
         self.parent.sync()
@@ -280,34 +262,30 @@ class NCStructuredGrid(object):
             self._read_grid_dimensions()
 
         if frame < 0:
-            self._cur_frame = len(self)+frame
+            self._cur_frame = len(self) + frame
         else:
             self._cur_frame = frame
-
 
     def __del__(self):
         if self._data is not None:
             self._data.close()
             self._data = None
 
-
     @staticmethod
     def _grid_dimension_name(i):
         return 'grid_' + chr(ord('x') + i)
 
-
     def _create_grid_dimensions(self, nb_domain_grid_pts):
         self._nb_domain_grid_pts = tuple(nb_domain_grid_pts)
 
-        if not 'frame' in self._data.dimensions:
+        if 'frame' not in self._data.dimensions:
             self._data.createDimension('frame', None)
         for i, n in enumerate(nb_domain_grid_pts):
             dim_name = self._grid_dimension_name(i)
-            if not dim_name in self._data.dimensions:
+            if dim_name not in self._data.dimensions:
                 self._data.createDimension(dim_name, n)
 
         self._data.sync()
-
 
     def _read_grid_dimensions(self):
         i = 0
@@ -324,16 +302,14 @@ class NCStructuredGrid(object):
 
         self._nb_domain_grid_pts = tuple(nb_domain_grid_pts)
 
-
     def _tensor_dimension_name(self, n):
         """
         Return a variable for a tensor component of length `n`.
         """
         dim_name = 'tensor_{}'.format(n)
-        if not dim_name in self._data.dimensions:
+        if dim_name not in self._data.dimensions:
             self._data.createDimension(dim_name, n)
         return dim_name
-
 
     def _create_variable(self, name, template, prefix=[]):
         """
@@ -343,15 +319,15 @@ class NCStructuredGrid(object):
         nb_grid_dims = len(self._nb_domain_grid_pts)
         guessed_nb_grid_pts = template.shape[:nb_grid_dims]
         if self._decomposition == 'subdomain' and \
-            len(template.shape) >= nb_grid_dims and \
-            guessed_nb_grid_pts == tuple(self._nb_subdomain_grid_pts):
+                len(template.shape) >= nb_grid_dims and \
+                guessed_nb_grid_pts == tuple(self._nb_subdomain_grid_pts):
             component_dims = [self._tensor_dimension_name(i)
                               for i in template.shape[nb_grid_dims:]]
             grid_dims = [self._grid_dimension_name(i)
                          for i in range(nb_grid_dims)]
             dims = grid_dims + component_dims
         elif len(template.shape) >= nb_grid_dims and \
-            guessed_nb_grid_pts == tuple(self._nb_domain_grid_pts):
+                guessed_nb_grid_pts == tuple(self._nb_domain_grid_pts):
             component_dims = [self._tensor_dimension_name(i)
                               for i in template.shape[nb_grid_dims:]]
             grid_dims = [self._grid_dimension_name(i)
@@ -362,7 +338,6 @@ class NCStructuredGrid(object):
         dims = prefix + dims
         self._data.createVariable(name, template.dtype.str, tuple(dims))
 
-
     def _variable(self, name, template, prefix=[]):
         if name not in self._data.variables:
             self._create_variable(name, template, prefix)
@@ -371,37 +346,30 @@ class NCStructuredGrid(object):
             pass
             # Collective I/O causes trouble on some configurations. Disable
             # for now.
-            #var.set_collective(True)
+            # var.set_collective(True)
         return var
-
 
     def __len__(self):
         return len(self._data.dimensions['frame'])
-
 
     def close(self):
         if self._data is not None:
             self._data.close()
             self._data = None
 
-
     def get_filename(self):
         return self._fn
-
 
     def get_next_frame(self):
         frame = NCStructuredGridFrame(self, self._cur_frame)
         self._cur_frame += 1
         return frame
 
-
     def set_cursor(self, cur_frame):
         self._cur_frame = cur_frame
 
-
     def get_cursor(self):
         return self._cur_frame
-
 
     def __getattr__(self, name):
         if name[0] == '_':
@@ -416,7 +384,6 @@ class NCStructuredGrid(object):
 
         return getattr(self._data, name)
 
-
     def __setattr__(self, name, value):
         if name[0] == '_':
             self.__dict__[name] = value
@@ -429,12 +396,10 @@ class NCStructuredGrid(object):
         else:
             return setattr(self._data, name, value)
 
-
     def __setitem__(self, i, value):
         if isinstance(i, str):
             return self.__setattr__(i, value)
         raise RuntimeError('Cannot set full frame.')
-
 
     def __getitem__(self, i):
         if isinstance(i, str):
@@ -444,31 +409,25 @@ class NCStructuredGrid(object):
                     for j in range(*i.indices(len(self)))]
         return NCStructuredGridFrame(self, i)
 
-
     def __iter__(self):
         for i in range(len(self)):
             yield NCStructuredGridFrame(self, i)
-
 
     @property
     def decomposition(self):
         return self._decomposition
 
-
     @property
     def nb_domain_grid_pts(self):
         return self._nb_domain_grid_pts
-
 
     @property
     def subdomain_locations(self):
         return self._subdomain_locations
 
-
     @property
     def nb_subdomain_grid_pts(self):
         return self._nb_subdomain_grid_pts
-
 
     @property
     def subdomain_slices(self):
@@ -476,18 +435,16 @@ class NCStructuredGrid(object):
                      for start, length in zip(self.subdomain_locations,
                                               self.nb_subdomain_grid_pts))
 
-
     @property
     def is_parallel(self):
         return self._parallel
 
-
     def sync(self):
         self._data.sync()
 
-
     def __str__(self):
         return self._fn
+
 
 ###
 
@@ -496,7 +453,7 @@ def open(fn, mode='r', frame=None, **kwargs):
         return fn
     i = fn.find('@')
     if i > 0:
-        n = int(fn[i+1:])
+        n = int(fn[i + 1:])
         fn = fn[:i]
         return NCStructuredGrid(fn, mode=mode, **kwargs)[n]
     elif frame is not None:

@@ -1,4 +1,7 @@
 """
+
+Licence HEADER from muspectre
+
 @author Till Junge <till.junge@altermail.ch>
 
 @date   17 Jan 2018
@@ -31,8 +34,19 @@ Program grant you additional permission to convey the resulting work.
 import numpy as np
 import pytest
 
-from netCDF4 import Dataset
-from NuMPI.IO.NetCDF import NCStructuredGrid
+try:
+    # raise ImportError()
+    from netCDF4 import Dataset
+
+    _has_netCDF4 = True
+except ImportError:
+    _has_netCDF4 = False
+###
+
+if _has_netCDF4:
+    from NuMPI.IO.NetCDF import NCStructuredGrid
+else:
+    pytestmark = pytest.mark.skip("skip because no NetCDF installed")
 
 
 class DomainDecomposition():
