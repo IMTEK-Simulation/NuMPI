@@ -6,7 +6,7 @@
 import numbers
 import numpy as np
 
-from NetCDF4 import Dataset
+from netCDF4 import Dataset
 
 
 class NCStructuredGridFrame(object):
