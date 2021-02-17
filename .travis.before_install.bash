@@ -2,7 +2,7 @@
 
 sudo apt-get update
 if [ "$WITH_MPI" == "yes" ]; then
-  sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev
+  sudo apt-get install openmpi-bin libopenmpi-dev
 fi
 python -m pip install $(grep numpy requirements.txt)
 if [ "$WITH_MPI" == "yes" ]; then
