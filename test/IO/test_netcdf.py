@@ -104,7 +104,7 @@ def test_write_read_domain(self):
     nc.tensor = self.tensor_grid
     nc[3].per_frame_tensor = self.tensor_grid
     nc.close()
-
+    self.communicator.barrier()
     # Check that the file structure is correct
     nc = Dataset('test_{}d.nc'.format(len(self.nb_grid_pts)), 'r', comm=None)
     dimensions = ['frame', 'grid_x', 'tensor_3']
@@ -149,7 +149,7 @@ def test_write_read_subdomain(self):
     nc.tensor = tensor_grid
     nc[3].per_frame_tensor = tensor_grid
     nc.close()
-
+    self.communicator.barrier()
     # Check that the file structure is correct
     nc = Dataset('test_{}d.nc'.format(len(self.nb_grid_pts)), 'r', comm=None)
     dimensions = ['frame', 'grid_x', 'tensor_3']
