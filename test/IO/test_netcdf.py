@@ -106,7 +106,7 @@ def test_write_read_domain(self):
     nc.close()
 
     # Check that the file structure is correct
-    nc = Dataset('test_{}d.nc'.format(len(self.nb_grid_pts)), 'r')
+    nc = Dataset('test_{}d.nc'.format(len(self.nb_grid_pts)), 'r', comm=self.communicator)
     dimensions = ['frame', 'grid_x', 'tensor_3']
     if len(self.nb_grid_pts) > 1:
         dimensions += ['grid_y']
@@ -123,7 +123,7 @@ def test_write_read_domain(self):
     nc.close()
 
     # Read file and check data
-    nc = NCStructuredGrid('test_{}d.nc'.format(len(self.nb_grid_pts)), mode='r')
+    nc = NCStructuredGrid('test_{}d.nc'.format(len(self.nb_grid_pts)), mode='r', communicator=self.communicator)
     assert np.equal(tuple(nc.nb_domain_grid_pts), tuple(self.nb_grid_pts)).all()
     assert np.equal(nc.scalar, self.scalar_grid).all()
     assert np.equal(nc.tensor, self.tensor_grid).all()
@@ -151,7 +151,7 @@ def test_write_read_subdomain(self):
     nc.close()
 
     # Check that the file structure is correct
-    nc = Dataset('test_{}d.nc'.format(len(self.nb_grid_pts)), 'r')
+    nc = Dataset('test_{}d.nc'.format(len(self.nb_grid_pts)), 'r', comm=self.communicator)
     dimensions = ['frame', 'grid_x', 'tensor_3']
     if len(self.nb_grid_pts) > 1:
         dimensions += ['grid_y']
@@ -168,7 +168,7 @@ def test_write_read_subdomain(self):
     nc.close()
 
     # Read file and check data
-    nc = NCStructuredGrid('test_{}d.nc'.format(len(self.nb_grid_pts)), mode='r')
+    nc = NCStructuredGrid('test_{}d.nc'.format(len(self.nb_grid_pts)), mode='r', communicator=self.communicator)
     assert np.equal(tuple(nc.nb_domain_grid_pts), tuple(self.nb_grid_pts)).all()
     assert np.equal(nc.scalar, self.scalar_grid).all()
     assert np.equal(nc.tensor, self.tensor_grid).all()
