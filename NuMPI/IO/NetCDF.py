@@ -30,6 +30,8 @@ import numpy as np
 
 from netCDF4 import Dataset
 
+import NuMPI
+
 
 class NCStructuredGridFrame(object):
     def __init__(self, parent, index):
@@ -192,8 +194,8 @@ class NCStructuredGrid(object):
         }
     """
 
-    _program = 'muFFT'
-    _programVersion = 'N/A'
+    _program = 'NuMPI'
+    _programVersion = NuMPI.__version__
 
     def __init__(self, fn, mode='r', nb_domain_grid_pts=None,
                  decomposition='serial', subdomain_locations=None,
