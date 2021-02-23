@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-# Lars Pastewka is author
+# This was migrated from muSpectre byy Antoine Sanner. Lars Pastewka is author
 
 
 import numbers
