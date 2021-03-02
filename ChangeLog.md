@@ -1,8 +1,8 @@
 Change log for NuMPI
 ===================
 
-v0.1.5. (>210122)
------------------
+v0.1.5 (02Mar21)
+----------------
 
 - ENH: NetCDF IO : NCStructuredGrid migrated from muspectre to here
 - Drop support for Python3.5
