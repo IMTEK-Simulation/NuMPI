@@ -5,3 +5,4 @@ pep8>=0.6
 pytest
 pytest-flake8
 runtests>=0.0.28
+netCDF4>=1.5.3

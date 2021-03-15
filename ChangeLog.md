@@ -1,5 +1,12 @@
 Change log for NuMPI
 ===================
+
+v0.1.5 (02Mar21)
+----------------
+
+- ENH: NetCDF IO : NCStructuredGrid migrated from muspectre to here
+- Drop support for Python3.5
+
 v0.1.4 (16Oct20)
 ----------------
 - BUG: don't close filestream on failure
