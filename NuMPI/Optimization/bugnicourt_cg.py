@@ -18,7 +18,6 @@ def constrained_conjugate_gradients(fun, hessp,
                                     communicator=None,
                                     bounds=None
                                     ):
-
     '''
     A constrained conjugate gradients implementation that can handle both
     force and ga as input variable.
@@ -113,8 +112,7 @@ def constrained_conjugate_gradients(fun, hessp,
         #
         mask_nonzero = x > bounds
         N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
-        residual = residual \
-            - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
+        residual = residual - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
 
     '''Apply the admissible Lagrange multipliers.'''
     mask_res = residual >= 0
@@ -145,7 +143,6 @@ def constrained_conjugate_gradients(fun, hessp,
         # Here we could evaluate this directly in Fourier space (Parseval)
         # and spare one FFT.
         # See issue #47
-
 
         if denominator_temp == 0:
             print("it {}: denominator for alpha is 0".format(i))
@@ -183,7 +180,7 @@ def constrained_conjugate_gradients(fun, hessp,
             mask_nonzero = x > bounds
             N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
             residual = residual \
-                - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
+                       - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
 
         '''Apply the admissible Lagrange multipliers.'''
         mask_res = residual >= 0
@@ -205,16 +202,14 @@ def constrained_conjugate_gradients(fun, hessp,
             descent_dir '''
 
         # beta = np.sum(residual.T * hessp_val) / denominator_temp
-        beta = comm.sum(residual * (residual - residual_old)) / (
-                alpha * denominator_temp)
+        beta = comm.sum(residual * (residual - residual_old)) / (alpha * denominator_temp)
 
         des_dir_old = des_dir
         des_dir = -residual + beta * des_dir_old
 
         # TODO: this is useless
         des_dir[np.logical_not(mask_bounded)] = -residual[
-            np.logical_not(mask_bounded)] + beta * des_dir_old[
-            np.logical_not(mask_bounded)]
+            np.logical_not(mask_bounded)] + beta * des_dir_old[np.logical_not(mask_bounded)]
 
         des_dir[mask_bounded] = 0
 

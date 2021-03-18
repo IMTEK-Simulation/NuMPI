@@ -146,13 +146,13 @@ def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
             alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
                 / np.sum(hessp_val[mask_c] * des_dir[mask_c])
         else:
+            # TODO: does anything happen when alpha is 0 or is the algorithm just stuck ?
             alpha = 0.0
 
         if alpha < 0:
             print("it {} : hessian is negative along the descent direction. "
                   "You will probably need linesearch "
                   "or trust region".format(n_iterations))
-        # assert alpha >= 0
 
         x[mask_c] += alpha * des_dir[mask_c]
 
@@ -196,15 +196,15 @@ def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
                 else:
                     res_convg = False
             if (res_convg) and (rms_pen <= gtol):
-                result = optim.OptimizeResult({'success': True,
-                                               'x': x,
-                                               'fun': rms_pen_,
-                                               'jac': residual,
-                                               'nit': n_iterations,
-                                               'message': 'CONVERGENCE: '
-                                                          'NORM_OF_GRADIENT_'
-                                                          '<=_GTOL',
-                                               })
+                result = optim.OptimizeResult(
+                    {
+                        'success': True,
+                        'x': x,
+                        'fun': rms_pen_,
+                        'jac': residual,
+                        'nit': n_iterations,
+                        'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
+                        })
                 if residual_plot:
                     plt.pyplot.plot(iterations, np.log10(gaps))
                     plt.pyplot.xlabel('iterations')
