@@ -142,6 +142,10 @@ def constrained_conjugate_gradients(fun, hessp,
             raise ValueError('hessp function has to take max 1 arg (descent '
                              'dir) or 2 args (x, descent direction)')
         denominator_temp = comm.sum(des_dir.T * hessp_val)
+        # Here we could evaluate this directly in Fourier space (Parseval)
+        # and spare one FFT.
+        # See issue #47
+
 
         if denominator_temp == 0:
             print("it {}: denominator for alpha is 0".format(i))
