@@ -179,8 +179,7 @@ def constrained_conjugate_gradients(fun, hessp,
         if mean_val is not None:
             mask_nonzero = x > bounds
             N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
-            residual = residual \
-                       - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
+            residual = residual - comm.sum(residual[mask_nonzero]) / N_mask_nonzero
 
         '''Apply the admissible Lagrange multipliers.'''
         mask_res = residual >= 0
@@ -195,7 +194,7 @@ def constrained_conjugate_gradients(fun, hessp,
             # assert np.mean(residual) < 1e-14 * np.max(abs(residual))
 
         '''Computing beta for updating descent direction
-            In Bugnicourt's paper: 
+            In Bugnicourt's paper:
             beta = num / denom
             num = new_residual_transpose . (new_residual - old_residual)
             denom = alpha * descent_dir_transpose . (A_inverse - d2_ψadh).
