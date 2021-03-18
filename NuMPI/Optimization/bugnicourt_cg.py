@@ -167,15 +167,19 @@ def constrained_conjugate_gradients(fun, hessp,
 
         if mean_val is not None:
             # x = (mean_val / comm.sum(x) * nb_DOF) * x
+            # below is just a more complicated version of this compatible with
+            # more general bounds
             x = bounds + (mean_val - mean_bounds) \
                 / (comm.sum(x) / nb_DOF - mean_bounds) * (x - bounds)
         residual_old = residual
 
-        '''Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g'''
+        '''
+        In Bugnicourt's paper
+        Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g
+        '''
         residual = fun(x)[1]
 
         if mean_val is not None:
-            #
             mask_nonzero = x > bounds
             N_mask_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
             residual = residual \
@@ -187,7 +191,6 @@ def constrained_conjugate_gradients(fun, hessp,
         residual[mask_bounded] = 0.0
 
         if mean_val is not None:
-            #
             mask_nonzero = residual != 0
             N_nonzero = comm.sum(np.count_nonzero(mask_nonzero))
             residual[mask_nonzero] = residual[mask_nonzero] - comm.sum(
@@ -195,6 +198,7 @@ def constrained_conjugate_gradients(fun, hessp,
             # assert np.mean(residual) < 1e-14 * np.max(abs(residual))
 
         '''Computing beta for updating descent direction
+            In Bugnicourt's paper: 
             beta = num / denom
             num = new_residual_transpose . (new_residual - old_residual)
             denom = alpha * descent_dir_transpose . (A_inverse - d2_ψadh).
