@@ -69,7 +69,7 @@ class NCStructuredGridFrame(object):
             raise ValueError("Variable '{}' exists in NetCDF file, but it "
                              "does not store per-frame data.".format(name))
         if self.decomposition == 'subdomain':
-            if var.ndim == 1: # it is a scalar
+            if var.ndim == 1:  # it is a scalar
                 return var[self._index]
             else:
                 return var[self._index][self.subdomain_slices]
