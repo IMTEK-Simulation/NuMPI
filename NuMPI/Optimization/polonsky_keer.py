@@ -8,7 +8,7 @@ import matplotlib as plt
 from inspect import signature
 
 
-def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
+def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                                     mean_value=None, residual_plot=False,
                                     maxiter=5000):
     """
@@ -31,7 +31,7 @@ def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
             where x is the input ndarray and des_dir is the descent direction.
 
     x0 : ndarray
-         Initial guess. Default value->None.
+         Initial guess.
          ValueError is raised if "None" is provided.
 
     gtol : float, optional
@@ -79,11 +79,9 @@ def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
                          'a bool \
                          is expected'.format(type(residual_plot)))
 
-    x0 = x0.flatten()
-
     if x0 is not None:
         x = x0.copy()
-        # print("Total force is  :: {}".format(np.sum(x)))
+        x = x.flatten()
         delta = 0
         G_old = 1
     else:
@@ -173,8 +171,7 @@ def constrained_conjugate_gradients(fun, hessp, x0=None, gtol=1e-8,
         if mean_value is not None:
             '''Take care of constraint a_x*a_y*sum(p_ij)=P0'''
             P = np.mean(x)
-            P0 = mean_value
-            x *= (P0 / P)
+            x *= (mean_value / P)
 
         if residual_plot:
             iterations = np.append(iterations, n_iterations)
