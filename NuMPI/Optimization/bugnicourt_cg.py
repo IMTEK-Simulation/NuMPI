@@ -49,9 +49,6 @@ def constrained_conjugate_gradients(fun, hessp,
                If you want to apply the mean_value constraint then provide an
                int/float value to the mean_value.
 
-    residual_plot : bool, optional
-                    Generates a plot between the residual and iterations.
-
     maxiter : int,optional
               Default, maxiter=5000
               Maximum number of iterations after which the program will exit.
