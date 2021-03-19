@@ -19,8 +19,7 @@ def constrained_conjugate_gradients(fun, hessp,
                                     bounds=None
                                     ):
     '''
-    A constrained conjugate gradients implementation that can handle both
-    force and ga as input variable.
+    Constrained conjugate gradient algorithm from Bugnicourt et al. [1].
 
     Parameters
     __________
@@ -28,7 +27,7 @@ def constrained_conjugate_gradients(fun, hessp,
     fun :   callable.
                 The objective function to be minimized.
                             fun(x) -> float(energy),ndarray(gradient)
-                where x is the input ndarray.
+                where x is the input ndarray. The energy is actually never used.
 
     hessp : callable
             Function to evaluate the hessian product of the objective.
