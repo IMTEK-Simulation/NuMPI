@@ -89,7 +89,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
     gaps = np.array([])
     iterations = np.array([])
-    rms_pen_ = np.array([])
+    # rms_pen_ = np.array([])
 
     des_dir = np.zeros(np.shape(x))
 
@@ -119,10 +119,10 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
         des_dir[np.logical_not(mask_c)] = 0
         G_old = G
 
-        if mask_neg.sum() > 0:
-            rms_pen = np.sqrt(G / mask_neg.sum())
-        else:
-            rms_pen = np.sqrt(G)
+        # if mask_neg.sum() > 0:
+        #     rms_pen = np.sqrt(G / mask_neg.sum())
+        # else:
+        #     rms_pen = np.sqrt(G)
 
         '''Calculating step-length alpha'''
 
@@ -179,7 +179,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                 gaps = np.append(gaps, np.max(abs(residual[mask_c])))
             else:
                 gaps = np.append(gaps, np.max(abs(residual)))
-            rms_pen_ = np.append(rms_pen_, rms_pen)
+            # rms_pen_ = np.append(rms_pen_, rms_pen)
 
         n_iterations += 1
         res_convg = False
@@ -192,12 +192,13 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                     res_convg = True
                 else:
                     res_convg = False
-            if (res_convg) and (rms_pen <= gtol):
+            # if (res_convg) and (rms_pen <= gtol):
+            if res_convg:
                 result = optim.OptimizeResult(
                     {
                         'success': True,
                         'x': x,
-                        'fun': rms_pen_,
+                        'fun': fun,
                         'jac': residual,
                         'nit': n_iterations,
                         'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
@@ -225,10 +226,10 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                     plt.pyplot.xlabel('iterations')
                     plt.pyplot.ylabel('residuals')
                     plt.pyplot.show()
-                    plt.pyplot.plot(range(n_iterations - 1),
-                                    np.log10(rms_pen_))
-                    plt.pyplot.xlabel('iterations')
-                    plt.pyplot.ylabel('rms pen')
-                    plt.pyplot.show()
+                    # plt.pyplot.plot(range(n_iterations - 1),
+                    #                 np.log10(rms_pen_))
+                    # plt.pyplot.xlabel('iterations')
+                    # plt.pyplot.ylabel('rms pen')
+                    # plt.pyplot.show()
 
                 return result
