@@ -44,7 +44,8 @@ def constrained_conjugate_gradients(fun, hessp,
 
     gtol : float, optional
            Default value : 1e-8
-
+           convergence criterion is max(abs) and norm2 of the projected
+           gradient < gtol.
     mean_value : int/float, optional
                If you want to apply the mean_value constraint then provide an
                int/float value to the mean_value.
@@ -52,23 +53,13 @@ def constrained_conjugate_gradients(fun, hessp,
     residual_plot : bool, optional
                     Generates a plot between the residual and iterations.
 
-    maxiter : int,optional
+    maxiter : int, optional
               Default, maxiter=5000
               Maximum number of iterations after which the program will exit.
 
     Returns
     -------
-    success : bool
-              True if convergence else False.
-    x : array
-        array of minimized x.
-    jac : array
-          value of the gradient of Lagrangian at convergence/
-          non-convergence.
-    nit : int
-          Number of iterations
-    message : string
-              Convergence or Nodes_dir-Convergence
+    OptimizeResult  : scipy.optimize object.
 
     References
     __________
@@ -243,3 +234,7 @@ def constrained_conjugate_gradients(fun, hessp,
                     })
 
                 return result
+        else:
+            if comm.max(abs(residual)) <= gtol:
+                print('Algorithm will run atleast 5 iterations before '
+                      'converging.')

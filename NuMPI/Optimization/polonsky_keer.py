@@ -46,23 +46,13 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
     residual_plot : bool, optional
                     Generates a plot between the residual and iterations.
 
-    maxiter : int,optional
+    maxiter : int, optional
               Default, maxiter=5000
               Maximum number of iterations after which the program will exit.
 
     Returns
     -------
-    success : bool
-              True if convergence else False.
-    x : array
-        array of minimized x.
-    jac : array
-          value of the gradient of Lagrangian at convergence/
-          non-convergence.
-    nit : int
-          Number of iterations
-    message : string
-              Convergence or Nodes_dir-Convergence
+    OptimizeResult  : scipy.optimize object.
 
     References
     ----------
