@@ -1,10 +1,7 @@
-"""
-Implementation of constrained conjugate gradient algorithm as described in,
-    I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999).
-"""
+
+
 import numpy as np
 import scipy.optimize as optim
-import matplotlib as plt
 from inspect import signature
 
 
@@ -15,12 +12,21 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
     Implementation of constrained conjugate gradient algorithm as described in,
     I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999).
 
+    See also
+    M.R. Hestenes, Conjugate Direction Methods in Optimization, Springer, New York, 1980, Chaps. 2, 3.
+
+    Application to contact problems with adhesion:
+    Rey, V. et al. Comput. Mech. 60, 69–81 (2017)
+
+
     Parameters
     ----------
     fun : callable.
                 The objective function to be minimized.
                             fun(x) -> float(energy),ndarray(gradient)
                 where x is the input ndarray.
+                Note that energy is never used, you can return a dummy value.
+
     hessp : callable
             Function to evaluate the hessian product of the objective.
             Hessp should accept either 1 argument (desscent direction) or
@@ -53,6 +59,12 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
     Returns
     -------
     OptimizeResult  : scipy.optimize object.
+        Attributes:
+         success: bool
+         x: x,
+         jac: residual = gradient(x),
+         nit: n_iterations,
+         message: 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL' or 'NO-CONVERGENCE'
 
     References
     ----------
@@ -188,16 +200,16 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                     {
                         'success': True,
                         'x': x,
-                        'fun': fun,
                         'jac': residual,
                         'nit': n_iterations,
                         'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
                         })
                 if residual_plot:
-                    plt.pyplot.plot(iterations, np.log10(gaps))
-                    plt.pyplot.xlabel('iterations')
-                    plt.pyplot.ylabel('residuals')
-                    plt.pyplot.show()
+                    import matplotlib.pyplot as plt
+                    plt.plot(iterations, np.log10(gaps))
+                    plt.xlabel('iterations')
+                    plt.ylabel('residuals')
+                    plt.show()
 
                 return result
 
@@ -205,17 +217,17 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                 '''If no convergence'''
                 result = optim.OptimizeResult({'success': False,
                                                'x': x,
-                                               'fun': fun,
                                                'jac': residual,
                                                'nit': n_iterations,
                                                'message': 'NO-CONVERGENCE:',
                                                })
 
                 if residual_plot:
-                    plt.pyplot.plot(iterations, np.log10(gaps))
-                    plt.pyplot.xlabel('iterations')
-                    plt.pyplot.ylabel('residuals')
-                    plt.pyplot.show()
+                    import matplotlib.pyplot as plt
+                    plt.plot(iterations, np.log10(gaps))
+                    plt.xlabel('iterations')
+                    plt.ylabel('residuals')
+                    plt.show()
                     # plt.pyplot.plot(range(n_iterations - 1),
                     #                 np.log10(rms_pen_))
                     # plt.pyplot.xlabel('iterations')
