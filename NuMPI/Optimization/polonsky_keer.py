@@ -14,6 +14,8 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
     See also
     M.R. Hestenes, Conjugate Direction Methods in Optimization, Springer, New York, 1980, Chaps. 2, 3.
+    B.N. Pshenichny, Yu.M. Danilin, Numerical Methods in Optimization Problems, Nauka, Moscow, 1975, Chap. 3, in Russian.
+    G. Zoutendijk, Mathematical Programming Methods, North Holland, Amsterdam, 1976, Chap. 16.
 
     Application to contact problems with adhesion:
     Rey, V. et al. Comput. Mech. 60, 69–81 (2017)
