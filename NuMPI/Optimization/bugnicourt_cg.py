@@ -59,6 +59,12 @@ def constrained_conjugate_gradients(fun, hessp,
     Returns
     -------
     OptimizeResult  : scipy.optimize object.
+        Attributes:
+         success: bool
+         x: x,
+         jac: residual = gradient(x),
+         nit: n_iterations,
+         message: 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL' or 'NO CONVERGENCE: MAXITERATIONS REACHED'
 
     References
     __________
@@ -68,6 +74,10 @@ def constrained_conjugate_gradients(fun, hessp,
                 for Solving a Rough Adhesive Contact: Description and
                 Convergence Study.
                 Tribology Letters. 66. 10.1007/s11249-017-0980-z.
+
+    ..[2]   :   Vollebregt, E. A. H. J Optim Theory Appl 162, 931–953 (2014)
+                The Bound-Constrained Conjugate Gradient Method for Non-negative Matrices
+
     '''
     if communicator is None:
         comm = np
@@ -214,7 +224,6 @@ def constrained_conjugate_gradients(fun, hessp,
                     {
                         'success': True,
                         'x': x,
-                        'fun': fun,
                         'jac': residual,
                         'nit': i,
                         'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
@@ -226,7 +235,6 @@ def constrained_conjugate_gradients(fun, hessp,
                     {
                         'success': False,
                         'x': x,
-                        'fun': fun,
                         'jac': residual,
                         'nit': i,
                         'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'

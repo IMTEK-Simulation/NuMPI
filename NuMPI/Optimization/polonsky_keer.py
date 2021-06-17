@@ -66,7 +66,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
          x: x,
          jac: residual = gradient(x),
          nit: n_iterations,
-         message: 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL' or 'NO-CONVERGENCE'
+         message: 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL' or 'NO CONVERGENCE: MAXITERATIONS REACHED'
 
     References
     ----------
@@ -221,7 +221,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                                                'x': x,
                                                'jac': residual,
                                                'nit': n_iterations,
-                                               'message': 'NO-CONVERGENCE:',
+                                               'message': 'NO-CONVERGENCE: MAXITERATIONS REACHED',
                                                })
 
                 if residual_plot:
