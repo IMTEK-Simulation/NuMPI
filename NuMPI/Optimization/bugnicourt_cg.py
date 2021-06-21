@@ -207,10 +207,6 @@ def constrained_conjugate_gradients(fun, hessp,
         des_dir_old = des_dir
         des_dir = -residual + beta * des_dir_old
 
-        # des_dir[np.logical_not(mask_bounded)] = -residual[
-        #     np.logical_not(mask_bounded)] + beta * des_dir_old[
-        #     np.logical_not(mask_bounded)]
-
         des_dir[mask_bounded] = 0
 
         if callback:
