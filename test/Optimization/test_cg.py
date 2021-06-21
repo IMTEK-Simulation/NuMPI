@@ -3,7 +3,7 @@ from NuMPI.Tools import Reduction
 import numpy as np
 import scipy.optimize
 
-from NuMPI.Optimization.bugnicourt_cg import constrained_conjugate_gradients
+from NuMPI.Optimization.ccg_without_restart import constrained_conjugate_gradients
 
 
 def test_bugnicourt_cg(comm):
