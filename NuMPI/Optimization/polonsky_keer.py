@@ -12,7 +12,8 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
     See also
     M.R. Hestenes, Conjugate Direction Methods in Optimization, Springer, New York, 1980, Chaps. 2, 3.
-    B.N. Pshenichny, Yu.M. Danilin, Numerical Methods in Optimization Problems, Nauka, Moscow, 1975, Chap. 3, in Russian.
+    B.N. Pshenichny, Yu.M. Danilin,
+        Numerical Methods in Optimization Problems, Nauka, Moscow, 1975, Chap. 3, in Russian.
     G. Zoutendijk, Mathematical Programming Methods, North Holland, Amsterdam, 1976, Chap. 16.
 
     Application to contact problems with adhesion:
@@ -137,8 +138,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
         if mask_c.sum() != 0:
             '''alpha is TAU from algorithm'''
-            alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
+            alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) / np.sum(hessp_val[mask_c] * des_dir[mask_c])
         else:
             # TODO: does anything happen when alpha is 0 or is the algorithm just stuck ?
             alpha = 0.0
@@ -209,12 +209,12 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
             elif (n_iterations >= maxiter - 1):
                 '''If no convergence'''
                 result = optim.OptimizeResult({
-                                                  'success': False,
-                                                  'x': x,
-                                                  'jac': residual,
-                                                  'nit': n_iterations,
-                                                  'message': 'NO-CONVERGENCE: MAXITERATIONS REACHED',
-                                                  })
+                    'success': False,
+                    'x': x,
+                    'jac': residual,
+                    'nit': n_iterations,
+                    'message': 'NO-CONVERGENCE: MAXITERATIONS REACHED',
+                    })
 
                 if residual_plot:
                     import matplotlib.pyplot as plt

@@ -202,7 +202,7 @@ def constrained_conjugate_gradients(fun, hessp,
 
         # beta = np.sum(residual.T * hessp_val) / denominator_temp
         beta = comm.sum(residual * (residual - residual_old)) / (
-                    alpha * denominator_temp)
+                alpha * denominator_temp)
 
         des_dir_old = des_dir
         des_dir = -residual + beta * des_dir_old
@@ -214,7 +214,6 @@ def constrained_conjugate_gradients(fun, hessp,
 
         n_iterations += 1
 
-        #if i >= 5:
         if comm.max(abs(residual)) <= gtol:
             result = optim.OptimizeResult(
                 {
@@ -223,7 +222,7 @@ def constrained_conjugate_gradients(fun, hessp,
                     'jac': residual,
                     'nit': i,
                     'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
-                })
+                    })
             return result
 
         elif i == maxiter - 1:
@@ -234,6 +233,6 @@ def constrained_conjugate_gradients(fun, hessp,
                     'jac': residual,
                     'nit': i,
                     'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
-                })
+                    })
 
             return result
