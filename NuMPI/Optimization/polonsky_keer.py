@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import scipy.optimize as optim
 from inspect import signature
@@ -93,7 +91,6 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
     gaps = np.array([])
     iterations = np.array([])
-    # rms_pen_ = np.array([])
 
     des_dir = np.zeros(np.shape(x))
 
@@ -123,11 +120,6 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
         des_dir[np.logical_not(mask_c)] = 0
         G_old = G
 
-        # if mask_neg.sum() > 0:
-        #     rms_pen = np.sqrt(G / mask_neg.sum())
-        # else:
-        #     rms_pen = np.sqrt(G)
-
         '''Calculating step-length alpha'''
 
         sig = signature(hessp)
@@ -146,7 +138,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
         if mask_c.sum() != 0:
             '''alpha is TAU from algorithm'''
             alpha = -np.sum(residual[mask_c] * des_dir[mask_c]) \
-                / np.sum(hessp_val[mask_c] * des_dir[mask_c])
+                    / np.sum(hessp_val[mask_c] * des_dir[mask_c])
         else:
             # TODO: does anything happen when alpha is 0 or is the algorithm just stuck ?
             alpha = 0.0
@@ -183,7 +175,6 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                 gaps = np.append(gaps, np.max(abs(residual[mask_c])))
             else:
                 gaps = np.append(gaps, np.max(abs(residual)))
-            # rms_pen_ = np.append(rms_pen_, rms_pen)
 
         n_iterations += 1
         res_convg = False
@@ -196,7 +187,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                     res_convg = True
                 else:
                     res_convg = False
-            # if (res_convg) and (rms_pen <= gtol):
+
             if res_convg:
                 result = optim.OptimizeResult(
                     {
@@ -217,12 +208,13 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
             elif (n_iterations >= maxiter - 1):
                 '''If no convergence'''
-                result = optim.OptimizeResult({'success': False,
-                                               'x': x,
-                                               'jac': residual,
-                                               'nit': n_iterations,
-                                               'message': 'NO-CONVERGENCE: MAXITERATIONS REACHED',
-                                               })
+                result = optim.OptimizeResult({
+                                                  'success': False,
+                                                  'x': x,
+                                                  'jac': residual,
+                                                  'nit': n_iterations,
+                                                  'message': 'NO-CONVERGENCE: MAXITERATIONS REACHED',
+                                                  })
 
                 if residual_plot:
                     import matplotlib.pyplot as plt
@@ -230,10 +222,5 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                     plt.xlabel('iterations')
                     plt.ylabel('residuals')
                     plt.show()
-                    # plt.pyplot.plot(range(n_iterations - 1),
-                    #                 np.log10(rms_pen_))
-                    # plt.pyplot.xlabel('iterations')
-                    # plt.pyplot.ylabel('rms pen')
-                    # plt.pyplot.show()
 
                 return result
