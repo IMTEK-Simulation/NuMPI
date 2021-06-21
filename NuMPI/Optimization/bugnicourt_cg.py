@@ -214,26 +214,26 @@ def constrained_conjugate_gradients(fun, hessp,
 
         n_iterations += 1
 
-        if i >= 5:
-            if comm.max(abs(residual)) <= gtol:
-                result = optim.OptimizeResult(
-                    {
-                        'success': True,
-                        'x': x,
-                        'jac': residual,
-                        'nit': i,
-                        'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
-                    })
-                return result
+        #if i >= 5:
+        if comm.max(abs(residual)) <= gtol:
+            result = optim.OptimizeResult(
+                {
+                    'success': True,
+                    'x': x,
+                    'jac': residual,
+                    'nit': i,
+                    'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
+                })
+            return result
 
-            elif i == maxiter - 1:
-                result = optim.OptimizeResult(
-                    {
-                        'success': False,
-                        'x': x,
-                        'jac': residual,
-                        'nit': i,
-                        'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
-                    })
+        elif i == maxiter - 1:
+            result = optim.OptimizeResult(
+                {
+                    'success': False,
+                    'x': x,
+                    'jac': residual,
+                    'nit': i,
+                    'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
+                })
 
-                return result
+            return result
