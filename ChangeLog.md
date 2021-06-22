@@ -1,6 +1,13 @@
 Change log for NuMPI
 ===================
 
+v0.1.7 (22Jun21)
+----------------
+
+- Drop support for python3.6 and take python3.9 in testing
+- Fix bug in CI installation 
+
+
 v0.1.6 (22Jun21)
 ----------------
 
