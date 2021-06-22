@@ -8,5 +8,6 @@ python -m pip install $(grep numpy requirements.txt)
 if [ "$WITH_MPI" == "yes" ]; then
   python -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION}
   BUILDDIR=/tmp PREFIX=$HOME/.local source .install_parallel_netcdf.sh
-  sed -n '/netCDF4/!p' requirements.txt > requirements.txt # remove from requirements since we already installed it
+  sed -n '/netCDF4/!p' requirements.txt > requirements_temp.txt # remove from requirements since we already installed it
+  mv requirements_temp.txt requirements.txt
 fi
