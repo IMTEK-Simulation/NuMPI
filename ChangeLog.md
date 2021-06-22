@@ -1,6 +1,13 @@
 Change log for NuMPI
 ===================
 
+v0.1.6 (22Jun21)
+----------------
+
+- ENH: Optimization: parallelized the bound constrained conjugate gradient without restart
+- ENH: Optimization: implement bound constrained conjugate gradient without restart when the constrained set changes
+- ENH: Optimization: implement bound constrained conjugate gradient with restart when the constrained set changes
+
 v0.1.5 (02Mar21)
 ----------------
 
