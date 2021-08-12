@@ -3,10 +3,10 @@ NuMPI
 
 NuMPI is a collection of numerical tools for MPI-parallelized Python codes. NuMPI presently contains:
 
-- An (incomplete) stub implementation of the [mpi4py](https://bitbucket.org/mpi4py/mpi4py) interface to the MPI libraries.
-- Parallel file IO in numpy's [.npy](https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html) format.
+- An (incomplete) stub implementation of the [mpi4py](https://bitbucket.org/mpi4py/mpi4py) interface to the MPI libraries. This allows running serial versions of MPI parallel code  without having `mpi4py` (and hence a full MPI stack) installed.
+- Parallel file IO in numpy's [.npy](https://docs.scipy.org/doc/numpy/reference/generated/numpy.save.html) format using MPI I/O.
 - An MPI-parallel implementation of the L-BFGS optimizer.
-- An MPI-parallel bound constrained conjugate gradients algorithm
+- An MPI-parallel bound constrained conjugate gradients algorithm.
 
 Build status
 ------------
@@ -57,7 +57,7 @@ On NEMO for example
 msub -q express -l walltime=15:00,nodes=1:ppn=20 NEMO_test_job.sh -m bea
 ```
 
-Funding
--------
+Development & Funding
+---------------------
 
 Development of this project is funded by the [European Research Council](https://erc.europa.eu) within [Starting Grant 757343](https://cordis.europa.eu/project/id/757343) and by the [Deutsche Forschungsgemeinschaft](https://www.dfg.de/en) within project [EXC 2193](https://gepris.dfg.de/gepris/projekt/390951807).
