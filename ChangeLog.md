@@ -1,12 +1,16 @@
 Change log for NuMPI
 ===================
 
+v0.2.0 (27Oct21)
+----------------
+
+- ENH: Reduction for computing arithmetic mean
+
 v0.1.7 (22Jun21)
 ----------------
 
 - Drop support for python3.6 and take python3.9 in testing
-- Fix bug in CI installation 
-
+- Fix bug in CI installation
 
 v0.1.6 (22Jun21)
 ----------------
@@ -36,7 +40,7 @@ v0.1.2 (29Jun20)
 v0.1.1 (02Dec19)
 ----------------
 
-- Reader from Stub MPI communicator compatible with filestrem input 
+- Reader from Stub MPI communicator compatible with filestream input 
 
 v0.1.0 (25Aug19)
 ----------------

@@ -28,7 +28,7 @@ import numpy as np
 from .. import MPI
 
 
-def get_dtypeInfo(dtype):
+def get_dtype_info(dtype):
     if dtype.kind == 'i':
         return np.iinfo(dtype)
     if dtype.kind == 'f':
@@ -43,113 +43,142 @@ class Reduction:
         else:
             self.comm = comm
 
+    def _op(self, npop, npargs, mpiop, *args, **kwargs):
+        """
+        Generic reduction operation
+
+        Parameters
+        ----------
+        arr : array_like
+            Numpy array containing the data to be reduced
+        npop : func
+            Numpy reduction function (e.g. np.sum)
+        mpiop : mpi4py.MPI.op
+            MPI reduction operation
+
+        Returns
+        -------
+        result_arr : np.ndarray
+            Result of the reduction operation
+        """
+        local_result = npop(*npargs, *args, **kwargs)
+        result = np.zeros_like(local_result)
+        mpitype = MPI._typedict[local_result.dtype.char]
+        self.comm.Allreduce([local_result, mpitype], [result, mpitype], op=mpiop)
+        return result
+
     def sum(self, arr, *args, **kwargs):
         """
-        take care that the input arrays have the same datatype on all
-        Processors !
-
-        when you specify an axis along which make the sum, be shure that it
-        is the direction in which data is decomposed (for slab data
-        decomposition) !
-
-        pencil data decomposition is not implemented yet.
+        Summation
 
         Parameters
         ----------
-        arr: numpy Array
+        arr : array_like
+            Numpy array containing the data to be reduced
 
         Returns
         -------
-        scalar np.ndarray , the sum of all Elements of the Array over all
-        the Processors
+        result_arr : np.ndarray
+            Sum of all elements of the array over all processors
         """
+        return self._op(np.sum, (arr,), MPI.SUM, *args, **kwargs)
 
-        locresult = np.sum(arr, *args, **kwargs)
-        result = np.zeros_like(locresult)
-        # print("Proc{}: result.dtype={}, locresult.dtype={} arr.dtype={
-        # }".format(self.comm.Get_rank(),result.dtype,locresult.dtype,
-        # arr.dtype))
-        mpitype = MPI._typedict[locresult.dtype.char]
-        self.comm.Allreduce([locresult, mpitype], [result, mpitype],
-                            op=MPI.SUM)
-        if type(locresult) == type(result):  # TODO:Why is this done again ?
-            return result
-        else:
-            return type(locresult)(result)
-
-    def max(self, arr):
+    def max(self, arr, *args, **kwargs):
         """
-        take care that the input arrays have the same datatype on all
-        Processors !
+        Maximum value
+
         Parameters
         ----------
-        arr: numpy float array, can be empty
+        arr : array_like
+            Numpy array containing the data to be reduced
 
         Returns
         -------
-        np.array of size 1, the max value of arr over all arrays, if all are
-        empty this is -np.inf
-
+        result_arr : np.ndarray
+            Maximum of all elements of the array over all processors
         """
-        result = np.asarray(0, dtype=arr.dtype)
+        kwargs['initial'] = get_dtype_info(arr.dtype).min
+        return self._op(np.max, (arr,), MPI.MAX, *args, **kwargs)
 
-        absmin = get_dtypeInfo(arr.dtype).min  # most negative value that can
-        #                                        be stored in this datatype
-        mpitype = MPI._typedict[arr.dtype.char]
-        self.comm.Allreduce([np.max(arr) if arr.size > 0 else np.array(
-            [absmin], dtype=arr.dtype), mpitype],
-                            [result, mpitype], op=MPI.MAX)
-        # FIXME: use the max of the dtype because np.inf only float
-        # TODO: Not elegant, but following options didn't work
-        # self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array(
-        # None, dtype=arr.dtype), result, op=MPI.MAX)
-        # Here when the first array isn't empty it is fine, but otherwise
-        # the result will be nan
-        #
-        # self.comm.Allreduce(np.max(arr) if arr.size > 0 else np.array([],
-        # dtype=arr.dtype), result, op=MPI.MAX)
-        # Her MPI claims that the input and output array have not the same
-        # datatype
-        return result
-
-    def min(self, arr):
+    def min(self, arr, *args, **kwargs):
         """
-        take care that the input arrays have the same datatype on all
-        Processors !
+        Minimum value
+
         Parameters
         ----------
-        arr: numpy float array, can be empty
+        arr : array_like
+            Numpy array containing the data to be reduced
 
         Returns
         -------
-        np.array of size 1, the min value of arr over all arrays, if all are
-        empty this is np.inf
-
+        result_arr : np.ndarray
+            Minimum of all elements of the array over all processors
         """
-        result = np.asarray(0, dtype=arr.dtype)
-        absmax = get_dtypeInfo(arr.dtype).max  # most positive value that can
-        #                                        be stored in this datatype
-        mpitype = MPI._typedict[arr.dtype.char]
-        self.comm.Allreduce([np.min(arr) if arr.size > 0 else np.array(
-            [absmax], dtype=arr.dtype), mpitype],
-                            [result, mpitype], op=MPI.MIN)
-        return result
+        kwargs['initial'] = get_dtype_info(arr.dtype).max
+        return self._op(np.min, (arr,), MPI.MIN, *args, **kwargs)
 
-    def dot(self, a, b):
-        locresult = np.dot(a, b)
-        result = np.zeros_like(locresult)
-        mpitype = MPI._typedict[locresult.dtype.char]
-        self.comm.Allreduce([locresult, mpitype], [result, mpitype],
-                            op=MPI.SUM)
-        return result
+    def mean(self, arr, *args, **kwargs):
+        """
+        Arithmetic mean
 
-    def any(self, arr):
-        result = np.array(False, dtype=bool)
-        self.comm.Allreduce(np.array(np.any(arr)), result, op=MPI.LOR)
-        return result.item()
+        Parameters
+        ----------
+        arr : array_like
+            Numpy array containing the data to be reduced
 
-    def all(self, arr):
-        result = np.array(False, dtype=bool)
-        self.comm.Allreduce(np.array(np.all(arr), dtype=bool), result,
-                            op=MPI.LAND)
-        return result.item()
+        Returns
+        -------
+        result_arr : np.ndarray
+            Arithmetic mean of all elements of the array over all processors
+        """
+        return self.sum(arr, *args, **kwargs) / self.sum(np.ones_like(arr), *args, **kwargs)
+
+    def dot(self, a, b, *args, **kwargs):
+        """
+        Scalar product a.b
+
+        Parameters
+        ----------
+        a : array_like
+            Numpy array containing the data of the first array
+        a : array_like
+            Numpy array containing the data of the second array
+
+        Returns
+        -------
+        result_arr : np.ndarray
+            Scalar product between a and b
+        """
+        return self._op(np.dot, (a, b), MPI.SUM, *args, **kwargs)
+
+    def any(self, arr, *args, **kwargs):
+        """
+        Returns true of any value is true
+
+        Parameters
+        ----------
+        arr : array of bools
+            Input data
+
+        Returns
+        -------
+        result_arr : np.ndarray
+            True if any value in `arr` is true
+        """
+        return self._op(np.any, (arr,), MPI.LOR, *args, **kwargs)
+
+    def all(self, arr, *args, **kwargs):
+        """
+        Returns true of all values are true
+
+        Parameters
+        ----------
+        arr : array of bools
+            Input data
+
+        Returns
+        -------
+        result_arr : np.ndarray
+            True if all values in `arr` are true
+        """
+        return self._op(np.all, (arr,), MPI.LAND, *args, **kwargs)
