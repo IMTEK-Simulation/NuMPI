@@ -1,7 +1,7 @@
 Change log for NuMPI
 ===================
 
-v0.2.0 (27Oct21)
+v0.2.0 (28Oct21)
 ----------------
 
 - ENH: Reduction for computing arithmetic mean
