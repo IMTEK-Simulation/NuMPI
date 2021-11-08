@@ -11,7 +11,7 @@ NuMPI is a collection of numerical tools for MPI-parallelized Python codes. NuMP
 Build status
 ------------
 
-[![Build Status](https://www.travis-ci.com/IMTEK-Simulation/NuMPI.svg?branch=master)](https://www.travis-ci.org/IMTEK-Simulation/NuMPI)
+[![Build Status](https://github.com/ContactEngineering/SurfaceTopography/actions/workflows/tests.yml/badge.svg)](https://github.com/IMTEK-Simulation/NuMPI/actions/workflows/tests.yml)
 
 Installation
 ------------
