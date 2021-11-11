@@ -25,6 +25,7 @@
 
 import pytest
 import numpy as np
+import numpy.ma as ma
 
 from NuMPI.Tools import Reduction
 
@@ -39,22 +40,36 @@ def test_sum_scalar(pnp):
     assert res == pnp.comm.Get_size()
 
 
-def test_sum_1D(pnp):
-    arr = np.array((1, 2.1, 3))
+@pytest.mark.parametrize('arr', [
+    [1, 2.1, 3],
+    np.array((1, 2.1, 3)),
+    ma.masked_array([1, 2.1, 3])
+])
+def test_sum_1D(pnp, arr):
     res = pnp.sum(arr)
     np.testing.assert_allclose(res, pnp.comm.Get_size() * 6.1, atol=1e-12)
 
 
-def test_sum_2D(pnp):
-    arr = np.array(((1, 2.1, 3),
-                    (4, 5, 6)))
+@pytest.mark.parametrize('arr', [
+    [[1, 2.1, 3],
+     [4, 5, 6]],
+    np.array(((1, 2.1, 3),
+              (4, 5, 6))),
+    ma.masked_array([[1, 2.1, 3],
+                     [4, 5, 6]])
+])
+def test_sum_2D(pnp, arr):
     res = pnp.sum(arr)
     np.testing.assert_allclose(res, pnp.comm.Get_size() * 21.1, atol=1e-12)
 
 
-def test_sum_boolean(pnp):
-    arr = np.array(((1, 2.1, 3),
-                    (4, 5, 6)))
+@pytest.mark.parametrize('arr', [
+    np.array(((1, 2.1, 3),
+              (4, 5, 6))),
+    ma.masked_array([[1, 2.1, 3],
+                     [4, 5, 6]])
+])
+def test_sum_boolean(pnp, arr):
     arr = arr > 3
 
     # print(arr.dtype)
@@ -90,11 +105,15 @@ def test_sum_along_axis_decomp(pnp):
     # Why are they not perfectly equal ?
 
 
-def test_max_2D(pnp):
-    arr = np.reshape(np.array((-1, 1, 5, 4,
-                               4, 5, 4, 5,
-                               7, 0, 1, 0.), dtype=float), (3, 4))
-
+@pytest.mark.parametrize('arr', [
+    np.reshape(np.array((-1, 1, 5, 4,
+                         4, 5, 4, 5,
+                         7, 0, 1, 0.), dtype=float), (3, 4)),
+    ma.masked_array(np.reshape(np.array((-1, 1, 5, 4,
+                                         4, 5, 4, 5,
+                                         7, 0, 1, 0.), dtype=float), (3, 4)))
+])
+def test_max_2D(pnp, arr):
     rank = pnp.comm.Get_rank()
     if pnp.comm.Get_size() >= 4:
         if rank == 0:
@@ -119,11 +138,15 @@ def test_max_2D(pnp):
     assert pnp.max(local_arr) == 7
 
 
-def test_max_2D_int(pnp):
-    arr = np.reshape(np.array((-1, 1, 5, 4,
-                               4, 5, 4, 5,
-                               7, 0, 1, 0), dtype=int), (3, 4))
-
+@pytest.mark.parametrize('arr', [
+    np.reshape(np.array((-1, 1, 5, 4,
+                         4, 5, 4, 5,
+                         7, 0, 1, 0), dtype=int), (3, 4)),
+    ma.masked_array(np.reshape(np.array((-1, 1, 5, 4,
+                                         4, 5, 4, 5,
+                                         7, 0, 1, 0), dtype=int), (3, 4)))
+])
+def test_max_2D_int(pnp, arr):
     rank = pnp.comm.Get_rank()
     if pnp.comm.Get_size() >= 4:
         if rank == 0:
@@ -177,11 +200,15 @@ def test_max_min_empty(pnp):
         assert pnp.min(local_arr) == np.finfo(local_arr.dtype).max
 
 
-def test_min(pnp):
-    arr = np.reshape(np.array((-1, 1, 5, 4,
-                               4, 5, 4, 5,
-                               7, 0, 1, 0), dtype=float), (3, 4))
-
+@pytest.mark.parametrize('arr', [
+    np.reshape(np.array((-1, 1, 5, 4,
+                         4, 5, 4, 5,
+                         7, 0, 1, 0), dtype=float), (3, 4)),
+    ma.masked_array(np.reshape(np.array((-1, 1, 5, 4,
+                                         4, 5, 4, 5,
+                                         7, 0, 1, 0), dtype=float), (3, 4)))
+])
+def test_min(pnp, arr):
     rank = pnp.comm.Get_rank()
     if pnp.comm.Get_size() >= 4:
         if rank == 0:
@@ -295,10 +322,12 @@ def test_any_scalar(pnp):
     assert not pnp.any(locval)
 
 
-def test_any_array(pnp):
+@pytest.mark.parametrize('locval', [
+    np.array([False, False, True]),
+    ma.masked_array([False, False, True])
+])
+def test_any_array(pnp, locval):
     rank = pnp.comm.Get_rank()
-
-    locval = np.array([False, False, True])
 
     if rank == 0:
         locval = np.array([False, True])
@@ -325,10 +354,12 @@ def test_all_scalar(pnp):
     assert pnp.all(locval)
 
 
-def test_all_array(pnp):
+@pytest.mark.parametrize('locval', [
+    np.array([True, True, True]),
+    ma.masked_array([True, True, True])
+])
+def test_all_array(pnp, locval):
     rank = pnp.comm.Get_rank()
-
-    locval = np.array([True, True, True])
 
     if rank == 0:
         locval = np.array([False, True])

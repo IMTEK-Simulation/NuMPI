@@ -35,7 +35,7 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     python_requires='>=3.5.0',
-    install_requires=['numpy',
+    install_requires=['numpy>=1.15.0',  # initial argument for amax
                       'scipy>=1.1.0',
                       ],
     # metadata for upload to PyPI
