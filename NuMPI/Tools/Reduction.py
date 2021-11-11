@@ -49,10 +49,11 @@ class Reduction:
 
         Parameters
         ----------
-        arr : array_like
-            Numpy array containing the data to be reduced
         npop : func
             Numpy reduction function (e.g. np.sum)
+        npargs: tuple
+            Arguments passed to the reduction function (e.g. array to be
+            reduced)
         mpiop : mpi4py.MPI.op
             MPI reduction operation
 
@@ -66,6 +67,32 @@ class Reduction:
         mpitype = MPI._typedict[local_result.dtype.char]
         self.comm.Allreduce([local_result, mpitype], [result, mpitype], op=mpiop)
         return result
+
+    def _op1(self, npop, arr, mpiop, *args, **kwargs):
+        """
+        Generic reduction operation that takes a single (array) argument
+
+        Parameters
+        ----------
+        npop : func
+            Numpy reduction function (e.g. np.sum)
+        arr : array_like
+            Numpy array containing the data to be reduced
+        mpiop : mpi4py.MPI.op
+            MPI reduction operation
+        initial : arr.dtype
+            Value to use if local array is empty
+
+        Returns
+        -------
+        result_arr : np.ndarray
+            Result of the reduction operation
+        """
+        if 'initial' in kwargs and isinstance(arr, np.ma.MaskedArray):
+            # Max/min on masked array do not support `initial`
+            arr = arr.filled(kwargs['initial'])
+            del kwargs['initial']
+        return self._op(npop, (arr,), mpiop, *args, **kwargs)
 
     def sum(self, arr, *args, **kwargs):
         """
@@ -81,7 +108,7 @@ class Reduction:
         result_arr : np.ndarray
             Sum of all elements of the array over all processors
         """
-        return self._op(np.sum, (arr,), MPI.SUM, *args, **kwargs)
+        return self._op1(np.sum, arr, MPI.SUM, *args, **kwargs)
 
     def max(self, arr, *args, **kwargs):
         """
@@ -98,7 +125,7 @@ class Reduction:
             Maximum of all elements of the array over all processors
         """
         kwargs['initial'] = get_dtype_info(arr.dtype).min
-        return self._op(np.max, (arr,), MPI.MAX, *args, **kwargs)
+        return self._op1(np.max, arr, MPI.MAX, *args, **kwargs)
 
     def min(self, arr, *args, **kwargs):
         """
@@ -115,7 +142,7 @@ class Reduction:
             Minimum of all elements of the array over all processors
         """
         kwargs['initial'] = get_dtype_info(arr.dtype).max
-        return self._op(np.min, (arr,), MPI.MIN, *args, **kwargs)
+        return self._op1(np.min, arr, MPI.MIN, *args, **kwargs)
 
     def mean(self, arr, *args, **kwargs):
         """
@@ -165,7 +192,7 @@ class Reduction:
         result_arr : np.ndarray
             True if any value in `arr` is true
         """
-        return self._op(np.any, (arr,), MPI.LOR, *args, **kwargs)
+        return self._op1(np.any, arr, MPI.LOR, *args, **kwargs)
 
     def all(self, arr, *args, **kwargs):
         """
@@ -181,4 +208,4 @@ class Reduction:
         result_arr : np.ndarray
             True if all values in `arr` are true
         """
-        return self._op(np.all, (arr,), MPI.LAND, *args, **kwargs)
+        return self._op1(np.all, arr, MPI.LAND, *args, **kwargs)

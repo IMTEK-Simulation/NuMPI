@@ -1,6 +1,11 @@
 Change log for NuMPI
 ===================
 
+v0.3.0 (11Nov21)
+----------------
+
+- ENH: Support for masked arrays
+
 v0.2.0 (28Oct21)
 ----------------
 

@@ -1,4 +1,4 @@
-numpy
+numpy>=1.15.0
 scipy>=1.1.0
 pylint>0.25
 pep8>=0.6
