@@ -28,7 +28,7 @@ Clone the repository.
 To use the code, use the env.sh script to set the environment:
 
 ```
-source /path/to/PyCo/env.sh [python3]
+source /path/to/NuMPI/env.sh
 ```
 
 Testing
