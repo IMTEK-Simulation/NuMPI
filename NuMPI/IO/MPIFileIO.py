@@ -98,20 +98,22 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None,
         # the data is loaded in C_contiguous array but in a transposed manner
         # data.transpose() is called which swaps the shapes back again and
         # toggles C-order to F-order
-        ix = 1
-        iy = 0
+        dim_noncontiguous = 1
+        dim_contiguous = 0
     else:
-        ix = 0
-        iy = 1
+        dim_noncontiguous = 0
+        dim_contiguous = 1
+
+    # TODO: I guess that somehow the step sizes in the noncontiguous direction will be a product, or something like that
 
     mpitype = MPI._typedict[data.dtype.char]
-    filetype = mpitype.Create_vector(nb_subdomain_grid_pts[ix],
+    filetype = mpitype.Create_vector(nb_subdomain_grid_pts[dim_noncontiguous],
                                      # number of blocks  : length of data in
                                      # the non-contiguous direction
-                                     nb_subdomain_grid_pts[iy],
+                                     nb_subdomain_grid_pts[dim_contiguous],
                                      # length of block : length of data in
                                      # contiguous direction
-                                     nb_grid_pts[iy]
+                                     nb_grid_pts[dim_contiguous]
                                      # stepsize: the data is contiguous in y
                                      # direction,
                                      # two matrix elements with same x
@@ -121,8 +123,8 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None,
 
     filetype.Commit()  # verification if type is OK
     file.Set_view(
-        header_len + (subdomain_locations[ix] * nb_grid_pts[iy]
-                      + subdomain_locations[iy]) * mpitype.Get_size(),
+        header_len + (subdomain_locations[dim_noncontiguous] * nb_grid_pts[dim_contiguous]
+                      + subdomain_locations[dim_contiguous]) * mpitype.Get_size(),
         filetype=filetype)
     if fortran_order:
         data = data.transpose()
@@ -260,7 +262,7 @@ class MPIFileViewNPY(MPIFileView):
     def read(self, subdomain_locations=None, nb_subdomain_grid_pts=None):
 
         if subdomain_locations is None:
-            subdomain_locations = (0, 0)
+            subdomain_locations = [0] * len(self.nb_grid_pts)
         if nb_subdomain_grid_pts is None:
             nb_subdomain_grid_pts = self.nb_grid_pts
 
@@ -274,20 +276,22 @@ class MPIFileViewNPY(MPIFileView):
             # manner
             # data.transpose() is called which swaps the shapes back again and
             # toggles C-order to F-order
-            ix = 1
-            iy = 0
+            dim_noncontiguous = 1
+            dim_contiguous = 0
+
+
         else:
-            ix = 0
-            iy = 1
+            dim_noncontiguous = 0
+            dim_contiguous = 1
 
         # create a type
         filetype = mpitype.Create_vector(
-            nb_subdomain_grid_pts[ix],
+            nb_subdomain_grid_pts[dim_noncontiguous],
             # number of blocks  : length of data in the non-contiguous
             # direction
-            nb_subdomain_grid_pts[iy],
+            nb_subdomain_grid_pts[dim_contiguous],
             # length of block : length of data in contiguous direction
-            self.nb_grid_pts[iy]
+            self.nb_grid_pts[dim_contiguous]
             # stepsize: the data is contiguous in y direction,
             # two matrix elements with same x position are separated by ny
             # in memory
@@ -296,11 +300,11 @@ class MPIFileViewNPY(MPIFileView):
         filetype.Commit()  # verification if type is OK
         self.file.Set_view(
             self.data_start + (
-                    subdomain_locations[ix] * self.nb_grid_pts[iy] +
-                    subdomain_locations[iy]) * mpitype.Get_size(),
+                    subdomain_locations[dim_noncontiguous] * self.nb_grid_pts[dim_contiguous] +
+                    subdomain_locations[dim_contiguous]) * mpitype.Get_size(),
             filetype=filetype)
 
-        data = np.empty((nb_subdomain_grid_pts[ix], nb_subdomain_grid_pts[iy]),
+        data = np.empty((nb_subdomain_grid_pts[dim_noncontiguous], nb_subdomain_grid_pts[dim_contiguous]),
                         dtype=self.dtype)
 
         self.file.Read_all(data)
