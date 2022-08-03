@@ -26,6 +26,7 @@
 
 import numpy as np
 import pytest
+from NuMPI import MPI
 
 try:
     # raise ImportError()
@@ -47,6 +48,8 @@ class DomainDecomposition():
         nprocs = communicator.Get_size()
         rank = communicator.Get_rank()
 
+        self.communicator = communicator
+        self.nb_domain_grid_pts = nb_domain_grid_pts
         self.subdomain_slices = [slice(None), ] * len(nb_domain_grid_pts)
         self.subdomain_locations = [0, ] * len(nb_domain_grid_pts)
         self.nb_subdomain_grid_pts = list(nb_domain_grid_pts)
@@ -168,3 +171,43 @@ def test_write_read_subdomain(self):
     assert np.equal(nc.tensor, self.tensor_grid).all()
     assert np.equal(nc[3].per_frame_tensor, self.tensor_grid).all()
     nc.close()
+
+
+@pytest.mark.skipif(MPI.COMM_WORLD.Get_size() > 1,
+                    reason="test is only serial")
+def test_big_field_serial():
+    nx = 32768
+
+    field = np.ones((nx, nx), dtype=float)
+
+    nc = NCStructuredGrid(f'test_{nx}x{nx}.nc', nb_domain_grid_pts=(nx, nx),  mode='w')
+    nc[0].field = field
+    nc[0].scalar1 = 21.5
+
+    nc.close()
+
+    nc = NCStructuredGrid(f'test_{nx}x{nx}.nc', mode='r')
+    assert not np.isnan(nc.field).any()
+
+def test_big_field_parallel(comm):
+    nx = 256
+
+    decomp = DomainDecomposition((nx, nx), communicator=comm)
+
+    field = np.ones(decomp.nb_subdomain_grid_pts, dtype=float)
+
+    nc = NCStructuredGrid(f'test_{nx}x{nx}.nc', mode="w",
+                          nb_domain_grid_pts=decomp.nb_subdomain_grid_pts,
+                          decomposition='subdomain',
+                          subdomain_locations=decomp.subdomain_locations,
+                          nb_subdomain_grid_pts=decomp.nb_subdomain_grid_pts,
+                          communicator=decomp.communicator)
+
+    nc[0].field = field
+    nc[0].scalar1 = 21.5
+
+    nc.close()
+
+    nc = NCStructuredGrid(f'test_{nx}x{nx}.nc', mode='r')
+    assert not np.isnan(nc.field).any()
+
