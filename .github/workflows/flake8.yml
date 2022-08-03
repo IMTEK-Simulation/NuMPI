@@ -28,7 +28,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python3 -m pip install pytest
+        python3 -m pip install pytest pytest-flake8
         python3 -m pip list
 
     - name: Build extension module
