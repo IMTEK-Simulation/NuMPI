@@ -274,6 +274,7 @@ def test_gaussian_nD(n):
     np.testing.assert_allclose(res.x, shift, atol=1e-3)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 def test_x2_xcosy():
     def ex_fun(x_):
         x = x_.reshape((-1, 1))
