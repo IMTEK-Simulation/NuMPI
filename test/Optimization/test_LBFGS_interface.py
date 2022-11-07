@@ -30,6 +30,7 @@ from NuMPI.Tools import Reduction
 
 try:
     import scipy.optimize
+
     _scipy_present = True
 except ModuleNotFoundError:
     _scipy_present = False

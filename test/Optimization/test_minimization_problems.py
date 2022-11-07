@@ -28,13 +28,13 @@ Tests the that the objective functions provided for the tests are
 correctly implemented
 """
 
-
 import numpy as np
 import pytest
 from NuMPI import MPI
 
 try:
     import scipy.optimize
+
     _scipy_present = True
 except ModuleNotFoundError:
     _scipy_present = False
