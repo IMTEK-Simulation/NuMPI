@@ -28,13 +28,19 @@ Tests the that the objective functions provided for the tests are
 correctly implemented
 """
 
-import test.Optimization.minimization_problems as mp
-from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
+
 import numpy as np
-import scipy.optimize
+import pytest
 from NuMPI import MPI
 
-import pytest
+try:
+    import scipy.optimize
+    _scipy_present = True
+except ModuleNotFoundError:
+    _scipy_present = False
+
+import test.Optimization.minimization_problems as mp
+from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
 
 
 @pytest.mark.skipif(
@@ -86,6 +92,7 @@ def test_directional_derivative(Objective, n):
         plt.show(block=True)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 @pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,
     reason="tests only serial funcionalities, please execute with pytest")

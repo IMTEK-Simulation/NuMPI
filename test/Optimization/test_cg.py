@@ -1,10 +1,15 @@
-from test.Optimization.MPI_minimization_problems import MPI_Quadratic
-from NuMPI.Tools import Reduction
 import numpy as np
-import scipy.optimize
+from NuMPI.Tools import Reduction
+
+try:
+    import scipy.optimize
+    _scipy_present = True
+except ModuleNotFoundError:
+    _scipy_present = False
 
 from NuMPI.Optimization.ccg_without_restart import constrained_conjugate_gradients
 
+from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 
 def test_bugnicourt_cg(comm):
     n = 128
@@ -23,6 +28,7 @@ def test_bugnicourt_cg(comm):
     print(res.nit)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 def test_bugnicourt_cg_arbitrary_bounds(comm):
     n = 128
     np.random.seed(0)
