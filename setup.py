@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 
+from pathlib import Path
 from setuptools import setup, find_packages
 
 import versioneer
@@ -41,6 +42,8 @@ setup(
     author="Antoine Sanner",
     author_email="antoine.sanner@imtek.uni-freiburg.de",
     description="Numerical tools for MPI-parallelized code",
+    long_description=(Path(__file__).parent / "README.md").read_text(),
+    long_description_content_type='text/markdown',
     license="MIT",
     test_suite='tests',
 )
