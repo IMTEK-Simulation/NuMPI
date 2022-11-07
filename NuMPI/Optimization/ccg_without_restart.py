@@ -5,9 +5,11 @@ algorithm.
 """
 
 import numpy as np
-import scipy.optimize as optim
+
 from inspect import signature
-from NuMPI.Tools import Reduction
+
+from ..Tools import Reduction
+from .result import OptimizeResult
 
 
 def constrained_conjugate_gradients(fun, hessp,
@@ -215,7 +217,7 @@ def constrained_conjugate_gradients(fun, hessp,
         n_iterations += 1
 
         if comm.max(abs(residual)) <= gtol:
-            result = optim.OptimizeResult(
+            result = OptimizeResult(
                 {
                     'success': True,
                     'x': x,
@@ -226,7 +228,7 @@ def constrained_conjugate_gradients(fun, hessp,
             return result
 
         elif i == maxiter - 1:
-            result = optim.OptimizeResult(
+            result = OptimizeResult(
                 {
                     'success': False,
                     'x': x,

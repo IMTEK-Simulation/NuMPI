@@ -27,14 +27,22 @@ serial test
 """
 
 import numpy as np
-import scipy.optimize
+import pytest
+
+try:
+    import scipy.optimize
+
+    _scipy_present = True
+except ModuleNotFoundError:
+    _scipy_present = False
+
+from NuMPI import MPI
 from NuMPI.Optimization import LBFGS
 from NuMPI.Optimization.Wolfe import (
     second_wolfe_condition,
     first_wolfe_condition
 )
-from NuMPI import MPI
-import pytest
+
 import test.Optimization.minimization_problems as mp
 
 pytestmark = pytest.mark.skipif(
@@ -47,6 +55,7 @@ def my_print(*args):
     pass
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 @pytest.mark.parametrize("Objective", [mp.Trigonometric])
 @pytest.mark.parametrize("n", [10, 30])
 def test_compare_scipy(Objective, n):
@@ -71,6 +80,7 @@ def test_compare_scipy(Objective, n):
     assert np.abs(Objective.f(resScipy.x) - Objective.f(resLBGFS.x)) < 1e-8
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 def test_3D():
     # Gaussian Potential
 
@@ -163,6 +173,7 @@ def test_3D():
     np.testing.assert_almost_equal(res.x, np.zeros(res.x.shape), decimal=5)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 def test_quadratic_nD():
     # quadratic
     n = 50
@@ -263,6 +274,7 @@ def test_gaussian_nD(n):
     np.testing.assert_allclose(res.x, shift, atol=1e-3)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 def test_x2_xcosy():
     def ex_fun(x_):
         x = x_.reshape((-1, 1))

@@ -24,10 +24,16 @@
 #
 
 import numpy as np
-import scipy.optimize
 import pytest
 from NuMPI.Optimization import LBFGS
 from NuMPI.Tools import Reduction
+
+try:
+    import scipy.optimize
+
+    _scipy_present = True
+except ModuleNotFoundError:
+    _scipy_present = False
 
 import test.Optimization.minimization_problems as mp
 import test.Optimization.MPI_minimization_problems as mpi_mp
@@ -38,6 +44,7 @@ def pnp(comm):
     return Reduction(comm)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 @pytest.mark.parametrize("Objectiveclass", [mpi_mp.MPI_Quadratic])
 def test_minimize_call_column(pnp, Objectiveclass):
     """
@@ -67,6 +74,7 @@ def test_minimize_call_column(pnp, Objectiveclass):
     )) / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 @pytest.mark.parametrize("Objectiveclass", [mpi_mp.MPI_Quadratic])
 def test_minimize_call_row(pnp, Objectiveclass):
     comm = pnp.comm

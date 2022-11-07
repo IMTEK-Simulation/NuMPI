@@ -1,9 +1,17 @@
-from test.Optimization.MPI_minimization_problems import MPI_Quadratic
-from NuMPI.Tools import Reduction
+import pytest
 import numpy as np
-import scipy.optimize
 
+try:
+    import scipy.optimize
+
+    _scipy_present = True
+except ModuleNotFoundError:
+    _scipy_present = False
+
+from NuMPI.Tools import Reduction
 from NuMPI.Optimization.ccg_without_restart import constrained_conjugate_gradients
+
+from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 
 
 def test_bugnicourt_cg(comm):
@@ -18,11 +26,12 @@ def test_bugnicourt_cg(comm):
         obj.hessian_product,
         x0=xstart,
         communicator=comm
-        )
+    )
     assert res.success, res.message
     print(res.nit)
 
 
+@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
 def test_bugnicourt_cg_arbitrary_bounds(comm):
     n = 128
     np.random.seed(0)
@@ -38,7 +47,7 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
         communicator=comm,
         bounds=bounds,
         gtol=1e-8
-        )
+    )
     assert res.success, res.message
 
     assert (res.x >= bounds).all()
@@ -69,7 +78,7 @@ def test_bugnicourt_cg_active_bounds(comm):
         obj.hessian_product,
         x0=xstart,
         communicator=comm
-        )
+    )
     assert res.success, res.message
     print(res.nit)
     print(np.count_nonzero(res.x == 0))
@@ -88,7 +97,7 @@ def test_bugnicourt_cg_mean_val(comm):
         x0=xstart,
         mean_val=1.,
         communicator=comm
-        )
+    )
     assert res.success, res.message
     print(res.nit)
 
@@ -106,6 +115,6 @@ def test_bugnicourt_cg_mean_val_active_bounds(comm):
         x0=xstart,
         mean_val=1.,
         communicator=comm
-        )
+    )
     assert res.success, res.message
     print(res.nit)

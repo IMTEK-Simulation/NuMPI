@@ -1,6 +1,8 @@
 import numpy as np
-import scipy.optimize as optim
+
 from inspect import signature
+
+from .result import OptimizeResult
 
 
 def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
@@ -189,7 +191,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
                     res_convg = False
 
             if res_convg:
-                result = optim.OptimizeResult(
+                result = OptimizeResult(
                     {
                         'success': True,
                         'x': x,
@@ -208,7 +210,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
 
             elif (n_iterations >= maxiter - 1):
                 '''If no convergence'''
-                result = optim.OptimizeResult({
+                result = OptimizeResult({
                     'success': False,
                     'x': x,
                     'jac': residual,

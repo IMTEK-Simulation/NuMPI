@@ -1,5 +1,2 @@
 numpy>=1.15.0
-scipy>=1.1.0
-pytest
-runtests>=0.0.28
 netCDF4>=1.5.3

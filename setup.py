@@ -23,6 +23,7 @@
 # SOFTWARE.
 #
 
+from pathlib import Path
 from setuptools import setup, find_packages
 
 import versioneer
@@ -35,13 +36,14 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     python_requires='>=3.5.0',
-    install_requires=['numpy>=1.15.0',  # initial argument for amax
-                      'scipy>=1.1.0',
-                      ],
+    install_requires=['numpy>=1.15.0'],
+    extras_requires=['scipy>=1.1.0'],
     # metadata for upload to PyPI
     author="Antoine Sanner",
     author_email="antoine.sanner@imtek.uni-freiburg.de",
     description="Numerical tools for MPI-parallelized code",
+    long_description=(Path(__file__).parent / "README.md").read_text(),
+    long_description_content_type='text/markdown',
     license="MIT",
     test_suite='tests',
 )
