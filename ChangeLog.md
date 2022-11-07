@@ -1,6 +1,11 @@
 Change log for NuMPI
 ===================
 
+v0.3.1 (07Nov22)
+----------------
+
+- MAINT: Made `scipy` dependency optional
+
 v0.3.0 (11Nov21)
 ----------------
 
