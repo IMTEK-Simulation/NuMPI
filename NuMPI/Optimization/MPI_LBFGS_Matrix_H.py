@@ -28,12 +28,11 @@
 
 
 import numpy as np
-import scipy.optimize
 
-from NuMPI import MPI
-from NuMPI.Tools import Reduction
-
-from NuMPI.Optimization.linesearch import scalar_search_wolfe2
+from .. import MPI
+from ..Tools import Reduction
+from .linesearch import scalar_search_wolfe2
+from .result import OptimizeResult
 
 def donothing(*args, **kwargs):
     pass
@@ -231,7 +230,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
         callback(x)
 
         if (pnp.max(np.abs(grad)) < gtol):
-            result = scipy.optimize.OptimizeResult({
+            result = OptimizeResult({
                 'success': True,
                 'x': x.reshape(
                     original_shape),
@@ -249,7 +248,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
             return result
 
         if ((phi_old - phi) <= ftol * max((1, abs(phi), abs(phi_old)))):
-            result = scipy.optimize.OptimizeResult({
+            result = OptimizeResult({
                 'success': True,
                 'x': x.reshape(
                     original_shape),
@@ -267,7 +266,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
             return result
 
         if k > maxiter:
-            result = scipy.optimize.OptimizeResult({
+            result = OptimizeResult({
                 'success': False,
                 'x': x.reshape(
                     original_shape),
@@ -373,7 +372,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
         x = x - Hgrad * alpha
 
         if store_iterates == 'iterate':
-            iterate = scipy.optimize.OptimizeResult(
+            iterate = OptimizeResult(
                 {
                     'x': x.copy().reshape(original_shape),
                     'fun': phi,
