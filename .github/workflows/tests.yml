@@ -19,7 +19,7 @@ jobs:
         mpi: ['yes', 'no']
         scipy: ['yes', 'no']
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        netcdf4-python-version: [1.6.5]
+        netcdf4-python-version: [1.5.8]
 
     steps:
     - uses: actions/checkout@v4
