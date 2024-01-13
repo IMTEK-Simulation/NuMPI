@@ -41,13 +41,11 @@ jobs:
         if [ "${{ matrix.mpi }}" == "yes" ]; then CC=mpicc python3 -m pip install -v --force-reinstall --no-binary mpi4py mpi4py==${{ matrix.mpi4py-version }}; fi
         python3 -m pip install .[test]
         if [ "${{ matrix.mpi }}" == "yes" ]; then NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall -v --no-binary netCDF4 netCDF4==${{ matrix.netcdf4-python-version }}; fi
-        python3 -m pip install build
         python3 -m pip list
 
     - name: Build extension module
       run: |
-        python3 -m build
-        python3 -m pip install dist/*.tar.gz
+        python3 -m pip install .[test]
 
     - name: Test with pytest
       run: |
