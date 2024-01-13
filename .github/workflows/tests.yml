@@ -19,7 +19,6 @@ jobs:
         mpi: ['yes', 'no']
         scipy: ['yes', 'no']
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        mpi4py-version: [3.1.5]
         netcdf4-python-version: [1.6.5]
 
     steps:
@@ -43,8 +42,7 @@ jobs:
         if [ "${{ matrix.mpi }}" == "yes" ]; then
           # We now need to recompile some modules to link with native MPI
           sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
-          sudo CC=mpicc python3 -m pip install -v --force-reinstall --no-binary mpi4py mpi4py==${{ matrix.mpi4py-version }}
-          sudo NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall -v --no-binary netCDF4 netCDF4==${{ matrix.netcdf4-python-version }}
+          sudo NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall -v --no-binary mpi4py --no-binary netCDF4 mpi4py netCDF4==${{ matrix.netcdf4-python-version }}
         fi
         python3 -m pip list
 
