@@ -81,7 +81,8 @@ LBFGS = profile("profile_out", comm)(LBFGS)
 res, t = timer(LBFGS, PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor,
                maxiter=100000, gtol=(1e-5), pnp=pnp)
 assert res.success
-if MPI.COMM_WORLD.Get_rank() == 0: print("elapsed time: {}".format(t))
+if MPI.COMM_WORLD.Get_rank() == 0:
+    print("elapsed time: {}".format(t))
 
 if comm.rank == 0:
     print("to vizualize the profile, execute `snakeviz profile_out.{rank}`")

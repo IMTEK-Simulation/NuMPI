@@ -63,17 +63,17 @@ for Objective in [Trigonometric, Extended_Rosenbrock]:
 
         axgrad.plot(range(objective_monitor.neval),
                     objective_monitor.maxgradients, label="{}".format(name))
-        axEn.plot(range(objective_monitor.neval), (
-                np.array(objective_monitor.energies) - objective_monitor.energies[
-            -1]) / (objective_monitor.energies[0] -
-                    objective_monitor.energies[-1]),
-                  label="{}".format(name), c=c)
+        axEn.plot(
+            range(objective_monitor.neval),
+            (np.array(objective_monitor.energies) - objective_monitor.energies[-1]) / (
+                    objective_monitor.energies[0] - objective_monitor.energies[-1]),
+            label="{}".format(name), c=c)
 
-        print("{}, {}: nevals {}, nit {}, evals/it {}".format(name,
-                                                              Objective.__name__,
-                                                              objective_monitor.neval,
-                                                              result.nit, float(
-                objective_monitor.neval) / result.nit))
+        print("{}, {}: nevals {}, nit {}, evals/it {}"
+              .format(name,
+                      Objective.__name__,
+                      objective_monitor.neval,
+                      result.nit, float(objective_monitor.neval) / result.nit))
 
     axEn.set_xlabel("# of objective evaluations")
     axEn.set_ylabel("E(i)-E(last) / (E(0)-E(last))")

@@ -23,7 +23,7 @@
 #
 
 
-from matplotlib.patches import FancyArrowPatch, Arc, Rectangle
+from matplotlib.patches import FancyArrowPatch
 import numpy as np
 
 rec = 0
