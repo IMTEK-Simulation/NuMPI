@@ -45,6 +45,7 @@ jobs:
           # Dump NetCDF configuration
           cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/libnetcdf.settings
           cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/include/netcdf_meta.h
+          nc-config --prefix
           NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall --no-build-isolation -v --no-binary mpi4py --no-binary netCDF4 mpi4py netCDF4==${{ matrix.netcdf4-python-version }}
         fi
         python3 -m pip install .[test]
