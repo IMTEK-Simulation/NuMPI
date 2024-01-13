@@ -14,27 +14,10 @@ jobs:
   tests:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
-
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up python3 ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
+    - name: Flake8
       run: |
-        python3 -m pip install .[test]
-
-    - name: Build extension module
-      run: |
-        python3 -m build
-        python3 -m pip install dist/*.tar.gz
-
-    - name: Test with pytest
-      run: |
-        python3 -m pytest --flake8 -m flake8 --verbose --full-trace -s
+        python3 -m pip install flake8
+        flake8
