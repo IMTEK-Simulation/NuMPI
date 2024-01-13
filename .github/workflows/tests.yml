@@ -19,11 +19,14 @@ jobs:
         mpi: ['yes', 'no']
         scipy: ['yes', 'no']
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        mpi4py-version: [3.0.3]
-        netcdf4-python-version: [1.5.7]
+        mpi4py-version: [3.1.5]
+        netcdf4-python-version: [1.6.5]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
 
     - name: Set up python3 ${{ matrix.python-version }}
       uses: actions/setup-python@v2
