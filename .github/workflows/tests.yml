@@ -42,7 +42,7 @@ jobs:
         if [ "${{ matrix.mpi }}" == "yes" ]; then
           # We now need to recompile some modules to link with native MPI
           sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
-          NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall -v --no-binary mpi4py --no-binary netCDF4 mpi4py netCDF4==${{ matrix.netcdf4-python-version }}
+          NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall --no-build-isolation -v --no-binary mpi4py --no-binary netCDF4 mpi4py netCDF4==${{ matrix.netcdf4-python-version }}
         fi
 
     - name: Test with pytest
