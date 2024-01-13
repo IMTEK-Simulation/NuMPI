@@ -21,38 +21,37 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
+
 import numpy as np
-from NuMPI import MPI
 from NuMPI.Tools.Reduction import Reduction
-from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface, \
-    MPI_Quadratic
-import scipy.optimize
+from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 import time
-import test.Optimization.minimization_problems as mp
 
 from NuMPI.Optimization.MPI_LBFGS_Matrix_H import LBFGS
 
 from NuMPI import MPI
 import cProfile
 
+
 def profile(filename=None, comm=MPI.COMM_WORLD):
-  def prof_decorator(f):
-    def wrap_f(*args, **kwargs):
-      pr = cProfile.Profile()
-      pr.enable()
-      result = f(*args, **kwargs)
-      pr.disable()
+    def prof_decorator(f):
+        def wrap_f(*args, **kwargs):
+            pr = cProfile.Profile()
+            pr.enable()
+            result = f(*args, **kwargs)
+            pr.disable()
 
-      if filename is None:
-        pr.print_stats()
-      else:
-        filename_r = filename + ".{}".format(comm.rank)
-        pr.dump_stats(filename_r)
+            if filename is None:
+                pr.print_stats()
+            else:
+                filename_r = filename + ".{}".format(comm.rank)
+                pr.dump_stats(filename_r)
 
-      return result
-    return wrap_f
-  return prof_decorator
+            return result
 
+        return wrap_f
+
+    return prof_decorator
 
 
 def timer(fun, *args, **kwargs):
@@ -65,14 +64,12 @@ def timer(fun, *args, **kwargs):
 np.random.seed(1)
 n = int(1e7)
 
-
 # Objective = mp.Extended_Rosenbrock
 maxcor = 10
 factors = 0.1 + np.random.random(n)
 startpoint = np.random.normal(size=n)
 
 comm = MPI.COMM_WORLD
-
 
 pnp = Reduction(comm)
 # PObjective = MPI_Objective_Interface(Objective, nb_domain_grid_pts=n, comm=comm)
@@ -84,7 +81,8 @@ LBFGS = profile("profile_out", comm)(LBFGS)
 res, t = timer(LBFGS, PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor,
                maxiter=100000, gtol=(1e-5), pnp=pnp)
 assert res.success
-if MPI.COMM_WORLD.Get_rank() == 0: print("elapsed time: {}".format(t))
+if MPI.COMM_WORLD.Get_rank() == 0:
+    print("elapsed time: {}".format(t))
 
-if comm.rank==0:
+if comm.rank == 0:
     print("to vizualize the profile, execute `snakeviz profile_out.{rank}`")

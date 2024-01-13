@@ -23,22 +23,24 @@
 #
 
 
-
-from matplotlib.patches import FancyArrowPatch, Arc,Rectangle
+from matplotlib.patches import FancyArrowPatch
 import numpy as np
 
 rec = 0
+
+
 def asscalar(a):
-#    global rec
-#    print(rec)
-#    rec=rec+1;
-#    print(a)
-    if isinstance(a,np.ndarray):
+    #    global rec
+    #    print(rec)
+    #    rec=rec+1;
+    #    print(a)
+    if isinstance(a, np.ndarray):
         return asscalar(a.tolist()[0])
-    elif isinstance(a,(list,tuple)):
+    elif isinstance(a, (list, tuple)):
         return asscalar(a[0])
-    else :
+    else:
         return a
+
 
 def draw_npArrow2D(ax, start, end=None, delta=None, arrowprops={}, label=None, textprops={}):
     arrow_prop_dict = dict(mutation_scale=10, arrowstyle='-|>', color='k', shrinkA=0, shrinkB=0)
