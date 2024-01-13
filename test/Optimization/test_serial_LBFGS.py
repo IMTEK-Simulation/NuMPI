@@ -148,7 +148,7 @@ def test_3D():
         second_wolfe_condition(x_old, ex_jac, -grad_old, reslinesearch.x,
                                beta2=0.9)))
 
-    resscipy = scipy.optimize.minimize(ex_fun, x, jac=ex_jac,
+    resscipy = scipy.optimize.minimize(ex_fun, np.reshape(x, (-1,)), jac=ex_jac,
                                        options=dict(gtol=1e-10, ftol=0))
     my_print("scipy success: {}".format(resscipy.success))
     my_print("scipy nit {}".format(resscipy.nit))
@@ -207,7 +207,7 @@ def test_quadratic_nD():
     my_print("x first_linesearch {}".format(x))
     # k = 1
 
-    resscipy = scipy.optimize.minimize(ex_fun, x, jac=ex_jac)
+    resscipy = scipy.optimize.minimize(ex_fun, np.reshape(x, (-1,)), jac=ex_jac)
     my_print("schipy success: {}".format(resscipy.success))
 
     # my_print(x)
