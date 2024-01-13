@@ -19,7 +19,6 @@ jobs:
         mpi: ['yes', 'no']
         scipy: ['yes', 'no']
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        netcdf4-python-version: [1.5.8]
 
     steps:
     - uses: actions/checkout@v4
@@ -49,7 +48,7 @@ jobs:
           export CC=mpicc
           pip-compile --extra test --extra mpi pyproject.toml > requirements.txt
           python3 -m pip install -v --no-binary mpi4py `grep mpi4py== requirements.txt`
-          python3 -m pip install -v --no-binary netCDF4 `grep netCDF4== requirements.txt`
+          python3 -m pip install -v --no-binary netCDF4 `grep netcdf4== requirements.txt`
           python3 -m pip install -v .[test,mpi]
         else
           sudo apt-get install libhdf5-dev libnetcdf-dev
