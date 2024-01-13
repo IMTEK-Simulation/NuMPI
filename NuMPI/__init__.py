@@ -26,7 +26,7 @@
 
 import warnings
 
-from .DiscoverVersion import __version__
+from .DiscoverVersion import __version__  # noqa: F401
 
 try:
     # raise ImportError()
