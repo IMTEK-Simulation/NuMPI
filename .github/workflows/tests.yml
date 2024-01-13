@@ -44,7 +44,7 @@ jobs:
           sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
           # Dump NetCDF configuration
           cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/libnetcdf.settings
-          cat cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/include/netcdf_meta.h
+          cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/include/netcdf_meta.h
           NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install --force-reinstall --no-build-isolation -v --no-binary mpi4py --no-binary netCDF4 mpi4py netCDF4==${{ matrix.netcdf4-python-version }}
         fi
 
