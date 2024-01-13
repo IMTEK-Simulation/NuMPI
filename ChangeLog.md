@@ -1,6 +1,11 @@
 Change log for NuMPI
 ===================
 
+v0.4.0 (14Jan24)
+----------------
+
+- MAINT: Switched build system to `flit`
+
 v0.3.1 (07Nov22)
 ----------------
 
