@@ -40,7 +40,7 @@ jobs:
         python3 -m venv venv
         source venv/bin/activate
         python3 -m pip install --upgrade pip
-        python3 -m pip install wheel setuptools numpy pip-tools
+        python3 -m pip install flit numpy pip-tools setuptools wheel
         if [ "${{ matrix.mpi }}" == "yes" ]; then
           # We now need to recompile some modules to link with native MPI
           sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
