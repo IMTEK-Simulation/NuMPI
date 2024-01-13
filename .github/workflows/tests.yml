@@ -46,8 +46,9 @@ jobs:
           # Install mpi4py first (because netCDF4 depends on it)
           export NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf
           export CC=mpicc
+          python3 -m pip install mpi4py
           pip-compile --extra test --extra mpi pyproject.toml > requirements.txt
-          python3 -m pip install -v --no-binary mpi4py `grep mpi4py== requirements.txt`
+          python3 -m pip install -v --force-reinstall --no-binary mpi4py `grep mpi4py== requirements.txt`
           python3 -m pip install -v cython
           python3 -m pip install -v --no-build-isolation --no-binary netCDF4 `grep netcdf4== requirements.txt`
           python3 -m pip install -v .[test,mpi]
