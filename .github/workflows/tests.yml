@@ -46,7 +46,7 @@ jobs:
           # Dump NetCDF configuration
           cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/libnetcdf.settings
           cat /usr/lib/x86_64-linux-gnu/netcdf/pnetcdf/include/netcdf_meta.h
-          NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install -v --no-binary mpi4py --no-binary netCDF4 mpi4py .[test]
+          NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf CC=mpicc python3 -m pip install -v --no-binary mpi4py --no-binary netCDF4 .[test,mpi]
         else
           # Install NuMPI, but avoid upgrade of NetCDF4 which would then be installed without parallel support
           python3 -m pip install -v .[test]
