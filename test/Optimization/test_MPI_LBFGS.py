@@ -35,7 +35,7 @@ from test.Optimization.MPI_minimization_problems import (
 import time
 import test.Optimization.minimization_problems as mp
 
-from NuMPI.Optimization.MPI_LBFGS_Matrix_H import LBFGS
+from NuMPI.Optimization.LBFGS import LBFGS
 
 
 def timer(fun, *args, **kwargs):

@@ -9,7 +9,7 @@ except ModuleNotFoundError:
     _scipy_present = False
 
 from NuMPI.Tools import Reduction
-from NuMPI.Optimization.ccg_without_restart import constrained_conjugate_gradients
+from NuMPI.Optimization.CCGWithoutRestart import constrained_conjugate_gradients
 
 from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 

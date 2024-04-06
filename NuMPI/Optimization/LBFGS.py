@@ -31,8 +31,8 @@ import numpy as np
 
 from .. import MPI
 from ..Tools import Reduction
-from .linesearch import scalar_search_wolfe2
-from .result import OptimizeResult
+from .LineSearch import scalar_search_wolfe2
+from .Result import OptimizeResult
 
 def donothing(*args, **kwargs):
     pass
@@ -80,44 +80,51 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
           maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9),
           pnp=Reduction(MPI.COMM_WORLD),
           store_iterates=None, printdb=donothing, callback=None, **options):
-    r"""
+    """
+    Limited-memory L-BFGS optimization with MPI parallelization.
 
-    convergence if |grad|_{\infty} <= gtol or <= ftol is satisfied
+    The optimization converges if |grad|_{\infty} <= gtol or <= ftol is satisfied.
 
     Parameters
     ----------
-    fun
-    x
-    args
-    jac
-    x_old: initial guess
-    maxcor: max number of history gradients stored
-    gtol:
-    ftol:
-    maxiter
-    maxls, default 20, as in scipy.optimize.fmin_l_bfgs_b
-    linesearch_options: further options for the linesearch
-    the result of the linesearch has to satisfy the strong wolfe condition
-    See Wright and Nocedal, 'Numerical Optimization',p.34
-    c1 parameter for the sufficient decrease condition
-    c2 parameter for the curvature condition
-    
-    default values are choosen here to match the implementation in
-    the Fortran subroutine L-BFGS-B 3.0 by
-    Ciyou Zhu, Richard Byrd, and Jorge Nocedal
-
-    See lbfgsb.f line 2497, with gtol=c2 and ftol=c1
-    
-    pnp
-    store_iterates: stores each iterate of x, only debugging
-    printdb
-    options
+    fun : callable
+        The objective function to be minimized.
+    x : ndarray
+        Initial guess.
+    args : tuple, optional
+        Extra arguments passed to the objective function and its derivatives (Jacobian).
+    jac : bool or callable, optional
+        Method for computing the gradient vector. If it is a callable, it should be a function that returns the gradient vector. If it is a Boolean and is True, then `fun` should return the gradient along with the objective function.
+    x_old : ndarray, optional
+        Initial guess for the previous value of x. If None, a steepest descent step will be performed.
+    maxcor : int, optional
+        The maximum number of variable metric corrections used to define the limited memory matrix.
+    gtol : float, optional
+        The iteration will stop when max{|proj g_i | i = 1, ..., n} <= gtol where pg_i is the i-th component of the projected gradient.
+    ftol : float, optional
+        The iteration will stop when (f^k - f^{k+1})/max{|f^k|,|f^{k+1}|,1} <= ftol.
+    maxiter : int, optional
+        Maximum number of iterations.
+    maxls : int, optional
+        Maximum number of line search steps (per iteration).
+    linesearch_options : dict, optional
+        A dictionary with optional settings for the line search parameters.
+    pnp : Reduction, optional
+        Parallelization object from the NuMPI package.
+    store_iterates : bool, optional
+        If True, the result at each iteration is stored in a list.
+    printdb : callable, optional
+        Debugging print function.
+    callback : callable, optional
+        Called after each iteration.
+    options : dict, optional
+        A dictionary with optional settings for the optimization algorithm.
 
     Returns
     -------
-
+    result : OptimizeResult
+        The optimization result represented as a OptimizeResult object. Important attributes are: x the solution array, success a Boolean flag indicating if the optimizer exited successfully and message which describes the cause of the termination.
     """
-
     if callback is None:
         callback = donothing
 
@@ -125,14 +132,20 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
     if jac is True:
         def fun_grad(x):
             """
-            reshapes the gradient in a convenient form
+            This function evaluates the objective function and its gradient at the point x.
+            It reshapes the gradient into a convenient form for further computations.
+
             Parameters
             ----------
-            x
+            x : ndarray
+                The point at which the objective function and its gradient are to be evaluated.
 
             Returns
             -------
-
+            f : float
+                The value of the objective function at the point x.
+            grad : ndarray
+                The gradient of the objective function at the point x, reshaped into a convenient form.
             """
             f, grad = fun(x)
             return f, grad.reshape((-1, 1))
@@ -145,15 +158,21 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
 
         def fun_grad(x):
             """
-            evaluates function and grad consequently (important, see issue #13)
-            and reshapes the gradient in a convenient form
+            This function evaluates the objective function and its gradient at the point x.
+            It reshapes the gradient into a convenient form for further computations.
+            The order of function and gradient evaluation is important (see issue #13).
+
             Parameters
             ----------
-            x
+            x : ndarray
+                The point at which the objective function and its gradient are to be evaluated.
 
             Returns
             -------
-
+            f : float
+                The value of the objective function at the point x.
+            grad : ndarray
+                The gradient of the objective function at the point x, reshaped into a convenient form.
             """
             # order matte
             f = fun(x)

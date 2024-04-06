@@ -9,7 +9,7 @@ import numpy as np
 from inspect import signature
 
 from ..Tools import Reduction
-from .result import OptimizeResult
+from .Result import OptimizeResult
 
 
 def constrained_conjugate_gradients(fun, hessp,

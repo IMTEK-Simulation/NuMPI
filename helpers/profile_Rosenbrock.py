@@ -27,7 +27,7 @@ from NuMPI.Tools.Reduction import Reduction
 from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 import time
 
-from NuMPI.Optimization.MPI_LBFGS_Matrix_H import LBFGS
+from NuMPI.Optimization.LBFGS import LBFGS
 
 from NuMPI import MPI
 import cProfile

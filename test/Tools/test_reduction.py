@@ -43,7 +43,8 @@ def test_sum_scalar(pnp):
 @pytest.mark.parametrize('arr', [
     [1, 2.1, 3],
     np.array((1, 2.1, 3)),
-    ma.masked_array([1, 2.1, 3])
+    ma.masked_array([1, 2.1, 3]),
+    ma.masked_array([2, 3.1, 3], mask=[True, False, False]),
 ])
 def test_sum_1D(pnp, arr):
     res = pnp.sum(arr)
