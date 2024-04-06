@@ -34,6 +34,7 @@ from ..Tools import Reduction
 from .LineSearch import scalar_search_wolfe2
 from .Result import OptimizeResult
 
+
 def donothing(*args, **kwargs):
     pass
 
@@ -75,11 +76,9 @@ def steepest_descent_wolfe2(x0, f_gradf, pnp=None, maxiter=10, args=(), **kwargs
     return x, gradf, x0, grad0, phi, phi0, derphi
 
 
-def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
-           ftol=2.2e-9, maxiter=15000,
-           maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9),
-           pnp=Reduction(MPI.COMM_WORLD),
-           store_iterates=None, printdb=donothing, callback=None, **options):
+def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2e-9, maxiter=15000, maxls=20,
+           linesearch_options=dict(c1=1e-3, c2=0.9), disp=None, pnp=Reduction(MPI.COMM_WORLD), store_iterates=None,
+           printdb=donothing, callback=None, **options):
     """
     Limited-memory L-BFGS optimization with MPI parallelization.
 
@@ -109,6 +108,8 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
         Maximum number of line search steps (per iteration).
     linesearch_options : dict, optional
         A dictionary with optional settings for the line search parameters.
+    disp : int, optional
+        If disp is a positive integer, convergence messages will be printed.
     pnp : Reduction, optional
         Parallelization object from the NuMPI package.
     store_iterates : bool, optional
@@ -211,6 +212,13 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
 
     alpha = 0  # line search step size
 
+    if disp:
+        phi_title = "objective f"
+        max_grad_title = "max |∇ f|"
+        phi_change_title = "Δf"
+        print(f"{phi_title:<10} {max_grad_title:<10} {phi_change_title:<10}")
+        print(f"---------- ---------- ----------")
+
     # Start loop
     # printdb(k)
     while True:
@@ -248,7 +256,13 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
         #        if ftol is not None else True)):
         callback(x)
 
-        if (pnp.max(np.abs(grad)) < gtol):
+        max_grad = pnp.max(np.abs(grad))
+        phi_change = phi_old - phi
+
+        if disp:
+            print(f"{phi:<10.7g} {max_grad:<10.7g} {phi_change:<10.7g}")
+
+        if (max_grad < gtol):
             result = OptimizeResult({
                 'success': True,
                 'x': x.reshape(
@@ -266,7 +280,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
             #    result['iterates'] = iterates
             return result
 
-        if ((phi_old - phi) <= ftol * max((1, abs(phi), abs(phi_old)))):
+        if (phi_change <= ftol * max((1, abs(phi), abs(phi_old)))):
             result = OptimizeResult({
                 'success': True,
                 'x': x.reshape(
