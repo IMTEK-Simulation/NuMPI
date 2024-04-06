@@ -61,23 +61,33 @@ def my_print(*args):
 def test_compare_scipy(Objective, n):
     x0 = Objective.startpoint(n)
 
-    resLBGFS = LBFGS(Objective.f, x0, jac=Objective.grad, maxcor=5, gtol=1e-8,
-                     maxiter=1000)
+    resLBGFS = LBFGS(
+        Objective.f,
+        x0,
+        args=(2,),
+        jac=Objective.grad,
+        maxcor=5,
+        gtol=1e-8,
+        maxiter=1000)
     assert resLBGFS.success
     # Patch
     # resScipy = scipy.optimize.minimize(lambda x: Objective.f(np.reshape(x,
     # (-1,1))),np.reshape(x0,(-1,)), jac = lambda x : np.reshape(
     # Objective.grad(np.reshape(x,(-1,1))),(-1,)),method='L-BFGS-B',tol = 1e-4)
-    resScipy = scipy.optimize.minimize(Objective.f, np.reshape(x0, (-1,)),
-                                       jac=Objective.grad, method="L-BFGS-B",
-                                       options=dict(gtol=1e-8))
+    resScipy = scipy.optimize.minimize(
+        Objective.f,
+        np.reshape(x0, (-1,)),
+        args=(2,),
+        jac=Objective.grad,
+        method="L-BFGS-B",
+        options=dict(gtol=1e-8))
     assert resScipy.success
 
     np.testing.assert_allclose(np.reshape(resLBGFS.x, (-1,)), resScipy.x,
                                rtol=1e-2,
                                atol=1e-5)  # TODO: The location of the
     # minimum seems o be hard to find
-    assert np.abs(Objective.f(resScipy.x) - Objective.f(resLBGFS.x)) < 1e-8
+    assert np.abs(Objective.f(resScipy.x, 2) - Objective.f(resLBGFS.x, 2)) < 1e-8
 
 
 @pytest.mark.skipif(not _scipy_present, reason='scipy not present')

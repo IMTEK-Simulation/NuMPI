@@ -78,8 +78,8 @@ def test_directional_derivative(Objective, n):
         errorratios = np.zeros_like(epsilons)
         for eps, i in zip(epsilons, range(len(epsilons))):
             # print((Objective.f(x + u * eps) - Objective.f(x)) / eps)
-            der_numerical = (Objective.f(x + u * eps) - Objective.f(x)) / eps
-            der_analytical = (Objective.grad(x).T @ u).item()
+            der_numerical = (Objective.f(x + u * eps, 2) - Objective.f(x, 2)) / eps
+            der_analytical = (Objective.grad(x, 2).T @ u).item()
 
             errorratios[i] = np.abs(der_numerical - der_analytical) / eps
         errorratios /= errorratios[0]
@@ -125,9 +125,10 @@ def test_Gradient(Objective, n):
 
         epsilons = np.array([1e-3, 1e-5, 1e-6])
         errors = np.array([scipy.optimize.check_grad(Objective.f,
-                                                     Objective.grad, x,
-                                                     epsilon=eps) for eps in
-                           epsilons])  # should be O(epsilon)
+                                                     Objective.grad,
+                                                     x,
+                                                     2,
+                                                     epsilon=eps) for eps in epsilons])  # should be O(epsilon)
         errorratios = errors / epsilons  # should be O(1)
         errorratios /= errorratios[0]
         if _verbose:
@@ -167,11 +168,11 @@ def test_MPI_Parallel_Interface(comm):
         mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices],
         par.startpoint())
     np.testing.assert_almost_equal(
-        mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n)),
-        par.f(par.startpoint()),
+        mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n), 2),
+        par.f(par.startpoint(), 2),
         err_msg="Different Function Value at startpoint")
     np.testing.assert_allclose(
-        mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n))[
+        mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n), 2)[
             par.subdomain_slices],
-        par.grad(par.startpoint()),
+        par.grad(par.startpoint(), 2),
         err_msg="Different Gradient Value at startpoint")

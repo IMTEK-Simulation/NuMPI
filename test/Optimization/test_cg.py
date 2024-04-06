@@ -24,6 +24,7 @@ def test_bugnicourt_cg(comm):
     res = constrained_conjugate_gradients(
         obj.f_grad,
         obj.hessian_product,
+        args=(2,),
         x0=xstart,
         communicator=comm
     )
@@ -43,6 +44,7 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
     res = constrained_conjugate_gradients(
         obj.f_grad,
         obj.hessian_product,
+        args=(2,),
         x0=xstart,
         communicator=comm,
         bounds=bounds,
@@ -59,7 +61,11 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
 
         res_ref = scipy.optimize.minimize(
             obj.f_grad,
-            x0=xstart, bounds=bnds, method="L-BFGS-B", jac=True,
+            args=(2,),
+            x0=xstart,
+            bounds=bnds,
+            method="L-BFGS-B",
+            jac=True,
             options=dict(gtol=1e-8, ftol=0))
         assert res_ref.success, res_ref.message
 
@@ -76,6 +82,7 @@ def test_bugnicourt_cg_active_bounds(comm):
     res = constrained_conjugate_gradients(
         obj.f_grad,
         obj.hessian_product,
+        args=(2,),
         x0=xstart,
         communicator=comm
     )
@@ -94,6 +101,7 @@ def test_bugnicourt_cg_mean_val(comm):
     res = constrained_conjugate_gradients(
         obj.f_grad,
         obj.hessian_product,
+        args=(2,),
         x0=xstart,
         mean_val=1.,
         communicator=comm
@@ -112,6 +120,7 @@ def test_bugnicourt_cg_mean_val_active_bounds(comm):
     res = constrained_conjugate_gradients(
         obj.f_grad,
         obj.hessian_product,
+        args=(2,),
         x0=xstart,
         mean_val=1.,
         communicator=comm

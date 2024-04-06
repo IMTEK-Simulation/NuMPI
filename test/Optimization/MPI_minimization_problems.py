@@ -177,20 +177,23 @@ class MPI_Quadratic():
         self.nfeval = 0
         self.ngradeval = 0
 
-    def f_grad(self, x):
+    def f_grad(self, x, arg1):
+        assert arg1 == 2
         self.nfeval += 1
         self.ngradeval += 1
         factdotx = self.factors.reshape(x.shape) \
             * (x - self._xmin.reshape(x.shape))
         return self.pnp.sum(factdotx ** 2, axis=0).item(), 2 * factdotx
 
-    def f(self, x):
+    def f(self, x, arg1):
+        assert arg1 == 2
         self.nfeval += 1
         factdotx = self.factors.reshape(x.shape) \
             * (x - self._xmin.reshape(x.shape))
         return self.pnp.sum(factdotx ** 2, axis=0).item()
 
-    def grad(self, x):
+    def grad(self, x, arg1):
+        assert arg1 == 2
         self.ngradeval += 1
         return 2 * self.factors.reshape(x.shape) * (x - self._xmin)
 
@@ -253,23 +256,21 @@ class MPI_Objective_Interface():
         self.Objective = Objective
         self.nb_domain_grid_pts = nb_domain_grid_pts
 
-    def f_grad(self, x):
+    def f_grad(self, x, *args):
         x_ = x.reshape(-1)
         fullx = np.zeros(self.nb_domain_grid_pts, dtype=x.dtype)
         self.comm.Allgatherv(x_, [fullx, self.counts])
-        f, fullgrad = self.Objective.f_grad(fullx)
+        f, fullgrad = self.Objective.f_grad(fullx, *args)
         return f, fullgrad[self.subdomain_slices].reshape(x.shape)
 
-    def f(self, x):
-        return self.f_grad(x)[0]
+    def f(self, x, *args):
+        return self.f_grad(x, *args)[0]
 
-    def grad(self, x):
-        return self.f_grad(x)[1]
+    def grad(self, x, *args):
+        return self.f_grad(x, *args)[1]
 
     def startpoint(self):
-        return self.Objective.startpoint(self.nb_domain_grid_pts)[
-            self.subdomain_slices]
+        return self.Objective.startpoint(self.nb_domain_grid_pts)[self.subdomain_slices]
 
     def xmin(self):
-        return self.Objective.xmin(self.nb_domain_grid_pts)[
-            self.subdomain_slices]
+        return self.Objective.xmin(self.nb_domain_grid_pts)[self.subdomain_slices]

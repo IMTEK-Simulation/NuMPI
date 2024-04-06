@@ -48,12 +48,12 @@ class ObjectiveFunction(object, metaclass=abc.ABCMeta):
         pass
 
     @classmethod
-    def f(cls, x):
-        return cls.f_grad(x)[0]
+    def f(cls, x, *args):
+        return cls.f_grad(x, *args)[0]
 
     @classmethod
-    def grad(cls, x):
-        return cls.f_grad(x)[1]
+    def grad(cls, x, *args):
+        return cls.f_grad(x, *args)[1]
 
     @classmethod
     def plot_2D(cls):
@@ -105,7 +105,8 @@ class Trigonometric(ObjectiveFunction):
     bounds = (-np.pi, np.pi)
 
     @staticmethod
-    def f_grad(x_):
+    def f_grad(x_, arg1):
+        assert arg1 == 2
         n = x_.size
         old_shape = x_.shape
         x = np.reshape(x_, (-1, 1))
@@ -180,7 +181,8 @@ class Extended_Rosenbrock(ObjectiveFunction):
     bounds = (-4, 4)
 
     @staticmethod
-    def f_grad(x):
+    def f_grad(x, arg1):
+        assert arg1 == 2
 
         sumf2 = (np.sum(
             100 * (x[1::2] - x[:-1:2] ** 2) ** 2 + (1 - x[:-1:2]) ** 2)).item()

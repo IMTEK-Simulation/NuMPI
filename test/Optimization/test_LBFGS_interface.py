@@ -64,8 +64,13 @@ def test_minimize_call_column(pnp, Objectiveclass):
     comm = pnp.comm
     n = 10 + 2 * comm.Get_size()
     Objective = Objectiveclass(n, pnp=pnp)
-    result = scipy.optimize.minimize(Objective.f_grad, Objective.startpoint(),
-                                     jac=True, method=LBFGS, options={
+    result = scipy.optimize.minimize(
+        Objective.f_grad,
+        Objective.startpoint(),
+        jac=True,
+        method=LBFGS,
+        args=(2,),
+        options={
             "gtol": 1e-8, "ftol": 1e-20, "pnp": pnp
         })
     assert result.success
@@ -83,7 +88,9 @@ def test_minimize_call_row(pnp, Objectiveclass):
     result = scipy.optimize.minimize(
         Objective.f_grad,
         Objective.startpoint().reshape(-1),
-        method=LBFGS, jac=True,
+        method=LBFGS,
+        jac=True,
+        args=(2,),
         options={"gtol": 1e-8, "ftol": 1e-20, "pnp": pnp})
     assert result.success, ""
     assert pnp.max(abs(
@@ -103,8 +110,14 @@ def test_shape_unchanged(shape):
 
     x0 = Objective.startpoint(size).reshape(shape)
 
-    result = LBFGS(Objective.f_grad, x0, jac=True, gtol=1e-10, ftol=1e-40,
-                   pnp=np)
+    result = LBFGS(
+        Objective.f_grad,
+        x0,
+        jac=True,
+        args=(2,),
+        gtol=1e-10,
+        ftol=1e-40,
+        pnp=np)
 
     assert result.success, ""
     np.testing.assert_allclose(np.reshape(result.x, (-1,)),

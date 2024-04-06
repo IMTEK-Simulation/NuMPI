@@ -12,75 +12,51 @@ from ..Tools import Reduction
 from .Result import OptimizeResult
 
 
-def constrained_conjugate_gradients(fun, hessp,
-                                    x0, mean_val=None,
-                                    gtol=1e-8,
-                                    maxiter=3000,
-                                    callback=None,
-                                    communicator=None,
-                                    bounds=None
-                                    ):
-    '''
+def constrained_conjugate_gradients(fun, hessp, x0, args=(), mean_val=None, gtol=1e-8, maxiter=3000, callback=None,
+                                    communicator=None, bounds=None):
+    """
     Constrained conjugate gradient algorithm from Bugnicourt et al. [1].
 
     Parameters
-    __________
-
-    fun :   callable.
-                The objective function to be minimized.
-                            fun(x) -> float(energy),ndarray(gradient)
-                where x is the input ndarray. The energy is actually never used.
-
+    ----------
+    fun : callable
+        The objective function to be minimized. The function should return a float (energy) and an ndarray (gradient).
+        Note that energy is never used, you can return a dummy value.
     hessp : callable
-            Function to evaluate the hessian product of the objective.
-            Hessp should accept either 1 argument (descent direction) or
-            2 arguments (x,descent direction).
-                            hessp(des_dir)->ndarray
-                                    or
-                            hessp(x,des_dir)->ndarray
-            where x is the input ndarray and des_dir is the descent direction.
-
+        Function to evaluate the hessian product of the objective. Hessp should accept either 1 argument (descent direction) or
+        2 arguments (x, descent direction).
     x0 : ndarray
-         Initial guess.
-
+        Initial guess. ValueError is raised if "None" is provided.
     gtol : float, optional
-           Default value : 1e-8
-           convergence criterion is max(abs) and norm2 of the projected
-           gradient < gtol.
-    mean_value : int/float, optional
-               If you want to apply the mean_value constraint then provide an
-               int/float value to the mean_value.
-
+        Convergence criterion is max(abs) and norm2 of the projected gradient < gtol. Default value is 1e-8.
+    mean_value :  int/float, optional
+        If you want to apply the mean_value constraint then provide an int/float value to the mean_value.
     residual_plot : bool, optional
-                    Generates a plot between the residual and iterations.
-
+        If set to True, generates a plot between the residual and iterations.
     maxiter : int, optional
-              Default, maxiter=5000
-              Maximum number of iterations after which the program will exit.
+        Maximum number of iterations after which the program will exit. Default value is 5000.
 
     Returns
     -------
     OptimizeResult  : scipy.optimize object.
-        Attributes:
-         success: bool
-         x: x,
-         jac: residual = gradient(x),
-         nit: n_iterations,
-         message: 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL' or 'NO CONVERGENCE: MAXITERATIONS REACHED'
+        The result of the optimization. The object has the following attributes:
+        - success: bool, indicates if the optimization was successful
+        - x: ndarray, the optimized parameters
+        - jac: ndarray, the residual which is equal to the gradient at x
+        - nit: int, the number of iterations performed
+        - message: str, a message describing the reason for the termination
 
     References
-    __________
+    ----------
+    ..[1] Bugnicourt, Romain & Sainsot, Philippe & Dureisseix, David &
+        Gauthier, Catherine & Lubrecht, Ton. (2018). FFT-Based Methods
+        for Solving a Rough Adhesive Contact: Description and
+        Convergence Study.
+        Tribology Letters. 66. 10.1007/s11249-017-0980-z.
 
-    ..[1]   :   Bugnicourt, Romain & Sainsot, Philippe & Dureisseix, David &
-                Gauthier, Catherine & Lubrecht, Ton. (2018). FFT-Based Methods
-                for Solving a Rough Adhesive Contact: Description and
-                Convergence Study.
-                Tribology Letters. 66. 10.1007/s11249-017-0980-z.
-
-    ..[2]   :   Vollebregt, E. A. H. J Optim Theory Appl 162, 931–953 (2014)
-                The Bound-Constrained Conjugate Gradient Method for Non-negative Matrices
-
-    '''
+    ..[2] Vollebregt, E. A. H. J Optim Theory Appl 162, 931–953 (2014)
+        The Bound-Constrained Conjugate Gradient Method for Non-negative Matrices
+    """
     if communicator is None:
         comm = np
         nb_DOF = x0.size
@@ -104,7 +80,7 @@ def constrained_conjugate_gradients(fun, hessp,
         # There are ambiguities on how to compute the mean values
 
     '''Initial Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g'''
-    residual = fun(x)[1]
+    residual = fun(x, *args)[1]
 
     mask_neg = x <= bounds
     x[mask_neg] = bounds[mask_neg]
@@ -175,7 +151,7 @@ def constrained_conjugate_gradients(fun, hessp,
         In Bugnicourt's paper
         Residual = A^(-1).(U) - d A −1 .(U ) −  ∂ψadh/∂g
         '''
-        residual = fun(x)[1]
+        residual = fun(x, *args)[1]
 
         if mean_val is not None:
             mask_nonzero = x > bounds
@@ -224,7 +200,7 @@ def constrained_conjugate_gradients(fun, hessp,
                     'jac': residual,
                     'nit': i,
                     'message': 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL',
-                    })
+                })
             return result
 
         elif i == maxiter - 1:
@@ -235,6 +211,6 @@ def constrained_conjugate_gradients(fun, hessp,
                     'jac': residual,
                     'nit': i,
                     'message': 'NO CONVERGENCE: MAXITERATIONS REACHED'
-                    })
+                })
 
             return result

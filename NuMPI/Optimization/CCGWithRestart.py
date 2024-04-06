@@ -5,75 +5,49 @@ from inspect import signature
 from .Result import OptimizeResult
 
 
-def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
+def constrained_conjugate_gradients(fun, hessp, x0, args=(), gtol=1e-8,
                                     mean_value=None, residual_plot=False,
                                     maxiter=5000):
     """
     Implementation of constrained conjugate gradient algorithm as described in,
     I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999).
 
-    See also
-    M.R. Hestenes, Conjugate Direction Methods in Optimization, Springer, New York, 1980, Chaps. 2, 3.
-    B.N. Pshenichny, Yu.M. Danilin,
-        Numerical Methods in Optimization Problems, Nauka, Moscow, 1975, Chap. 3, in Russian.
-    G. Zoutendijk, Mathematical Programming Methods, North Holland, Amsterdam, 1976, Chap. 16.
-
-    Application to contact problems with adhesion:
-    Rey, V. et al. Comput. Mech. 60, 69–81 (2017)
-
+    This function minimizes a given objective function using the constrained conjugate gradient algorithm.
+    The algorithm is described in detail in the references provided.
 
     Parameters
     ----------
-    fun : callable.
-                The objective function to be minimized.
-                            fun(x) -> float(energy),ndarray(gradient)
-                where x is the input ndarray.
-                Note that energy is never used, you can return a dummy value.
-
+    fun : callable
+        The objective function to be minimized. The function should return a float (energy) and an ndarray (gradient).
+        Note that energy is never used, you can return a dummy value.
     hessp : callable
-            Function to evaluate the hessian product of the objective.
-            Hessp should accept either 1 argument (desscent direction) or
-            2 arguments (x,descent direction).
-                            hessp(des_dir)->ndarray
-                                    or
-                            hessp(x,des_dir)->ndarray
-            where x is the input ndarray and des_dir is the descent direction.
-
+        Function to evaluate the hessian product of the objective. Hessp should accept either 1 argument (descent direction) or
+        2 arguments (x, descent direction).
     x0 : ndarray
-         Initial guess.
-         ValueError is raised if "None" is provided.
-
+        Initial guess. ValueError is raised if "None" is provided.
     gtol : float, optional
-           Default value : 1e-8
-           convergence criterion is max(abs) and norm2 of the projected
-           gradient < gtol.
-
+        Convergence criterion is max(abs) and norm2 of the projected gradient < gtol. Default value is 1e-8.
     mean_value :  float, optional
-               If you want to apply the mean_value constraint then provide an
-               float value to the mean_value.
-
+        If you want to apply the mean_value constraint then provide a float value to the mean_value.
     residual_plot : bool, optional
-                    Generates a plot between the residual and iterations.
-
+        If set to True, generates a plot between the residual and iterations.
     maxiter : int, optional
-              Default, maxiter=5000
-              Maximum number of iterations after which the program will exit.
+        Maximum number of iterations after which the program will exit. Default value is 5000.
 
     Returns
     -------
     OptimizeResult  : scipy.optimize object.
-        Attributes:
-         success: bool
-         x: x,
-         jac: residual = gradient(x),
-         nit: n_iterations,
-         message: 'CONVERGENCE: NORM_OF_GRADIENT_<=_GTOL' or 'NO CONVERGENCE: MAXITERATIONS REACHED'
+        The result of the optimization. The object has the following attributes:
+        - success: bool, indicates if the optimization was successful
+        - x: ndarray, the optimized parameters
+        - jac: ndarray, the residual which is equal to the gradient at x
+        - nit: int, the number of iterations performed
+        - message: str, a message describing the reason for the termination
 
     References
     ----------
     ..[1] I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999)
     """
-
     if not isinstance(mean_value, (type(None), int, float)):
         raise ValueError('Inappropriate type: {} for mean_value whereas a '
                          'float \
@@ -110,7 +84,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, gtol=1e-8,
         x[mask_neg] = 0.0
 
         '''Initial residual or GAP'''
-        residual = fun(x)[1]
+        residual = fun(x, *args)[1]
 
         mask_c = x > 0
         if mean_value is not None:

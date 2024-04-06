@@ -38,14 +38,14 @@ def donothing(*args, **kwargs):
     pass
 
 
-def steepest_descent_wolfe2(x0, f_gradf, pnp=None, maxiter=10, **kwargs):
+def steepest_descent_wolfe2(x0, f_gradf, pnp=None, maxiter=10, args=(), **kwargs):
     """
     For first Iteration there is no history. We make a steepest descent
     satisfying strong Wolfe Condition
     :return:
     """
     # x_old.shape=(-1,1)
-    phi0, grad0 = f_gradf(x0)
+    phi0, grad0 = f_gradf(x0, *args)
     grad0 = grad0.reshape((-1, 1))
 
     derphi0 = pnp.dot(grad0.T, -grad0).item()
@@ -55,7 +55,7 @@ def steepest_descent_wolfe2(x0, f_gradf, pnp=None, maxiter=10, **kwargs):
     # take care, the linesearch has to return the last evaluated value
     # TODO: Dangerous
     def _phi_phiprime(alpha):
-        phi, gradf[...] = f_gradf(x0 - grad0 * alpha)
+        phi, gradf[...] = f_gradf(x0 - grad0 * alpha, *args)
         phiprime = pnp.dot(gradf.T, -grad0).item()
         return phi, phiprime
 
@@ -130,7 +130,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
 
     # print("jac = {}, type = {}".format(jac, type(jac)))
     if jac is True:
-        def fun_grad(x):
+        def fun_grad(x, *args):
             """
             This function evaluates the objective function and its gradient at the point x.
             It reshapes the gradient into a convenient form for further computations.
@@ -147,7 +147,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
             grad : ndarray
                 The gradient of the objective function at the point x, reshaped into a convenient form.
             """
-            f, grad = fun(x)
+            f, grad = fun(x, *args)
             return f, grad.reshape((-1, 1))
 
     elif jac is False:
@@ -156,7 +156,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
     else:
         # function and gradient provided sepatately
 
-        def fun_grad(x):
+        def fun_grad(x, *args):
             """
             This function evaluates the objective function and its gradient at the point x.
             It reshapes the gradient into a convenient form for further computations.
@@ -175,8 +175,8 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
                 The gradient of the objective function at the point x, reshaped into a convenient form.
             """
             # order matte
-            f = fun(x)
-            grad = jac(x).reshape((-1, 1))
+            f = fun(x, *args)
+            grad = jac(x, *args).reshape((-1, 1))
             return f, grad
 
     # user can provide x in the shape of his convenience
@@ -189,12 +189,12 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
         x_old = x.copy()
         x, grad, x_old, grad_old, phi, phi_old, derphi = \
             steepest_descent_wolfe2(x_old, fun_grad, pnp=pnp, maxiter=maxls,
-                                    **linesearch_options)
+                                    args=args, **linesearch_options)
     else:
-        phi_old, grad_old = fun_grad(
-            x_old)  # phi_old is never used, except for the convergence
+        # phi_old is never used, except for the convergence
+        phi_old, grad_old = fun_grad(x_old, *args)
         # criterion
-        phi, grad = fun_grad(x)
+        phi, grad = fun_grad(x, *args)
 
     # full history of x is sored here if wished
     iterates = list()
@@ -372,7 +372,7 @@ def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
         x_old[:] = x
 
         def _phi_phiprime(alpha):
-            phi, grad[...] = fun_grad(x - Hgrad * alpha)
+            phi, grad[...] = fun_grad(x - Hgrad * alpha, *args)
             phiprime = pnp.dot(grad.T, -Hgrad).item()
             return phi, phiprime
 
