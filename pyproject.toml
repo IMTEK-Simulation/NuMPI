@@ -1,5 +1,5 @@
 [build-system]
-requires = ["flit_core>=3.2", "numpy>1.15.0"]
+requires = ["flit_core>=3.2", "numpy>1.15.0", "DiscoverVersion"]
 build-backend = "flit_core.buildapi"
 
 [project]
@@ -24,6 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 mpi = [
+    "DiscoverVersion",
     "mpi4py"
 ]
 test = [

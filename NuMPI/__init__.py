@@ -26,7 +26,7 @@
 
 import warnings
 
-from .DiscoverVersion import __version__  # noqa: F401
+from DiscoverVersion import get_version
 
 try:
     # raise ImportError()
@@ -41,3 +41,5 @@ except ImportError:
     _has_mpi4py = False
 
 from . import Tools, Optimization  # noqa: F401
+
+__version__ = get_version('NuMPI', __file__)
