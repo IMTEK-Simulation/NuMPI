@@ -6,6 +6,7 @@ v0.5.0 (not yet released)
 
 - ENH: Added support for passing optional arguments to objective functions
   of optimizers
+- MAINT: Switched to `DiscoverVersion` package for version discovery
 - MAINT: Refactored file names
 
 v0.4.0 (14Jan24)
