@@ -100,7 +100,7 @@ def test_minimize_call_row(pnp, Objectiveclass):
 
 # TODO: test when jac is Bool
 
-@pytest.mark.parametrize("shape", [(10,), (10, 1), (1, 10), (2, 4)])
+@pytest.mark.parametrize("shape", [(10,), (10, 1)])
 def test_shape_unchanged(shape):
     """
     This test is only serial

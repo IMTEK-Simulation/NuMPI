@@ -125,6 +125,10 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
     result : OptimizeResult
         The optimization result represented as a OptimizeResult object. Important attributes are: x the solution array, success a Boolean flag indicating if the optimizer exited successfully and message which describes the cause of the termination.
     """
+    # user can provide x in the shape of his convenience
+    # but we will work with the shape (-1, 1)
+    original_shape = x.shape
+
     if callback is None:
         callback = donothing
 
@@ -147,7 +151,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
             grad : ndarray
                 The gradient of the objective function at the point x, reshaped into a convenient form.
             """
-            f, grad = fun(x, *args)
+            f, grad = fun(x.reshape(original_shape), *args)
             return f, grad.reshape((-1, 1))
 
     elif jac is False:
@@ -175,13 +179,9 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
                 The gradient of the objective function at the point x, reshaped into a convenient form.
             """
             # order matte
-            f = fun(x, *args)
-            grad = jac(x, *args).reshape((-1, 1))
+            f = fun(x.reshape(original_shape), *args)
+            grad = jac(x.reshape(original_shape), *args).reshape((-1, 1))
             return f, grad
-
-    # user can provide x in the shape of his convenience
-    # but we will work with the shape (-1, 1)
-    original_shape = x.shape
 
     x = x.reshape((-1, 1))
 

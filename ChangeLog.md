@@ -6,6 +6,8 @@ v0.5.0 (not yet released)
 
 - ENH: Added support for passing optional arguments to objective functions
   of optimizers
+- BUG: Keep shape of optimization target when passing to objective function and
+  jacobian
 - MAINT: Switched to `DiscoverVersion` package for version discovery
 - MAINT: Refactored file names
 

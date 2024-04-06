@@ -168,11 +168,9 @@ def test_MPI_Parallel_Interface(comm):
         mp.Extended_Rosenbrock.startpoint(n)[par.subdomain_slices],
         par.startpoint())
     np.testing.assert_almost_equal(
-        mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n), 2),
-        par.f(par.startpoint(), 2),
+        mp.Extended_Rosenbrock.f(mp.Extended_Rosenbrock.startpoint(n), 2), par.f(par.startpoint(), 2),
         err_msg="Different Function Value at startpoint")
     np.testing.assert_allclose(
-        mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n), 2)[
-            par.subdomain_slices],
+        mp.Extended_Rosenbrock.grad(mp.Extended_Rosenbrock.startpoint(n), 2)[par.subdomain_slices],
         par.grad(par.startpoint(), 2),
         err_msg="Different Gradient Value at startpoint")
