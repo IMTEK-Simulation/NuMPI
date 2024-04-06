@@ -75,11 +75,11 @@ def steepest_descent_wolfe2(x0, f_gradf, pnp=None, maxiter=10, args=(), **kwargs
     return x, gradf, x0, grad0, phi, phi0, derphi
 
 
-def LBFGS(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
-          ftol=2.2e-9, maxiter=15000,
-          maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9),
-          pnp=Reduction(MPI.COMM_WORLD),
-          store_iterates=None, printdb=donothing, callback=None, **options):
+def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5,
+           ftol=2.2e-9, maxiter=15000,
+           maxls=20, linesearch_options=dict(c1=1e-3, c2=0.9),
+           pnp=Reduction(MPI.COMM_WORLD),
+           store_iterates=None, printdb=donothing, callback=None, **options):
     """
     Limited-memory L-BFGS optimization with MPI parallelization.
 

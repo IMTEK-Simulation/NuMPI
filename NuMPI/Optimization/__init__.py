@@ -24,4 +24,4 @@
 #
 
 
-from .LBFGS import LBFGS  # noqa F401
+from .LBFGS import l_bfgs  # noqa F401

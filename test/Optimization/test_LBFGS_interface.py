@@ -25,7 +25,7 @@
 
 import numpy as np
 import pytest
-from NuMPI.Optimization import LBFGS
+from NuMPI.Optimization import l_bfgs
 from NuMPI.Tools import Reduction
 
 try:
@@ -68,7 +68,7 @@ def test_minimize_call_column(pnp, Objectiveclass):
         Objective.f_grad,
         Objective.startpoint(),
         jac=True,
-        method=LBFGS,
+        method=l_bfgs,
         args=(2,),
         options={
             "gtol": 1e-8, "ftol": 1e-20, "pnp": pnp
@@ -88,7 +88,7 @@ def test_minimize_call_row(pnp, Objectiveclass):
     result = scipy.optimize.minimize(
         Objective.f_grad,
         Objective.startpoint().reshape(-1),
-        method=LBFGS,
+        method=l_bfgs,
         jac=True,
         args=(2,),
         options={"gtol": 1e-8, "ftol": 1e-20, "pnp": pnp})
@@ -110,7 +110,7 @@ def test_shape_unchanged(shape):
 
     x0 = Objective.startpoint(size).reshape(shape)
 
-    result = LBFGS(
+    result = l_bfgs(
         Objective.f_grad,
         x0,
         jac=True,

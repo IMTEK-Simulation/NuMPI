@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-from NuMPI.Optimization import LBFGS
+from NuMPI.Optimization import l_bfgs
 from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 from NuMPI import MPI
 from NuMPI.Tools import Reduction
@@ -38,7 +38,7 @@ n = int(sys.argv[1])
 print(n)
 
 fp = open("LBFGS_memory_profile_n{}_nprocs{}_rank{}.log".format(n, nprocs, rank), "w")
-LBFGS = profile(stream=fp)(LBFGS)
+LBFGS = profile(stream=fp)(l_bfgs)
 
 Objective = MPI_Quadratic(n, pnp=pnp)
 result = LBFGS(Objective.f, Objective.startpoint(),

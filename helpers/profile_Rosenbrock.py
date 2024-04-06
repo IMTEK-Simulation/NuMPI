@@ -27,7 +27,7 @@ from NuMPI.Tools.Reduction import Reduction
 from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 import time
 
-from NuMPI.Optimization.LBFGS import LBFGS
+from NuMPI.Optimization.LBFGS import l_bfgs
 
 from NuMPI import MPI
 import cProfile
@@ -77,7 +77,7 @@ PObjective = MPI_Quadratic(nb_domain_grid_pts=n, pnp=pnp, factors=factors,
                            startpoint=startpoint)
 x0 = PObjective.startpoint()
 
-LBFGS = profile("profile_out", comm)(LBFGS)
+LBFGS = profile("profile_out", comm)(l_bfgs)
 res, t = timer(LBFGS, PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor,
                maxiter=100000, gtol=(1e-5), pnp=pnp)
 assert res.success

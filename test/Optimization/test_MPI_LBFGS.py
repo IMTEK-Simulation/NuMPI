@@ -35,7 +35,7 @@ from test.Optimization.MPI_minimization_problems import (
 import time
 import test.Optimization.minimization_problems as mp
 
-from NuMPI.Optimization.LBFGS import LBFGS
+from NuMPI.Optimization.LBFGS import l_bfgs
 
 
 def timer(fun, *args, **kwargs):
@@ -66,7 +66,7 @@ def test_quadratic_analytical_min(comm, n):
 
     x0 = PObjective.startpoint()
 
-    res = LBFGS(
+    res = l_bfgs(
         PObjective.f_grad,
         x0,
         args=(2,),
@@ -103,7 +103,7 @@ def test_rosenbrock_analytical_min(comm, n):
 
     x0 = PObjective.startpoint()
 
-    res = LBFGS(
+    res = l_bfgs(
         PObjective.f_grad,
         x0,
         args=(2,),
@@ -146,7 +146,7 @@ def test_time_complexity(comm):
                                              comm=comm)
         x0 = PObjective.startpoint()
 
-        res[i], t[i] = timer(LBFGS, PObjective.f_grad, x0, jac=True,
+        res[i], t[i] = timer(l_bfgs, PObjective.f_grad, x0, jac=True,
                              maxcor=maxcor, maxiter=100000, gtol=(1e-5),
                              pnp=pnp)
 

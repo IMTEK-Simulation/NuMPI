@@ -26,7 +26,7 @@ This runs LBFGS and scipy L-BFGS-B in serial and compare the number of iteration
 """
 
 import os
-from NuMPI.Optimization import LBFGS
+from NuMPI.Optimization import l_bfgs
 from test.Optimization.minimization_problems import Trigonometric, Extended_Rosenbrock
 import numpy as np
 import scipy
@@ -54,7 +54,7 @@ class decorated_objective:
 
 for Objective in [Trigonometric, Extended_Rosenbrock]:
     fig, (axEn, axgrad) = plt.subplots(2, 1, sharex=True)
-    for method, name, c in zip([LBFGS, "L-BFGS-B"], ["NuMPI", "scipy"], ["C1", "C0"]):
+    for method, name, c in zip([l_bfgs, "L-BFGS-B"], ["NuMPI", "scipy"], ["C1", "C0"]):
         objective_monitor = decorated_objective(Objective.f_grad)
         result = scipy.optimize.minimize(objective_monitor, Objective.startpoint(n),
                                          jac=True, method=method,

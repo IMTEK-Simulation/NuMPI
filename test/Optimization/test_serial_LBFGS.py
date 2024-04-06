@@ -37,7 +37,7 @@ except ModuleNotFoundError:
     _scipy_present = False
 
 from NuMPI import MPI
-from NuMPI.Optimization import LBFGS
+from NuMPI.Optimization import l_bfgs
 from NuMPI.Optimization.Wolfe import (
     second_wolfe_condition,
     first_wolfe_condition
@@ -61,7 +61,7 @@ def my_print(*args):
 def test_compare_scipy(Objective, n):
     x0 = Objective.startpoint(n)
 
-    resLBGFS = LBFGS(
+    resLBGFS = l_bfgs(
         Objective.f,
         x0,
         args=(2,),
@@ -164,8 +164,8 @@ def test_3D():
     my_print("scipy nit {}".format(resscipy.nit))
     my_print("scipy result: {}".format(resscipy.x))
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=3, maxiter=100,
-                gtol=1e-10, ftol=0)
+    res = l_bfgs(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=3, maxiter=100,
+                 gtol=1e-10, ftol=0)
     assert res.success
     my_print("nit {}".format(res.nit))
 
@@ -223,8 +223,8 @@ def test_quadratic_nD():
     # my_print(x)
     # my_print(ex_jac(x))
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=100,
-                g2tol=1e-10)
+    res = l_bfgs(ex_fun, x, jac=ex_jac, x_old=x_old, maxcor=5, maxiter=100,
+                 g2tol=1e-10)
     my_print("nit {}".format(res.nit))
 
     if False:
@@ -267,7 +267,7 @@ def test_gaussian_nD(n):
     # resscipy = scipy.optimize.minimize(ex_fun, x, jac=ex_jac)
     # my_print("schipy success: {}".format(resscipy.success))
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, maxcor=2, gtol=1e-5, maxiter=10000)
+    res = l_bfgs(ex_fun, x, jac=ex_jac, maxcor=2, gtol=1e-5, maxiter=10000)
     my_print("nit {}".format(res.nit))
 
     if False:
@@ -304,8 +304,8 @@ def test_x2_xcosy():
 
     # k = 1
 
-    res = LBFGS(ex_fun, x, jac=ex_jac, gtol=1e-5, maxcor=5, maxiter=10000,
-                linesearch_options=dict(c1=1e-4, c2=0.999))
+    res = l_bfgs(ex_fun, x, jac=ex_jac, gtol=1e-5, maxcor=5, maxiter=10000,
+                 linesearch_options=dict(c1=1e-4, c2=0.999))
     my_print("nit {}".format(res.nit))
 
     ref = scipy.optimize.minimize(ex_fun, x.reshape(-1),

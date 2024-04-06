@@ -29,7 +29,7 @@ from NuMPI.Tools import Reduction
 from test.Optimization.MPI_minimization_problems import MPI_Quadratic
 import time
 
-from NuMPI.Optimization import LBFGS
+from NuMPI.Optimization import l_bfgs
 
 
 def timer(fun, *args, **kwargs):
@@ -93,7 +93,7 @@ def show_parallel_speedup():
             if MPI.COMM_WORLD.Get_rank() == 0:
                 print(" Before min n = {}".format(n))
 
-            res[i], t[i] = timer(LBFGS, PObjective.f, x0, jac=PObjective.grad,
+            res[i], t[i] = timer(l_bfgs, PObjective.f, x0, jac=PObjective.grad,
                                  maxcor=maxcor, maxiter=100000, gtol=(1e-5),
                                  store_iterates=None, pnp=pnp)
             msg += "size {}:\n".format(size)
