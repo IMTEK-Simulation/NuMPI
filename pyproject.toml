@@ -18,13 +18,13 @@ classifiers = [
 requires-python = ">=3.8.0"
 dynamic = ["version"]
 dependencies = [
+    "DiscoverVersion",
     "scipy>1.1.0",
     "netCDF4>=1.5.3,<=1.6.2,!=1.6.1"  # Those versions seem to work
 ]
 
 [project.optional-dependencies]
 mpi = [
-    "DiscoverVersion",
     "mpi4py"
 ]
 test = [
