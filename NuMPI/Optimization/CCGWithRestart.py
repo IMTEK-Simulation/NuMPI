@@ -12,27 +12,33 @@ def constrained_conjugate_gradients(fun, hessp, x0, args=(), gtol=1e-8,
     Implementation of constrained conjugate gradient algorithm as described in,
     I.A. Polonsky, L.M. Keer, Wear 231, 206 (1999).
 
-    This function minimizes a given objective function using the constrained conjugate gradient algorithm.
-    The algorithm is described in detail in the references provided.
+    This function minimizes a given objective function using the constrained
+    conjugate gradient algorithm. The algorithm is described in detail in the
+    references provided.
 
     Parameters
     ----------
     fun : callable
-        The objective function to be minimized. The function should return a float (energy) and an ndarray (gradient).
-        Note that energy is never used, you can return a dummy value.
+        The objective function to be minimized. The function should return a float
+        (energy) and an ndarray (gradient). Note that energy is never used, you can
+        return a dummy value.
     hessp : callable
-        Function to evaluate the hessian product of the objective. Hessp should accept either 1 argument (descent direction) or
-        2 arguments (x, descent direction).
+        Function to evaluate the hessian product of the objective. Hessp should
+        accept either 1 argument (descent direction) or 2 arguments (x, descent
+        direction).
     x0 : ndarray
         Initial guess. ValueError is raised if "None" is provided.
     gtol : float, optional
-        Convergence criterion is max(abs) and norm2 of the projected gradient < gtol. Default value is 1e-8.
+        Convergence criterion is max(abs) and norm2 of the projected gradient <
+        gtol. Default value is 1e-8.
     mean_value :  float, optional
-        If you want to apply the mean_value constraint then provide a float value to the mean_value.
+        If you want to apply the mean_value constraint then provide a float value
+        to the mean_value.
     residual_plot : bool, optional
         If set to True, generates a plot between the residual and iterations.
     maxiter : int, optional
-        Maximum number of iterations after which the program will exit. Default value is 5000.
+        Maximum number of iterations after which the program will exit. Default
+        value is 5000.
 
     Returns
     -------

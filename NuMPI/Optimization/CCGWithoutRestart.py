@@ -20,21 +20,26 @@ def constrained_conjugate_gradients(fun, hessp, x0, args=(), mean_val=None, gtol
     Parameters
     ----------
     fun : callable
-        The objective function to be minimized. The function should return a float (energy) and an ndarray (gradient).
-        Note that energy is never used, you can return a dummy value.
+        The objective function to be minimized. The function should return a float
+        (energy) and an ndarray (gradient). Note that energy is never used, you can
+        return a dummy value.
     hessp : callable
-        Function to evaluate the hessian product of the objective. Hessp should accept either 1 argument (descent direction) or
-        2 arguments (x, descent direction).
+        Function to evaluate the hessian product of the objective. Hessp should
+        accept either 1 argument (descent direction) or 2 arguments (x, descent
+        direction).
     x0 : ndarray
         Initial guess. ValueError is raised if "None" is provided.
     gtol : float, optional
-        Convergence criterion is max(abs) and norm2 of the projected gradient < gtol. Default value is 1e-8.
+        Convergence criterion is max(abs) and norm2 of the projected gradient <
+        gtol. Default value is 1e-8.
     mean_value :  int/float, optional
-        If you want to apply the mean_value constraint then provide an int/float value to the mean_value.
+        If you want to apply the mean_value constraint then provide an int/float
+        value to the mean_value.
     residual_plot : bool, optional
         If set to True, generates a plot between the residual and iterations.
     maxiter : int, optional
-        Maximum number of iterations after which the program will exit. Default value is 5000.
+        Maximum number of iterations after which the program will exit. Default
+        value is 5000.
 
     Returns
     -------
@@ -52,10 +57,6 @@ def constrained_conjugate_gradients(fun, hessp, x0, args=(), mean_val=None, gtol
         Gauthier, Catherine & Lubrecht, Ton. (2018). FFT-Based Methods
         for Solving a Rough Adhesive Contact: Description and
         Convergence Study.
-        Tribology Letters. 66. 10.1007/s11249-017-0980-z.
-
-    ..[2] Vollebregt, E. A. H. J Optim Theory Appl 162, 931–953 (2014)
-        The Bound-Constrained Conjugate Gradient Method for Non-negative Matrices
     """
     if communicator is None:
         comm = np
