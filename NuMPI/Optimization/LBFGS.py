@@ -199,7 +199,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
 
     # full history of x is sored here if wished
     iterates = list()
-    k = 1
+    iteration = 1
 
     # n = x.size  # number of degrees of freedom
     gamma = 1
@@ -213,18 +213,19 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
     alpha = 0  # line search step size
 
     if disp:
+        iteration_title = "iteration"
         phi_title = "objective f"
         max_grad_title = "max |∇ f|"
         phi_change_title = "Δf"
-        print(f"{phi_title:<10} {max_grad_title:<10} {phi_change_title:<10}")
-        print(f"---------- ---------- ----------")
+        print(f"{iteration_title:<10} {phi_title:<10} {max_grad_title:<10} {phi_change_title:<10}")
+        print(f"---------- ---------- ---------- ----------")
 
     # Start loop
     # printdb(k)
     while True:
         # Update Sk,Yk
         # print("k= {}".format(k))
-        if k > maxcor:
+        if iteration > maxcor:
             # S = np.roll(S, -1)
             # S[:, -1] = (x - x_old).flat
 
@@ -260,9 +261,10 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         phi_change = phi_old - phi
 
         if disp:
-            print(f"{phi:<10.7g} {max_grad:<10.7g} {phi_change:<10.7g}")
+            print(f"{iteration:<10} {phi:<10.7g} {max_grad:<10.7g} {phi_change:<10.7g}")
 
         if (max_grad < gtol):
+            print("CONVERGED because gradient tolerance was reached")
             result = OptimizeResult({
                 'success': True,
                 'x': x.reshape(
@@ -270,7 +272,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'fun': phi,
                 'jac': grad.reshape(
                     original_shape),
-                'nit': k,
+                'nit': iteration,
                 'message':
                     'CONVERGENCE: '
                     'NORM_OF_GRADIENT_<=_GTOL',
@@ -281,6 +283,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
             return result
 
         if (phi_change <= ftol * max((1, abs(phi), abs(phi_old)))):
+            print("CONVERGED because function tolerance was reached")
             result = OptimizeResult({
                 'success': True,
                 'x': x.reshape(
@@ -288,7 +291,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'fun': phi,
                 'jac': grad.reshape(
                     original_shape),
-                'nit': k,
+                'nit': iteration,
                 'message':
                     'CONVERGENCE: '
                     'REL_REDUCTION_OF_F_<=_FACTR*EPSMCH',
@@ -298,7 +301,8 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
             #    result['iterates'] = iterates
             return result
 
-        if k > maxiter:
+        if iteration > maxiter:
+            print("CONVERGED because maximum number of iterations reached")
             result = OptimizeResult({
                 'success': False,
                 'x': x.reshape(
@@ -306,7 +310,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'fun': phi,
                 'jac': grad.reshape(
                     original_shape),
-                'nit': k,
+                'nit': iteration,
                 'iterates': iterates
             })
 
@@ -319,7 +323,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         # STgrad = pnp.dot(S.T, grad)
         # YTgrad = pnp.dot(Y.T, grad)
 
-        if k > maxcor:
+        if iteration > maxcor:
             S_now_T_grad_prev = np.roll(STgrad_prev, -1)
             S_now_T_grad_prev[-1] = - alpha * gamma * grad2prev - alpha * (
                     STgrad_prev.T.dot(p1) + gamma * YTgrad_prev.T.dot(p2))
@@ -327,14 +331,14 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
             S_now_T_grad_prev = np.array(
                 [pnp.dot(si.T, grad_old) for si in Slist]).reshape(-1, 1)
 
-        if k > maxcor:
+        if iteration > maxcor:
             R = np.roll(R, (-1, -1),
                         axis=(0, 1))  # mxm Matrix hold by all Processors
             R[-1, :] = 0
             STym1 = STgrad - S_now_T_grad_prev
             R[:, -1] = STym1.flat  # O(m x n)
 
-        elif k == 1:
+        elif iteration == 1:
             # Rm = np.triu(pnp.dot(S.T, Y))
             R = np.triu(np.array(
                 [[pnp.dot(si.T, yi).item() for yi in Ylist] for si in Slist]))
@@ -342,19 +346,19 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         else:
             # Rm = np.vstack([Rm, np.zeros(k - 1)])
             # Rm = np.hstack([Rm, pnp.dot(S.T, Y[:, -1]).reshape(k, 1)])
-            R = np.vstack([R, np.zeros(k - 1)])
+            R = np.vstack([R, np.zeros(iteration - 1)])
             R = np.hstack([R, np.array(
-                [pnp.dot(si.T, Ylist[-1]) for si in Slist]).reshape(k, 1)])
-        if k > maxcor:
+                [pnp.dot(si.T, Ylist[-1]) for si in Slist]).reshape(iteration, 1)])
+        if iteration > maxcor:
             D = np.roll(D, (-1, -1), axis=(0, 1))
             # D[-1,-1] = np.dot(Y[:,-1],Y[:,-1])# yk-1Tyk-1 # TOOPTIMIZE
             D[-1, -1] = R[-1, -1]
         else:
             # D = np.diag(np.einsum("ik,ik -> k", S, Y))
             D = np.diag(R.diagonal())
-        assert D[-1, -1] > 0, "k = {}: ".format(k)  # Assumption of Theorem 2.2
+        assert D[-1, -1] > 0, "k = {}: ".format(iteration)  # Assumption of Theorem 2.2
 
-        if k > maxcor:
+        if iteration > maxcor:
             YTY = np.roll(YTY, (-1, -1), axis=(0, 1))
             YTY[-1, :-1] = YTY[:-1, -1] = (YTgrad[:-1] - YTgrad_prev[1:]).flat
             YTY[-1, -1] = grad2prev - grad2 + 2 * YTgrad[-1]
@@ -413,8 +417,8 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 })
             iterates.append(iterate)
 
-        printdb("k = {}".format(k))
-        k = k + 1
+        printdb("k = {}".format(iteration))
+        iteration = iteration + 1
 
         STgrad_prev = STgrad.copy()
         YTgrad_prev = YTgrad.copy()
