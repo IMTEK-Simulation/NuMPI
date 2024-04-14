@@ -214,11 +214,12 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
 
     if disp:
         iteration_title = "iteration"
-        phi_title = "objective f"
-        max_grad_title = "max |∇ f|"
+        phi_title = "f"
         phi_change_title = "Δf"
-        print(f"{iteration_title:<10} {phi_title:<10} {max_grad_title:<10} {phi_change_title:<10}")
-        print(f"---------- ---------- ---------- ----------")
+        max_grad_title = "max ∇ f"
+        abs_grad_title = "|∇ f|"
+        print(f"{iteration_title:<10} {phi_title:<10} {phi_change_title:<10} {max_grad_title:<10} {abs_grad_title:<10}")
+        print(f"---------- ---------- ---------- ---------- ----------")
 
     # Start loop
     # printdb(k)
@@ -258,10 +259,11 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         callback(x)
 
         max_grad = pnp.max(np.abs(grad))
+        abs_grad = np.linalg.norm(grad)
         phi_change = phi_old - phi
 
         if disp:
-            print(f"{iteration:<10} {phi:<10.7g} {max_grad:<10.7g} {phi_change:<10.7g}")
+            print(f"{iteration:<10} {phi:<10.7g} {phi_change:<10.7g} {max_grad:<10.7g} {abs_grad:<10.7g}")
 
         if (max_grad < gtol):
             print("CONVERGED because gradient tolerance was reached")
