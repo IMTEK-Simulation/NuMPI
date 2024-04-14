@@ -1,8 +1,8 @@
 Change log for NuMPI
 ===================
 
-v0.5.0 (not yet released)
--------------------------
+v0.5.0 (14Apr24)
+----------------
 
 - ENH: Added support for passing optional arguments to objective functions
   of optimizers
