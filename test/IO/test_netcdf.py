@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 
-# This was migrated from muSpectre byy Antoine Sanner. Lars Pastewka is author
+# This was migrated from muSpectre by Antoine Sanner. Lars Pastewka is author.
 
 import numpy as np
 import pytest
