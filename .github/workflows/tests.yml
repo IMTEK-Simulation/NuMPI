@@ -19,7 +19,10 @@ jobs:
         mpi: ['yes', 'no']
         scipy: ['yes', 'no']
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        numpy-version: ['1.26.4', '2.0.1']
+        numpy-version: [
+          '1.24.4',  # Latest numpy with Python 3.8 support
+          '2.0.1'
+        ]
         mpi4py-version: ['3.1.5']
 
     steps:
