@@ -71,7 +71,7 @@ def constrained_conjugate_gradients(fun, hessp, x0, args=(), mean_val=None, gtol
     if bounds is None:
         bounds = np.zeros_like(x)
 
-    mask_bounds = bounds > - np.infty
+    mask_bounds = bounds > - np.inf
     nb_bounds = comm.sum(np.count_nonzero(mask_bounds))
     mean_bounds = comm.sum(bounds) / nb_bounds
 
