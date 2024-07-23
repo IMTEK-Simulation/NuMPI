@@ -19,8 +19,8 @@ jobs:
         mpi: ['yes', 'no']
         scipy: ['yes', 'no']
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        mpi4py-version: [3.1.5]
-        netcdf4-python-version: [1.6.2]
+        numpy-version: ['1.26.4', '2.0.1']
+        mpi4py-version: ['3.1.5']
 
     steps:
     - uses: actions/checkout@v4
@@ -45,17 +45,11 @@ jobs:
         if [ "${{ matrix.mpi }}" == "yes" ]; then
           # We now need to recompile some modules to link with native MPI
           sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
-          # Install mpi4py first (because netCDF4 depends on it)
-          export NETCDF4_DIR=/usr/lib/x86_64-linux-gnu/netcdf/pnetcdf
           export CC=mpicc
-          python3 -m pip install -v --no-binary mpi4py mpi4py==${{ matrix.mpi4py-version }}
-          python3 -m pip install -v cython
-          python3 -m pip install -v --no-build-isolation --no-binary netCDF4 netCDF4==${{ matrix.netcdf4-python-version }}
+          python3 -m pip install -v --no-binary mpi4py mpi4py==${{ matrix.mpi4py-version }} numpy==${{ matrix.numpy-version }}
           python3 -m pip install -v .[test,mpi]
         else
-          sudo apt-get install libhdf5-dev libnetcdf-dev
-          # Install NuMPI, but avoid upgrade of NetCDF4 which would then be installed without parallel support
-          python3 -m pip install -v .[test]
+          python3 -m pip install -v numpy==${{ matrix.numpy-version }} .[test]
         fi
 
     - name: Test with pytest
