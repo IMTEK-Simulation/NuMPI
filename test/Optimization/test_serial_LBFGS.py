@@ -36,6 +36,12 @@ try:
 except ModuleNotFoundError:
     _scipy_present = False
 
+if _scipy_present:
+    try:
+        from scipy.optimize._linesearch import scalar_search_wolfe2
+    except ModuleNotFoundError:
+        from scipy.optimize.linesearch import scalar_search_wolfe2
+
 from NuMPI import MPI
 from NuMPI.Optimization import l_bfgs
 from NuMPI.Optimization.Wolfe import (
@@ -207,7 +213,7 @@ def test_quadratic_nD():
     grad_old = ex_jac(x_old)
 
     # line search
-    alpha, phi, phi0, derphi = scipy.optimize.linesearch.scalar_search_wolfe2(
+    alpha, phi, phi0, derphi = scalar_search_wolfe2(
         lambda alpha: ex_fun(x_old - grad_old * alpha),
         lambda alpha: np.dot(ex_jac(x_old - grad_old * alpha).T, -grad_old))
     assert derphi is not None
