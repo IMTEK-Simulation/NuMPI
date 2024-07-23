@@ -16,50 +16,57 @@ jobs:
 
     strategy:
       matrix:
-        mpi: ['yes', 'no']
-        scipy: ['yes', 'no']
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-        numpy-version: [
-          '1.24.4',  # Latest numpy with Python 3.8 support
-          '2.0.1'
-        ]
-        mpi4py-version: ['3.1.5']
+        mpi: [ 'yes', 'no' ]
+        scipy: [ 'yes', 'no' ]
+        python-numpy-version:
+          [ [ '3.8', '1.26.4' ],
+            [ '3.9', '1.26.4' ],
+            [ '3.9', '2.0.1' ],
+            [ '3.10', '1.26.4' ],
+            [ '3.10', '2.0.1' ],
+            [ '3.11', '1.26.4' ],
+            [ '3.11', '2.0.1' ],
+            [ '3.12', '1.26.4' ],
+            [ '3.12', '2.0.1' ],
+            [ '3.13', '1.26.4' ],
+            [ '3.13', '2.0.1' ] ]
+        mpi4py-version: [ '3.1.5' ]
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        submodules: recursive
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
-    - name: Set up python3 ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up python3 ${{ matrix.python-numpy-version[0] }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-numpy-version[0] }}
 
-    - name: Install dependencies and extension module
-      run: |
-        set -x
-        sudo apt-get update -qy
-        sudo apt-get install -y python3-dev python3-venv libfftw3-dev libopenblas-dev
-        python3 -m venv venv
-        source venv/bin/activate
-        python3 -m pip install --upgrade pip
-        python3 -m pip install flit numpy pip-tools setuptools wheel
-        if [ "${{ matrix.mpi }}" == "yes" ]; then
-          # We now need to recompile some modules to link with native MPI
-          sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
-          export CC=mpicc
-          python3 -m pip install -v --no-binary mpi4py mpi4py==${{ matrix.mpi4py-version }} numpy==${{ matrix.numpy-version }}
-          python3 -m pip install -v .[test,mpi]
-        else
-          python3 -m pip install -v numpy==${{ matrix.numpy-version }} .[test]
-        fi
+      - name: Install dependencies and extension module
+        run: |
+          set -x
+          sudo apt-get update -qy
+          sudo apt-get install -y python3-dev python3-venv libfftw3-dev libopenblas-dev
+          python3 -m venv venv
+          source venv/bin/activate
+          python3 -m pip install --upgrade pip
+          python3 -m pip install flit numpy pip-tools setuptools wheel
+          if [ "${{ matrix.mpi }}" == "yes" ]; then
+            # We now need to recompile some modules to link with native MPI
+            sudo apt-get install openmpi-bin libopenmpi-dev libfftw3-mpi-dev libhdf5-mpi-dev libpnetcdf-dev libnetcdf-pnetcdf-dev
+            export CC=mpicc
+            python3 -m pip install -v --no-binary mpi4py mpi4py==${{ matrix.mpi4py-version }} numpy==${{ matrix.python-numpy-version[1] }}
+            python3 -m pip install -v .[test,mpi]
+          else
+            python3 -m pip install -v numpy==${{ matrix.python-numpy-version[1] }} .[test]
+          fi
 
-    - name: Test with pytest
-      run: |
-        source venv/bin/activate
-        if [ "${{ matrix.mpi }}" == "yes" ]; then
-          python3 run-tests.py --no-build --verbose --full-trace
-        else
-          python3 -m pytest --verbose --full-trace -s
-        fi
+      - name: Test with pytest
+        run: |
+          source venv/bin/activate
+          if [ "${{ matrix.mpi }}" == "yes" ]; then
+            python3 run-tests.py --no-build --verbose --full-trace
+          else
+            python3 -m pytest --verbose --full-trace -s
+          fi
