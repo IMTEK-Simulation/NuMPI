@@ -29,13 +29,13 @@ MPI-parallel writing of matrices in numpy's 'npy' format.
 """
 
 from .. import MPI
+
 import numpy as np
 import struct
 import abc
+from ast import literal_eval
 
-from numpy.compat import asstr
 from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
-from numpy.lib.utils import safe_eval
 
 
 def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None,
@@ -243,8 +243,8 @@ class MPIFileViewNPY(MPIFileView):
             header_length = struct.unpack(hlength_type, hlength_str)[0]
             header = mpi_read_bytes(self.file, header_length)
 
-            header = _filter_header(asstr(header))
-            d = safe_eval(
+            header = _filter_header(header.decode('latin1'))
+            d = literal_eval(
                 header)  # TODO: Copy from _read_array_header  with all the
             # assertions
             self.dtype = np.dtype(d['descr'])
