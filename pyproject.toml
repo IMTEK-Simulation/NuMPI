@@ -19,8 +19,7 @@ requires-python = ">=3.8.0"
 dynamic = ["version"]
 dependencies = [
     "DiscoverVersion",
-    "scipy>1.1.0",
-    "netCDF4>=1.5.3,!=1.6.1,!=1.6.3,!=1.6.4"  # Those versions seem to work
+    "scipy>1.1.0"
 ]
 
 [project.optional-dependencies]
