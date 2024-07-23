@@ -1,6 +1,12 @@
 Change log for NuMPI
 ===================
 
+v0.6.0 (23Jul24)
+----------------
+
+- MAINT: Removed `NCStructurdGrid` and dependency on NetCDF4 which caused many
+  problems downstream
+
 v0.5.0 (14Apr24)
 ----------------
 
