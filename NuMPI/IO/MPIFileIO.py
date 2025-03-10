@@ -277,38 +277,34 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         # the data is loaded in C_contiguous array but in a transposed manner
         # data.transpose() is called which swaps the shapes back again and
         # toggles C-order to F-order
-        ix = 1
-        iy = 0
+        axes = tuple(range(nb_dims - 1, -1, -1))
     else:
-        ix = 0
-        iy = 1
+        axes = tuple(range(nb_dims))
 
     mpitype = MPI._typedict[data.dtype.char]
     filetype = mpitype.Create_vector(
-        nb_subdomain_grid_pts[ix],
-        # number of blocks  : length of data in
-        # the non-contiguous direction
-        nb_subdomain_grid_pts[iy],
-        # length of block : length of data in
-        # contiguous direction
-        nb_grid_pts[iy],
-        # stepsize: the data is contiguous in y
-        # direction,
-        # two matrix elements with same x
-        # position are separated by ny in memory
+        # number of blocks: length of data in the non-contiguous direction
+        nb_subdomain_grid_pts[axes[0]],
+        # length of block: length of data in contiguous direction
+        nb_subdomain_grid_pts[axes[-1]],
+        # stride: the data is contiguous in z direction,
+        # two matrix elements with same x position are separated by ny*nz in memory
+        nb_grid_pts[axes[-1]],
     )  # create a type
     # see MPI_TYPE_VECTOR
 
+    offset = subdomain_locations[axes[0]]
+    for axis in axes[1:]:
+        offset = offset * nb_grid_pts[axis] + subdomain_locations[axis]
+
     filetype.Commit()  # verification if type is OK
     file.Set_view(
-        header_len
-        + (subdomain_locations[ix] * nb_grid_pts[iy] + subdomain_locations[iy])
-        * mpitype.Get_size(),
+        header_len + offset * mpitype.Get_size(),
         filetype=filetype,
     )
     if data.flags.f_contiguous:
         data = data.transpose()
-    file.Write_all(data.copy())  # TODO: is the copy needed ?
+    file.Write_all(data)
     filetype.Free()
 
     file.Close()
