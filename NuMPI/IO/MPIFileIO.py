@@ -38,125 +38,12 @@ from ast import literal_eval
 from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
 
 
-def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None,
-             comm=MPI.COMM_WORLD):
-    """
-
-    Parameters
-    ----------
-    data : numpy array : data owned by the processor
-    location : index of the first element of data within the global data
-    nb_grid_pts : nb_grid_pts of the global data
-    comm : MPI communicator
-
-    Returns
-    -------
-
-    """
-    data = np.asarray(data)
-    ndims = len(data.shape)
-
-    if ndims == 1:
-        data = data.reshape((-1, 1))
-
-    if subdomain_locations is None:
-        subdomain_locations = (0, 0)
-    elif ndims == 1:
-        subdomain_locations = (subdomain_locations, 0)
-    nb_subdomain_grid_pts = data.shape
-
-    if nb_grid_pts is None:
-        nb_grid_pts = nb_subdomain_grid_pts
-    elif ndims == 1:
-        nb_grid_pts = (nb_grid_pts, 1)
-
-    fortran_order = np.isfortran(data)
-
-    from numpy.lib.format import dtype_to_descr, magic
-    magic_str = magic(1, 0)
-
-    arr_dict_str = str({
-        'descr': dtype_to_descr(data.dtype),
-        'fortran_order': fortran_order,
-        'shape': (
-            nb_grid_pts[0],) if ndims == 1 else nb_grid_pts
-    })
-
-    while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
-        arr_dict_str += ' '
-    arr_dict_str += '\n'
-    header_len = len(arr_dict_str) + len(magic_str) + 2
-
-    file = MPI.File.Open(comm, fn, MPI.MODE_CREATE | MPI.MODE_WRONLY)
-    if comm.Get_rank() == 0:
-        file.Write(magic_str)
-        file.Write(np.int16(len(arr_dict_str)))
-        file.Write(arr_dict_str.encode('latin-1'))
-
-    if fortran_order:
-        # the returned array will be in fortran_order.
-        # the data is loaded in C_contiguous array but in a transposed manner
-        # data.transpose() is called which swaps the shapes back again and
-        # toggles C-order to F-order
-        ix = 1
-        iy = 0
-    else:
-        ix = 0
-        iy = 1
-
-    mpitype = MPI._typedict[data.dtype.char]
-    filetype = mpitype.Create_vector(nb_subdomain_grid_pts[ix],
-                                     # number of blocks  : length of data in
-                                     # the non-contiguous direction
-                                     nb_subdomain_grid_pts[iy],
-                                     # length of block : length of data in
-                                     # contiguous direction
-                                     nb_grid_pts[iy]
-                                     # stepsize: the data is contiguous in y
-                                     # direction,
-                                     # two matrix elements with same x
-                                     # position are separated by ny in memory
-                                     )  # create a type
-    # see MPI_TYPE_VECTOR
-
-    filetype.Commit()  # verification if type is OK
-    file.Set_view(
-        header_len + (subdomain_locations[ix] * nb_grid_pts[iy]
-                      + subdomain_locations[iy]) * mpitype.Get_size(),
-        filetype=filetype)
-    if fortran_order:
-        data = data.transpose()
-    file.Write_all(data.copy())  # TODO: is the copy needed ?
-    filetype.Free()
-
-    file.Close()
-
-
 class MPIFileTypeError(Exception):
     pass
 
 
 class MPIFileIncompatibleResolutionError(Exception):
     pass
-
-
-def mpi_read_bytes(file, nbytes):
-    # allocate the buffer
-    buf = np.empty(nbytes, dtype=np.int8)
-    file.Read_all(buf)
-    return buf.tobytes()
-
-
-def load_npy(fn, subdomain_locations=None, nb_subdomain_grid_pts=None,
-             comm=MPI.COMM_WORLD):
-    file = MPIFileViewNPY(fn, comm)
-    # if file.nb_grid_pts != nb_domain_grid_pts:
-    #    raise MPIFileIncompatibleResolutionError(
-    #        "nb_domain_grid_pts is {} but file nb_grid_pts is {}".format(
-    #        nb_domain_grid_pts, file.nb_grid_pts))
-    data = file.read(subdomain_locations, nb_subdomain_grid_pts)
-    file.close()
-    return data
 
 
 class MPIFileView(metaclass=abc.ABCMeta):
@@ -173,31 +60,6 @@ class MPIFileView(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def read(self):
         pass
-
-
-def make_mpi_file_view(fn, comm,
-                       format=None):  # TODO: DISCUSS: oder als __init__ von
-    # der MPIFileView Klasse ?
-    readers = {
-        "npy": MPIFileViewNPY
-    }
-
-    if format is not None:
-        try:
-            reader = readers[format]
-        except KeyError:
-            raise (ValueError(
-                "Given format is not recognised, you should give {}".format(
-                    readers.keys())))
-        return reader(fn, comm)
-
-    for reader in readers.values():
-        try:
-            return reader(fn, comm)
-        except MPIFileTypeError:
-            pass
-    raise MPIFileTypeError(
-        "No MPI filereader was able to open_topography the file {}".format(fn))
 
 
 class MPIFileViewNPY(MPIFileView):
@@ -313,3 +175,146 @@ class MPIFileViewNPY(MPIFileView):
 
     def close(self):
         self.file.Close()
+
+
+def make_mpi_file_view(fn, comm,
+                       format=None):  # TODO: DISCUSS: oder als __init__ von
+    # der MPIFileView Klasse ?
+    readers = {
+        "npy": MPIFileViewNPY
+    }
+
+    if format is not None:
+        try:
+            reader = readers[format]
+        except KeyError:
+            raise (ValueError(
+                "Given format is not recognised, you should give {}".format(
+                    readers.keys())))
+        return reader(fn, comm)
+
+    for reader in readers.values():
+        try:
+            return reader(fn, comm)
+        except MPIFileTypeError:
+            pass
+    raise MPIFileTypeError(
+        "No MPI filereader was able to open_topography the file {}".format(fn))
+
+
+def mpi_read_bytes(file, nbytes):
+    # allocate the buffer
+    buf = np.empty(nbytes, dtype=np.int8)
+    file.Read_all(buf)
+    return buf.tobytes()
+
+
+def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None,
+             comm=MPI.COMM_WORLD):
+    """
+
+    Parameters
+    ----------
+    data : numpy array : data owned by the processor
+    location : index of the first element of data within the global data
+    nb_grid_pts : nb_grid_pts of the global data
+    comm : MPI communicator
+
+    Returns
+    -------
+
+    """
+    data = np.asarray(data)
+
+    if not data.flags.f_contiguous and not data.flags.c_contiguous:
+        raise ValueError("Data must be contiguous")
+
+    nb_dims = len(data.shape)
+
+    if nb_dims == 1:
+        data = data.reshape((-1, 1))
+
+    if subdomain_locations is None:
+        if nb_dims == 1:
+            subdomain_locations = (0, 0)
+        else:
+            subdomain_locations = (0,) * nb_dims
+    elif nb_dims == 1:
+        subdomain_locations = (subdomain_locations, 0)
+    nb_subdomain_grid_pts = data.shape
+
+    if nb_grid_pts is None:
+        nb_grid_pts = nb_subdomain_grid_pts
+    elif nb_dims == 1:
+        nb_grid_pts = (nb_grid_pts, 1)
+
+    from numpy.lib.format import dtype_to_descr, magic
+    magic_str = magic(1, 0)
+
+    arr_dict_str = str({
+        'descr': dtype_to_descr(data.dtype),
+        'fortran_order': data.flags.f_contiguous,
+        'shape': (
+            nb_grid_pts[0],) if nb_dims == 1 else nb_grid_pts
+    })
+
+    while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
+        arr_dict_str += ' '
+    arr_dict_str += '\n'
+    header_len = len(arr_dict_str) + len(magic_str) + 2
+
+    file = MPI.File.Open(comm, fn, MPI.MODE_CREATE | MPI.MODE_WRONLY)
+    if comm.Get_rank() == 0:
+        file.Write(magic_str)
+        file.Write(np.int16(len(arr_dict_str)))
+        file.Write(arr_dict_str.encode('latin-1'))
+
+    if data.flags.f_contiguous:
+        # the returned array will be in fortran_order.
+        # the data is loaded in C_contiguous array but in a transposed manner
+        # data.transpose() is called which swaps the shapes back again and
+        # toggles C-order to F-order
+        ix = 1
+        iy = 0
+    else:
+        ix = 0
+        iy = 1
+
+    mpitype = MPI._typedict[data.dtype.char]
+    filetype = mpitype.Create_vector(nb_subdomain_grid_pts[ix],
+                                     # number of blocks  : length of data in
+                                     # the non-contiguous direction
+                                     nb_subdomain_grid_pts[iy],
+                                     # length of block : length of data in
+                                     # contiguous direction
+                                     nb_grid_pts[iy]
+                                     # stepsize: the data is contiguous in y
+                                     # direction,
+                                     # two matrix elements with same x
+                                     # position are separated by ny in memory
+                                     )  # create a type
+    # see MPI_TYPE_VECTOR
+
+    filetype.Commit()  # verification if type is OK
+    file.Set_view(
+        header_len + (subdomain_locations[ix] * nb_grid_pts[iy]
+                      + subdomain_locations[iy]) * mpitype.Get_size(),
+        filetype=filetype)
+    if data.flags.f_contiguous:
+        data = data.transpose()
+    file.Write_all(data.copy())  # TODO: is the copy needed ?
+    filetype.Free()
+
+    file.Close()
+
+
+def load_npy(fn, subdomain_locations=None, nb_subdomain_grid_pts=None,
+             comm=MPI.COMM_WORLD):
+    file = MPIFileViewNPY(fn, comm)
+    # if file.nb_grid_pts != nb_domain_grid_pts:
+    #    raise MPIFileIncompatibleResolutionError(
+    #        "nb_domain_grid_pts is {} but file nb_grid_pts is {}".format(
+    #        nb_domain_grid_pts, file.nb_grid_pts))
+    data = file.read(subdomain_locations, nb_subdomain_grid_pts)
+    file.close()
+    return data
