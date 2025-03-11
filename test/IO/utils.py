@@ -65,7 +65,7 @@ def subdivide(comm, globaldata):
     )
 
     return DistributedData(
-        globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations
+        globaldata[subdomain_slices].copy(), nb_domain_grid_pts, subdomain_locations
     )
 
 
