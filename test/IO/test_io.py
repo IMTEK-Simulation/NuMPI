@@ -62,8 +62,8 @@ def test_filesave_1D(comm):
 
     save_npy("test_Filesave_1D.npy",
              localdata,
-             subdomain_locations,
-             nb_domain_grid_pts,
+             (subdomain_locations,),
+             (nb_domain_grid_pts,),
              comm)
     comm.barrier()  # The MPI_File reading and closing doesn't have to
     # finish together
@@ -82,7 +82,7 @@ def test_filesave_1D_list():
     np.random.seed(2)
     globaldata = np.random.random(nb_domain_grid_pts).tolist()
 
-    save_npy("test_Filesave_1D_list.npy", globaldata)
+    save_npy("test_Filesave_1D_list.npy", globaldata, nb_grid_pts=(nb_domain_grid_pts,))
 
     loaded_data = np.load("test_Filesave_1D_list.npy")
     np.testing.assert_array_equal(loaded_data, globaldata)
@@ -292,7 +292,7 @@ def test_same_numpy_load_transposed(comm_self, npyfile):
 
 def test_load_same_numpy_save(comm_self, npyfile):
     data = np.random.random(size=(2, 3))
-    save_npy(npyfile, data, comm=comm_self)
+    save_npy(npyfile, data, nb_grid_pts=data.shape, comm=comm_self)
     loaded_data = np.load(npyfile)
     np.testing.assert_allclose(loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)
@@ -300,7 +300,7 @@ def test_load_same_numpy_save(comm_self, npyfile):
 
 def test_same_numpy_save_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
-    save_npy(npyfile, data, comm=comm_self)
+    save_npy(npyfile, data, nb_grid_pts=data.shape, comm=comm_self)
     loaded_data = np.load(npyfile)
     np.testing.assert_allclose(loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)

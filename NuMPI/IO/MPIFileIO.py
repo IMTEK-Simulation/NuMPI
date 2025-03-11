@@ -25,8 +25,9 @@
 
 
 """
-MPI-parallel writing of matrices in numpy's 'npy' format.
+MPI-parallel writing of arrays in numpy's 'npy' format.
 """
+
 from itertools import product
 
 from .. import MPI
@@ -232,23 +233,17 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         raise ValueError("Data must be contiguous")
 
     nb_dims = len(data.shape)
-
-    if nb_dims == 1:
-        data = data.reshape((-1, 1))
+    assert (
+        len(nb_grid_pts) == nb_dims
+    ), "`nb_grid_pts` must have the same number of dimensions as the data`"
 
     if subdomain_locations is None:
-        if nb_dims == 1:
-            subdomain_locations = (0, 0)
-        else:
-            subdomain_locations = (0,) * nb_dims
-    elif nb_dims == 1:
-        subdomain_locations = (subdomain_locations, 0)
+        subdomain_locations = (0,) * nb_dims
+    else:
+        assert (
+            len(subdomain_locations) == nb_dims
+        ), "`subdomain_locations` must have the same number of dimensions as the data`"
     nb_subdomain_grid_pts = data.shape
-
-    if nb_grid_pts is None:
-        nb_grid_pts = nb_subdomain_grid_pts
-    elif nb_dims == 1:
-        nb_grid_pts = (nb_grid_pts, 1)
 
     from numpy.lib.format import dtype_to_descr, magic
 
@@ -258,7 +253,7 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         {
             "descr": dtype_to_descr(data.dtype),
             "fortran_order": data.flags.f_contiguous,
-            "shape": (nb_grid_pts[0],) if nb_dims == 1 else nb_grid_pts,
+            "shape": tuple(nb_grid_pts),
         }
     )
 
@@ -286,7 +281,7 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     # see MPI_TYPE_VECTOR
     filetype = mpitype.Create_vector(
         # number of blocks: length of data in the non-contiguous direction
-        nb_subdomain_grid_pts[axes[1]],
+        nb_subdomain_grid_pts[axes[-2]] if nb_dims > 1 else 1,
         # length of block: length of data in contiguous direction
         nb_subdomain_grid_pts[axes[-1]],
         # stride: the data is contiguous in z direction,
@@ -295,9 +290,13 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     )  # create a type
     filetype.Commit()  # verification if type is OK
 
-    for coord in product(*(range(subdomain_locations[axis]) for axis in axes[:-2])):
-        offset = subdomain_locations[axes[0]]
-        for axis in axes[1:]:
+    for subdomain_coords in product(
+        *(range(nb_subdomain_grid_pts[axis]) for axis in axes[:-2])
+    ):
+        offset = 0
+        for axis, coord in zip(axes[:-2], subdomain_coords):
+            offset = offset * nb_grid_pts[axis] + subdomain_locations[axis] + coord
+        for axis in axes[-2:]:
             offset = offset * nb_grid_pts[axis] + subdomain_locations[axis]
 
         file.Set_view(
