@@ -1,6 +1,11 @@
 Change log for NuMPI
 ===================
 
+v0.7.0 (not yet released)
+-------------------------
+
+- ENH: Writing and reading decomposed arrays of arbitrary dimension to NPY
+
 v0.6.1 (23Jul24)
 ----------------
 
