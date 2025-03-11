@@ -34,8 +34,8 @@ import pytest
 
 import NuMPI
 from NuMPI import MPI
-from NuMPI.IO.MPIFileIO import (MPIFileTypeError, MPIFileViewNPY, load_npy,
-                                make_mpi_file_view, save_npy)
+from NuMPI.IO.NPY import (MPIFileTypeError, MPIFileViewNPY, load_npy,
+                          make_mpi_file_view, save_npy)
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 

@@ -24,7 +24,6 @@
 #
 
 
-from .MPIFileIO import (  # noqa: F401
-    save_npy, load_npy, make_mpi_file_view,
-    MPIFileIncompatibleResolutionError, MPIFileTypeError
-)
+from .NPY import MPIFileIncompatibleResolutionError  # noqa: F401
+from .NPY import (MPIFileTypeError, load_npy, make_mpi_file_view,  # noqa: F401
+                  save_npy)

@@ -28,7 +28,6 @@
 MPI-parallel writing of arrays in numpy's 'npy' format.
 """
 
-import abc
 import struct
 from ast import literal_eval
 from itertools import product
@@ -37,30 +36,7 @@ import numpy as np
 from numpy.lib.format import MAGIC_PREFIX, _filter_header, magic
 
 from .. import MPI
-
-
-class MPIFileTypeError(Exception):
-    pass
-
-
-class MPIFileIncompatibleResolutionError(Exception):
-    pass
-
-
-class MPIFileView(metaclass=abc.ABCMeta):
-    def __init__(self, fn, comm):
-        self.fn = fn
-        self.comm = comm
-        # if hasattr read, it is a stream and it should not close the file
-        self.close_file_on_error = not hasattr(fn, "read")
-
-    @abc.abstractmethod
-    def _read_header(self):
-        pass
-
-    @abc.abstractmethod
-    def read(self):
-        pass
+from .common import MPIFileTypeError, MPIFileView
 
 
 class MPIFileViewNPY(MPIFileView):
