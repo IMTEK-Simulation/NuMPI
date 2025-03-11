@@ -104,7 +104,7 @@ def make_2d_slab_x(comm, globaldata):
         # nb_subdomain_grid_pts = [step, nb_domain_grid_pts[1]]
 
     return DistributedData(
-        globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations
+        globaldata[subdomain_slices].copy(), nb_domain_grid_pts, subdomain_locations
     )
 
 
@@ -126,5 +126,5 @@ def make_2d_slab_y(comm, globaldata):
         # nb_subdomain_grid_pts = [nb_domain_grid_pts[1], step]
 
     return DistributedData(
-        globaldata[subdomain_slices], nb_domain_grid_pts, subdomain_locations
+        globaldata[subdomain_slices].copy(), nb_domain_grid_pts, subdomain_locations
     )
