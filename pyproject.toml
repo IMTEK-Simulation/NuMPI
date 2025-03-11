@@ -31,7 +31,8 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-flake8",
-    "runtests"
+    "runtests",
+    "primefac"
 ]
 
 [project.urls]
