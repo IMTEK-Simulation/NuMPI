@@ -25,29 +25,17 @@
 #
 
 
-import numpy as np
 import os
 import warnings
+from test.IO.utils import make_2d_slab_x, make_2d_slab_y, subdivide
 
-from NuMPI.IO.MPIFileIO import (
-    save_npy,
-    load_npy,
-    MPIFileViewNPY,
-    MPIFileTypeError,
-    make_mpi_file_view,
-)
-from NuMPI import MPI
-import NuMPI
+import numpy as np
 import pytest
 
-from .fixtures import (
-    make_2d_slab_x,
-    make_2d_slab_y,
-    subdivide,
-    globaldata,
-    globaldata3d,
-    npyfile,
-)
+import NuMPI
+from NuMPI import MPI
+from NuMPI.IO.MPIFileIO import (MPIFileTypeError, MPIFileViewNPY, load_npy,
+                                make_mpi_file_view, save_npy)
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 
@@ -65,11 +53,9 @@ def test_filesave_1D(comm):
     if rank == nprocs - 1:
         subdomain_slices = slice(rank * step, None)
         subdomain_locations = rank * step
-        # nb_subdomain_grid_pts = nb_domain_grid_pts - rank * step
     else:
         subdomain_slices = slice(rank * step, (rank + 1) * step)
         subdomain_locations = rank * step
-        # nb_subdomain_grid_pts = step
 
     localdata = globaldata[subdomain_slices]
 
@@ -105,8 +91,8 @@ def test_filesave_1D_list():
 
 
 @pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
-def test_filesave_2d(decompfun, comm, globaldata):
-    distdata = decompfun(comm, globaldata)
+def test_filesave_2d(decompfun, comm, globaldata2d):
+    distdata = decompfun(comm, globaldata2d)
 
     save_npy(
         "test_filesave_2d.npy",
@@ -118,15 +104,15 @@ def test_filesave_2d(decompfun, comm, globaldata):
     comm.barrier()
     if comm.Get_rank() == 0:
         loaded_data = np.load("test_filesave_2d.npy")
-        np.testing.assert_array_equal(loaded_data, globaldata)
+        np.testing.assert_array_equal(loaded_data, globaldata2d)
 
         os.remove("test_filesave_2d.npy")
     comm.barrier()
 
 
 @pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
-def test_fileview_2d(decompfun, comm, globaldata):
-    distdata = decompfun(comm, globaldata)
+def test_fileview_2d(decompfun, comm, globaldata2d):
+    distdata = decompfun(comm, globaldata2d)
 
     # arr = np.load("test_fileload_2d.npy")
     # assert arr.shape == self.nb_domain_grid_pts
@@ -134,7 +120,7 @@ def test_fileview_2d(decompfun, comm, globaldata):
     file = MPIFileViewNPY("test_fileload_2d.npy", comm=comm)
 
     assert file.nb_grid_pts == distdata.nb_domain_grid_pts
-    assert file.dtype == globaldata.dtype
+    assert file.dtype == globaldata2d.dtype
 
     loaded_data = file.read(
         nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
@@ -145,8 +131,8 @@ def test_fileview_2d(decompfun, comm, globaldata):
 
 
 @pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
-def test_fileload_2d(decompfun, comm, globaldata):
-    distdata = decompfun(comm, globaldata)
+def test_fileload_2d(decompfun, comm, globaldata2d):
+    distdata = decompfun(comm, globaldata2d)
 
     loaded_data = load_npy(
         "test_fileload_2d.npy",
