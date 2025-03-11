@@ -27,6 +27,7 @@
 """
 MPI-parallel writing of matrices in numpy's 'npy' format.
 """
+from itertools import product
 
 from .. import MPI
 
@@ -282,29 +283,31 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         axes = tuple(range(nb_dims))
 
     mpitype = MPI._typedict[data.dtype.char]
+    # see MPI_TYPE_VECTOR
     filetype = mpitype.Create_vector(
         # number of blocks: length of data in the non-contiguous direction
-        nb_subdomain_grid_pts[axes[0]],
+        nb_subdomain_grid_pts[axes[1]],
         # length of block: length of data in contiguous direction
         nb_subdomain_grid_pts[axes[-1]],
         # stride: the data is contiguous in z direction,
         # two matrix elements with same x position are separated by ny*nz in memory
         nb_grid_pts[axes[-1]],
     )  # create a type
-    # see MPI_TYPE_VECTOR
-
-    offset = subdomain_locations[axes[0]]
-    for axis in axes[1:]:
-        offset = offset * nb_grid_pts[axis] + subdomain_locations[axis]
-
     filetype.Commit()  # verification if type is OK
-    file.Set_view(
-        header_len + offset * mpitype.Get_size(),
-        filetype=filetype,
-    )
-    if data.flags.f_contiguous:
-        data = data.transpose()
-    file.Write_all(data)
+
+    for coord in product(*(range(subdomain_locations[axis]) for axis in axes[:-2])):
+        offset = subdomain_locations[axes[0]]
+        for axis in axes[1:]:
+            offset = offset * nb_grid_pts[axis] + subdomain_locations[axis]
+
+        file.Set_view(
+            header_len + offset * mpitype.Get_size(),
+            filetype=filetype,
+        )
+        if data.flags.f_contiguous:
+            data = data.transpose()
+        file.Write_all(data)
+
     filetype.Free()
 
     file.Close()
