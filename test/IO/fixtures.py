@@ -29,17 +29,17 @@ def globaldata2d(request, comm):
     nb_domain_grid_pts = (128, 128)
     np.random.seed(2)
     if order == "C":
-        globaldata = np.random.random(nb_domain_grid_pts)
-        assert globaldata.flags["C_CONTIGUOUS"]
+        data = np.random.random(nb_domain_grid_pts)
+        assert data.flags["C_CONTIGUOUS"]
     elif order == "F":
-        globaldata = np.random.random(nb_domain_grid_pts[::-1]).transpose()
-        assert globaldata.flags["F_CONTIGUOUS"]
+        data = np.random.random(nb_domain_grid_pts[::-1]).transpose()
+        assert data.flags["F_CONTIGUOUS"]
     if rank == 0:
-        np.save("test_fileload_2d.npy", globaldata)
+        np.save("test_fileload_2d.npy", data)
 
     comm.barrier()
 
-    yield globaldata
+    yield data
     comm.barrier()
     if rank == 0:
         os.remove("test_fileload_2d.npy")
@@ -54,17 +54,17 @@ def globaldata3d(request, comm):
     nb_domain_grid_pts = (32, 17, 23)
     np.random.seed(2)
     if order == "C":
-        globaldata = np.random.random(nb_domain_grid_pts)
-        assert globaldata.flags["C_CONTIGUOUS"]
+        data = np.random.random(nb_domain_grid_pts)
+        assert data.flags["C_CONTIGUOUS"]
     elif order == "F":
-        globaldata = np.random.random(nb_domain_grid_pts[::-1]).transpose()
-        assert globaldata.flags["F_CONTIGUOUS"]
+        data = np.random.random(nb_domain_grid_pts[::-1]).transpose()
+        assert data.flags["F_CONTIGUOUS"]
     if rank == 0:
-        np.save("test_3d.npy", globaldata)
+        np.save("test_3d.npy", data)
 
     comm.barrier()
 
-    yield globaldata
+    yield data
     comm.barrier()
     if rank == 0:
         os.remove("test_3d.npy")
