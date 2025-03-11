@@ -19,9 +19,9 @@ jobs:
         mpi: [ 'yes', 'no' ]
         scipy: [ 'yes', 'no' ]
         python-numpy-version:
-          [ [ '3.8', '1.24.4' ],
+          [ [ '3.8', '1.24.4' ],  # last supported version for 3.9
             [ '3.9', '1.26.4' ],
-            [ '3.9', '2.2.3' ],
+            [ '3.9', '2.0.2' ],  # last supported version for 3.9
             [ '3.10', '1.26.4' ],
             [ '3.10', '2.2.3' ],
             [ '3.11', '1.26.4' ],
