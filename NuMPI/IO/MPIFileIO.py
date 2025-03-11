@@ -28,16 +28,15 @@
 MPI-parallel writing of arrays in numpy's 'npy' format.
 """
 
+import abc
+import struct
+from ast import literal_eval
 from itertools import product
 
-from .. import MPI
-
 import numpy as np
-import struct
-import abc
-from ast import literal_eval
+from numpy.lib.format import MAGIC_PREFIX, _filter_header, magic
 
-from numpy.lib.format import magic, MAGIC_PREFIX, _filter_header
+from .. import MPI
 
 
 class MPIFileTypeError(Exception):
@@ -304,9 +303,9 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
             filetype=filetype,
         )
         if data.flags.f_contiguous:
-            chunk = data.T[*subdomain_coords]
+            chunk = data.T[subdomain_coords]
         else:
-            chunk = data[*subdomain_coords]
+            chunk = data[subdomain_coords]
         file.Write_all(chunk)
 
     filetype.Free()
