@@ -290,8 +290,6 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     )  # create a type
     filetype.Commit()  # verification if type is OK
 
-    print(f"Count = {filetype._count}, blocklength = {filetype._blocklength}, stride = {filetype._stride}")
-
     for subdomain_coords in product(
         *(range(nb_subdomain_grid_pts[axis]) for axis in axes[:-2])
     ):
@@ -301,15 +299,15 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         for axis in axes[-2:]:
             offset = offset * nb_grid_pts[axis] + subdomain_locations[axis]
 
-        print(subdomain_coords, offset)
-
         file.Set_view(
             header_len + offset * mpitype.Get_size(),
             filetype=filetype,
         )
         if data.flags.f_contiguous:
-            data = data.transpose()
-        file.Write_all(data)
+            chunk = data.T[*subdomain_coords]
+        else:
+            chunk = data[*subdomain_coords]
+        file.Write_all(chunk)
 
     filetype.Free()
 

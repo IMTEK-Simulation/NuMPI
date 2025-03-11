@@ -189,9 +189,6 @@ def subdivide(comm, globaldata):
         )
     )
 
-    print(f"coord = {coord} / {subdivisions}")
-    print("nb_subdomain_grid_pts =", nb_subdomain_grid_pts)
-
     subdomain_locations = tuple(n * c for n, c in zip(nb_subdomain_grid_pts, coord))
     subdomain_slices = tuple(
         slice(s, s + n) for s, n in zip(subdomain_locations, nb_subdomain_grid_pts)

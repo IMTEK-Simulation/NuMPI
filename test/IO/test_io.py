@@ -290,7 +290,7 @@ def test_filesave_3d(comm, globaldata3d):
     comm.barrier()
     if comm.Get_rank() == 0:
         loaded_data = np.load("test3d.npy")
-        np.testing.assert_array_equal(loaded_data, globaldata)
+        np.testing.assert_array_equal(loaded_data, globaldata3d)
 
         os.remove("test3d.npy")
     comm.barrier()
