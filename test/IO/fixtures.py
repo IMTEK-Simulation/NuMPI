@@ -51,14 +51,14 @@ def globaldata3d(request, comm):
 
     rank = comm.Get_rank()
 
-    nb_domain_grid_pts = (32, 17, 23)
+    nb_domain_grid_pts = (13, 27, 9)
     np.random.seed(2)
     if order == "C":
         data = np.random.random(nb_domain_grid_pts)
-        assert data.flags["C_CONTIGUOUS"]
+        assert data.flags.c_contiguous
     elif order == "F":
         data = np.random.random(nb_domain_grid_pts[::-1]).transpose()
-        assert data.flags["F_CONTIGUOUS"]
+        assert data.flags.f_contiguous
     if rank == 0:
         np.save("test_3d.npy", data)
 
@@ -68,3 +68,27 @@ def globaldata3d(request, comm):
     comm.barrier()
     if rank == 0:
         os.remove("test_3d.npy")
+
+
+@pytest.fixture(
+    params=[
+        ("C", (13, 7)),
+        ("F", (13, 7)),
+        ("C", (13, 11, 27)),
+        ("F", (13, 11, 27)),
+        ("C", (15, 7, 9, 3)),
+        ("F", (15, 7, 9, 3)),
+    ]
+)
+def datagrid(request, comm):
+    order, nb_domain_grid_pts = request.param
+
+    np.random.seed(2)
+    if order == "C":
+        data = np.random.random(nb_domain_grid_pts)
+        assert data.flags.c_contiguous
+    elif order == "F":
+        data = np.random.random(nb_domain_grid_pts[::-1]).transpose()
+        assert data.flags.f_contiguous
+
+    return data

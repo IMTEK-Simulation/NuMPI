@@ -63,7 +63,7 @@ def test_filesave_1D(comm):
     localdata = globaldata[subdomain_slices]
 
     save_npy(
-        "test_Filesave_1D.npy",
+        "test_filesave_1D.npy",
         localdata,
         (subdomain_locations,),
         (nb_domain_grid_pts,),
@@ -71,12 +71,12 @@ def test_filesave_1D(comm):
     )
     comm.barrier()  # The MPI_File reading and closing doesn't have to
     # finish together
-    loaded_data = np.load("test_Filesave_1D.npy")
+    loaded_data = np.load("test_filesave_1D.npy")
     assert_one_array_equal(comm, 0, loaded_data, globaldata)
 
     comm.barrier()
     if rank == 0:
-        os.remove("test_Filesave_1D.npy")
+        os.remove("test_filesave_1D.npy")
 
 
 @pytest.mark.skipif(MPI.COMM_WORLD.Get_size() > 1, reason="test is only serial")
@@ -117,9 +117,6 @@ def test_filesave_2d(decompfun, comm, globaldata2d):
 def test_fileview_2d(decompfun, comm, globaldata2d):
     distdata = decompfun(comm, globaldata2d)
 
-    # arr = np.load("test_fileload_2d.npy")
-    # assert arr.shape == self.nb_domain_grid_pts
-
     file = NPYFile("test_fileload_2d.npy", comm=comm)
 
     assert file.nb_grid_pts == distdata.nb_domain_grid_pts
@@ -128,20 +125,6 @@ def test_fileview_2d(decompfun, comm, globaldata2d):
     loaded_data = file.read(
         nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
         subdomain_locations=distdata.subdomain_locations,
-    )
-
-    assert_all_array_equal(comm, loaded_data, distdata.data)
-
-
-@pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
-def test_fileload_2d(decompfun, comm, globaldata2d):
-    distdata = decompfun(comm, globaldata2d)
-
-    loaded_data = load_npy(
-        "test_fileload_2d.npy",
-        nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
-        subdomain_locations=distdata.subdomain_locations,
-        comm=comm,
     )
 
     assert_all_array_equal(comm, loaded_data, distdata.data)
@@ -264,26 +247,43 @@ def test_make_mpi_file_view(comm_self, npyfile, mode):
         np.testing.assert_allclose(read_data, data)
 
 
-def test_filesave_3d(comm, globaldata3d):
-    distdata = subdivide(comm, globaldata3d)
-    print("A:", comm.Get_rank(), comm.Get_size(), distdata.nb_subdomain_grid_pts)
+def test_parallel_save(comm, datagrid):
+    distdata = subdivide(comm, datagrid)
 
     save_npy(
-        "test3d.npy",
+        "test.npy",
         distdata.data,
         subdomain_locations=distdata.subdomain_locations,
         nb_grid_pts=distdata.nb_domain_grid_pts,
         comm=comm,
     )
-    print("B:", comm.Get_rank(), comm.Get_size(), "before barrier")
-    comm.barrier()
-    print("C:", comm.Get_rank(), comm.Get_size(), "after barrier")
 
-    loaded_data = np.load("test3d.npy")
-    assert_one_array_equal(comm, 0, loaded_data, globaldata3d)
+    loaded_data = np.load("test.npy")
+
+    assert_one_array_equal(comm, 0, loaded_data, datagrid)
 
     comm.barrier()
     if comm.rank == 0:
-        os.remove("test3d.npy")
-    print("D:", comm.Get_rank(), comm.Get_size(), "before second barrier")
-    print("E:", comm.Get_rank(), comm.Get_size(), "after second barrier")
+        os.remove("test.npy")
+
+
+def test_parallel_load(comm, datagrid):
+    distdata = subdivide(comm, datagrid)
+
+    if comm.rank == 0:
+        np.save("test.npy", datagrid)
+
+    comm.barrier()
+
+    loaded_data = load_npy(
+        "test.npy",
+        subdomain_locations=distdata.subdomain_locations,
+        nb_subdomain_grid_pts=distdata.nb_subdomain_grid_pts,
+        comm=comm,
+    )
+
+    assert_all_array_equal(comm, loaded_data, distdata.data)
+
+    comm.barrier()
+    if comm.rank == 0:
+        os.remove("test.npy")

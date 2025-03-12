@@ -58,8 +58,6 @@ def _chunked_read_write(
     else:
         axes = tuple(range(nb_dims))
 
-    print(comm.rank, axes, fortran_order, data.flags.f_contiguous)
-
     mpitype = MPI._typedict[data.dtype.char]
     # see MPI_TYPE_VECTOR
     filetype = mpitype.Create_vector(
@@ -74,15 +72,15 @@ def _chunked_read_write(
     filetype.Commit()  # verification if type is OK
 
     nb_max_subdomain_grid_pts = np.empty_like(nb_subdomain_grid_pts)
-    comm.Allreduce(np.array(nb_subdomain_grid_pts, order='C'), nb_max_subdomain_grid_pts, op=MPI.MAX)
-
-    print(comm.rank, nb_max_subdomain_grid_pts, nb_subdomain_grid_pts)
+    comm.Allreduce(
+        np.array(nb_subdomain_grid_pts, order="C"),
+        nb_max_subdomain_grid_pts,
+        op=MPI.MAX,
+    )
 
     for subdomain_coords in product(
         *(range(nb_max_subdomain_grid_pts[axis]) for axis in axes[:-2])
     ):
-        print(comm.rank, subdomain_coords, "AAAA")
-
         offset = 0
         for axis, coord in zip(axes[:-2], subdomain_coords):
             offset = offset * nb_grid_pts[axis] + subdomain_locations[axis] + coord
@@ -93,7 +91,6 @@ def _chunked_read_write(
             header_len + offset * mpitype.Get_size(),
             filetype=filetype,
         )
-        print(comm.rank, subdomain_coords, "BBBB")
         if chunk_op == "read":
             if fortran_order:
                 chunk = np.empty(
@@ -104,37 +101,27 @@ def _chunked_read_write(
                 try:
                     chunk = data[subdomain_coords]
                 except IndexError:
-                    chunk = np.empty((), dtype=data.dtype)  # Nothing will be read anyway
-            print(comm.rank, subdomain_coords, "Before read")
+                    chunk = np.empty((0,), dtype=data.dtype)  # Nothing to read
             file.Read_all(chunk)
-            print(comm.rank, subdomain_coords, "After read")
             if fortran_order:
                 try:
                     data.T[subdomain_coords] = chunk
                 except IndexError:
                     pass
         elif chunk_op == "write":
-            print(comm.rank, subdomain_coords, "CCCC")
             try:
                 if fortran_order:
                     chunk = data.T[subdomain_coords]
                 else:
                     chunk = data[subdomain_coords]
             except IndexError:
-                chunk = data  # Nothing will be written anyway
-            print(comm.rank, subdomain_coords, "Before write")
+                chunk = np.empty((0,), dtype=data.dtype)  # Nothing to write
             file.Write_all(chunk)
-            print(comm.rank, subdomain_coords, "After write")
 
         else:
             raise ValueError("Unknown chunk operation '{}'".format(chunk_op))
 
-        print(comm.rank, subdomain_coords, "DDDD")
-
-    print(comm.rank, subdomain_coords, "EEEE")
     filetype.Free()
-
-    print(comm.rank, subdomain_coords, "FFFF")
 
 
 class NPYFile(MPIFileView):
@@ -158,7 +145,7 @@ class NPYFile(MPIFileView):
         self.file = None
         try:
             magic_str = magic(1, 0)
-            self.file = MPI.File.Open(self.comm, self.fn, MPI.MODE_RDONLY)  #
+            self.file = MPI.File.Open(self.comm, self.fn, MPI.MODE_RDONLY)
             magic_str = mpi_read_bytes(self.file, len(magic_str))
             if magic_str[:-2] != MAGIC_PREFIX:
                 raise MPIFileTypeError(
@@ -211,7 +198,7 @@ class NPYFile(MPIFileView):
             subdomain_locations,
             self.fortran_order,
             data,
-            self.comm
+            self.comm,
         )
 
         return data
@@ -221,7 +208,6 @@ class NPYFile(MPIFileView):
 
 
 def mpi_open(fn, comm, format=None):
-    # der MPIFileView Klasse ?
     readers = {"npy": NPYFile}
 
     if format is not None:
@@ -270,19 +256,13 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
     """
     data = np.asarray(data)
 
-    print(comm.rank, "AAA")
-
     if not data.flags.f_contiguous and not data.flags.c_contiguous:
         raise ValueError("Data must be contiguous")
-
-    print(comm.rank, "BBB")
 
     nb_dims = len(data.shape)
     assert (
         len(nb_grid_pts) == nb_dims
     ), "`nb_grid_pts` must have the same number of dimensions as the data`"
-
-    print(comm.rank, "CCC")
 
     if subdomain_locations is None:
         subdomain_locations = (0,) * nb_dims
@@ -304,8 +284,6 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         }
     )
 
-    print(comm.rank, "DDD")
-
     while (len(arr_dict_str) + len(magic_str) + 2) % 16 != 15:
         arr_dict_str += " "
     arr_dict_str += "\n"
@@ -317,8 +295,6 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         file.Write(np.int16(len(arr_dict_str)))
         file.Write(arr_dict_str.encode("latin-1"))
 
-    print(comm.rank, "EEE")
-
     _chunked_read_write(
         file,
         "write",
@@ -328,24 +304,16 @@ def save_npy(fn, data, subdomain_locations=None, nb_grid_pts=None, comm=MPI.COMM
         subdomain_locations,
         data.flags.f_contiguous,
         data,
-        comm
+        comm,
     )
 
-    print(comm.rank, "FFF")
-
     file.Close()
-
-    print(comm.rank, "GGG")
 
 
 def load_npy(
     fn, subdomain_locations=None, nb_subdomain_grid_pts=None, comm=MPI.COMM_WORLD
 ):
     file = NPYFile(fn, comm)
-    # if file.nb_grid_pts != nb_domain_grid_pts:
-    #    raise MPIFileIncompatibleResolutionError(
-    #        "nb_domain_grid_pts is {} but file nb_grid_pts is {}".format(
-    #        nb_domain_grid_pts, file.nb_grid_pts))
     data = file.read(subdomain_locations, nb_subdomain_grid_pts)
     file.close()
     return data

@@ -52,6 +52,9 @@ def subdivide(comm, globaldata):
     subdivisions = suggest_subdivisions(len(nb_domain_grid_pts), comm.Get_size())
     coord = get_coord(comm.Get_rank(), subdivisions)
     nb_subdomain_grid_pts = np.array(globaldata.shape) // subdivisions
+
+    subdomain_locations = tuple(n * c for n, c in zip(nb_subdomain_grid_pts, coord))
+
     nb_subdomain_grid_pts = tuple(
         n if c < s - 1 else m - n * (s - 1)
         for c, s, n, m in zip(
@@ -59,7 +62,6 @@ def subdivide(comm, globaldata):
         )
     )
 
-    subdomain_locations = tuple(n * c for n, c in zip(nb_subdomain_grid_pts, coord))
     subdomain_slices = tuple(
         slice(s, s + n) for s, n in zip(subdomain_locations, nb_subdomain_grid_pts)
     )
