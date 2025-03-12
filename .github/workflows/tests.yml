@@ -65,7 +65,10 @@ jobs:
         run: |
           source venv/bin/activate
           if [ "${{ matrix.mpi }}" == "yes" ]; then
-            python3 run-tests.py --no-build --verbose --full-trace
+            for nbprocs in 1 2 4 8 10; do
+              echo "=== $nbprocs MPI processes ==="
+              mpirun --oversubscribe -n $nbprocs python3 --verbose --full-trace
+            done
           else
             python3 -m pytest --verbose --full-trace -s
           fi
