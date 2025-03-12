@@ -229,8 +229,8 @@ def test_corrupted_file(comm_self):
 @pytest.mark.skipif(
     NuMPI._has_mpi4py,
     reason="filestreams are not supported when "
-    "                                         NuMPI "
-    "is using with mpi4py",
+           "                                         NuMPI "
+           "is using with mpi4py",
 )
 def test_filestream(comm_self, npyfile):
     data = np.random.normal(size=(4, 6))
@@ -265,6 +265,7 @@ def test_make_mpi_file_view(comm_self, npyfile, mode):
 
 def test_filesave_3d(comm, globaldata3d):
     distdata = subdivide(comm, globaldata3d)
+    print(comm.Get_rank(), comm.Get_size(), distdata.nb_subdomain_grid_pts)
 
     save_npy(
         "test3d.npy",
@@ -273,10 +274,14 @@ def test_filesave_3d(comm, globaldata3d):
         distdata.nb_domain_grid_pts,
         comm,
     )
+    print(comm.Get_rank(), comm.Get_size(), "before barrier")
     comm.barrier()
+    print(comm.Get_rank(), comm.Get_size(), "after barrier")
     if comm.Get_rank() == 0:
         loaded_data = np.load("test3d.npy")
         np.testing.assert_array_equal(loaded_data, globaldata3d)
 
         os.remove("test3d.npy")
+    print(comm.Get_rank(), comm.Get_size(), "before second barrier")
     comm.barrier()
+    print(comm.Get_rank(), comm.Get_size(), "before second barrier")
