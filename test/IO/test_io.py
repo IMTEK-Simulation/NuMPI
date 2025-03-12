@@ -36,6 +36,9 @@ import NuMPI
 from NuMPI import MPI
 from NuMPI.IO.NPY import (MPIFileTypeError, NPYFile, load_npy, mpi_open,
                           save_npy)
+from NuMPI.Testing.Assertions import (assert_all_allclose,
+                                      assert_all_array_equal,
+                                      assert_one_array_equal)
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 
@@ -69,7 +72,7 @@ def test_filesave_1D(comm):
     comm.barrier()  # The MPI_File reading and closing doesn't have to
     # finish together
     loaded_data = np.load("test_Filesave_1D.npy")
-    np.testing.assert_array_equal(loaded_data, globaldata)
+    assert_one_array_equal(comm, 0, loaded_data, globaldata)
 
     comm.barrier()
     if rank == 0:
@@ -102,12 +105,12 @@ def test_filesave_2d(decompfun, comm, globaldata2d):
         comm,
     )
     comm.barrier()
-    if comm.Get_rank() == 0:
-        loaded_data = np.load("test_filesave_2d.npy")
-        np.testing.assert_array_equal(loaded_data, globaldata2d)
+    loaded_data = np.load("test_filesave_2d.npy")
+    assert_one_array_equal(comm, 0, loaded_data, globaldata2d)
 
-        os.remove("test_filesave_2d.npy")
     comm.barrier()
+    if comm.rank == 0:
+        os.remove("test_filesave_2d.npy")
 
 
 @pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
@@ -127,7 +130,7 @@ def test_fileview_2d(decompfun, comm, globaldata2d):
         subdomain_locations=distdata.subdomain_locations,
     )
 
-    np.testing.assert_array_equal(loaded_data, distdata.data)
+    assert_all_array_equal(comm, loaded_data, distdata.data)
 
 
 @pytest.mark.parametrize("decompfun", [make_2d_slab_x, make_2d_slab_y])
@@ -141,7 +144,7 @@ def test_fileload_2d(decompfun, comm, globaldata2d):
         comm=comm,
     )
 
-    np.testing.assert_array_equal(loaded_data, distdata.data)
+    assert_all_array_equal(comm, loaded_data, distdata.data)
 
 
 @pytest.mark.skip(reason="just some statements on numpy behaviour")
@@ -170,21 +173,21 @@ def test_load_same_numpy_load(comm_self, npyfile):
     data = np.random.random(size=(2, 3))
     np.save(npyfile, data)
     loaded_data = load_npy(npyfile, comm=comm_self)
-    np.testing.assert_allclose(loaded_data, data)
+    assert_all_allclose(comm_self, loaded_data, data)
 
 
 def test_same_numpy_load_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
     np.save(npyfile, data)
     loaded_data = load_npy(npyfile, comm=comm_self)
-    np.testing.assert_allclose(loaded_data, data)
+    assert_all_allclose(comm_self, loaded_data, data)
 
 
 def test_load_same_numpy_save(comm_self, npyfile):
     data = np.random.random(size=(2, 3))
     save_npy(npyfile, data, nb_grid_pts=data.shape, comm=comm_self)
     loaded_data = np.load(npyfile)
-    np.testing.assert_allclose(loaded_data, data)
+    assert_all_allclose(comm_self, loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)
 
 
@@ -192,7 +195,7 @@ def test_same_numpy_save_transposed(comm_self, npyfile):
     data = np.random.random(size=(2, 3)).T
     save_npy(npyfile, data, nb_grid_pts=data.shape, comm=comm_self)
     loaded_data = np.load(npyfile)
-    np.testing.assert_allclose(loaded_data, data)
+    assert_all_allclose(comm_self, loaded_data, data)
     assert np.isfortran(data) == np.isfortran(loaded_data)
 
 
@@ -228,9 +231,7 @@ def test_corrupted_file(comm_self):
 
 @pytest.mark.skipif(
     NuMPI._has_mpi4py,
-    reason="filestreams are not supported when "
-           "                                         NuMPI "
-           "is using with mpi4py",
+    reason="File streams are not supported when NuMPI is using with mpi4py",
 )
 def test_filestream(comm_self, npyfile):
     data = np.random.normal(size=(4, 6))
@@ -246,7 +247,7 @@ def test_filestream(comm_self, npyfile):
 
 @pytest.mark.skipif(
     NuMPI._has_mpi4py,
-    reason="filestreams are not supported when NuMPI " "is using with mpi4py",
+    reason="File streams are not supported when NuMPI is using with mpi4py",
 )
 @pytest.mark.parametrize("mode", ["r"] if NuMPI._has_mpi4py else ["r", "rb"])
 def test_make_mpi_file_view(comm_self, npyfile, mode):
@@ -265,23 +266,24 @@ def test_make_mpi_file_view(comm_self, npyfile, mode):
 
 def test_filesave_3d(comm, globaldata3d):
     distdata = subdivide(comm, globaldata3d)
-    print(comm.Get_rank(), comm.Get_size(), distdata.nb_subdomain_grid_pts)
+    print("A:", comm.Get_rank(), comm.Get_size(), distdata.nb_subdomain_grid_pts)
 
     save_npy(
         "test3d.npy",
         distdata.data,
-        distdata.subdomain_locations,
-        distdata.nb_domain_grid_pts,
-        comm,
+        subdomain_locations=distdata.subdomain_locations,
+        nb_grid_pts=distdata.nb_domain_grid_pts,
+        comm=comm,
     )
-    print(comm.Get_rank(), comm.Get_size(), "before barrier")
+    print("B:", comm.Get_rank(), comm.Get_size(), "before barrier")
     comm.barrier()
-    print(comm.Get_rank(), comm.Get_size(), "after barrier")
-    if comm.Get_rank() == 0:
-        loaded_data = np.load("test3d.npy")
-        np.testing.assert_array_equal(loaded_data, globaldata3d)
+    print("C:", comm.Get_rank(), comm.Get_size(), "after barrier")
 
-        os.remove("test3d.npy")
-    print(comm.Get_rank(), comm.Get_size(), "before second barrier")
+    loaded_data = np.load("test3d.npy")
+    assert_one_array_equal(comm, 0, loaded_data, globaldata3d)
+
     comm.barrier()
-    print(comm.Get_rank(), comm.Get_size(), "before second barrier")
+    if comm.rank == 0:
+        os.remove("test3d.npy")
+    print("D:", comm.Get_rank(), comm.Get_size(), "before second barrier")
+    print("E:", comm.Get_rank(), comm.Get_size(), "after second barrier")
