@@ -35,8 +35,8 @@ try:
 except ModuleNotFoundError:
     _scipy_present = False
 
-import test.Optimization.minimization_problems as mp
-import test.Optimization.MPI_minimization_problems as mpi_mp
+import test.Optimization.MinimizationProblems as mp
+import test.Optimization.MPIMinimizationProblems as mpi_mp
 
 
 @pytest.fixture

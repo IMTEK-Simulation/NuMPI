@@ -28,12 +28,12 @@ import pytest
 
 import numpy as np
 from NuMPI.Tools import Reduction
-from test.Optimization.MPI_minimization_problems import (
+from test.Optimization.MPIMinimizationProblems import (
     MPI_Objective_Interface, MPI_Quadratic
 )
 
 import time
-import test.Optimization.minimization_problems as mp
+import test.Optimization.MinimizationProblems as mp
 
 from NuMPI.Optimization.LBFGS import l_bfgs
 

@@ -24,7 +24,7 @@
 
 import numpy as np
 from NuMPI.Tools.Reduction import Reduction
-from test.Optimization.MPI_minimization_problems import MPI_Quadratic
+from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
 import time
 
 from NuMPI.Optimization.LBFGS import l_bfgs

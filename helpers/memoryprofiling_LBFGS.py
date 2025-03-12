@@ -23,7 +23,7 @@
 #
 
 from NuMPI.Optimization import l_bfgs
-from test.Optimization.MPI_minimization_problems import MPI_Quadratic
+from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
 from NuMPI import MPI
 from NuMPI.Tools import Reduction
 from memory_profiler import profile

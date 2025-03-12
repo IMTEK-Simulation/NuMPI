@@ -11,7 +11,7 @@ except ModuleNotFoundError:
 from NuMPI.Tools import Reduction
 from NuMPI.Optimization.CCGWithoutRestart import constrained_conjugate_gradients
 
-from test.Optimization.MPI_minimization_problems import MPI_Quadratic
+from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
 
 
 def test_bugnicourt_cg(comm):

@@ -49,7 +49,7 @@ from NuMPI.Optimization.Wolfe import (
     first_wolfe_condition
 )
 
-import test.Optimization.minimization_problems as mp
+import test.Optimization.MinimizationProblems as mp
 
 pytestmark = pytest.mark.skipif(
     MPI.COMM_WORLD.Get_size() > 1,

@@ -39,8 +39,8 @@ try:
 except ModuleNotFoundError:
     _scipy_present = False
 
-import test.Optimization.minimization_problems as mp
-from test.Optimization.MPI_minimization_problems import MPI_Objective_Interface
+import test.Optimization.MinimizationProblems as mp
+from test.Optimization.MPIMinimizationProblems import MPI_Objective_Interface
 
 
 @pytest.mark.skipif(
