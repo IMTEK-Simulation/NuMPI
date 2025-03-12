@@ -34,8 +34,8 @@ import pytest
 
 import NuMPI
 from NuMPI import MPI
-from NuMPI.IO.NPY import (MPIFileTypeError, MPIFileViewNPY, load_npy,
-                          make_mpi_file_view, save_npy)
+from NuMPI.IO.NPY import (MPIFileTypeError, NPYFile, load_npy, mpi_open,
+                          save_npy)
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 
@@ -117,7 +117,7 @@ def test_fileview_2d(decompfun, comm, globaldata2d):
     # arr = np.load("test_fileload_2d.npy")
     # assert arr.shape == self.nb_domain_grid_pts
 
-    file = MPIFileViewNPY("test_fileload_2d.npy", comm=comm)
+    file = NPYFile("test_fileload_2d.npy", comm=comm)
 
     assert file.nb_grid_pts == distdata.nb_domain_grid_pts
     assert file.dtype == globaldata2d.dtype
@@ -223,7 +223,7 @@ def test_corrupted_file(comm_self):
         f.write("dfgdfghlkjhgiuhdfg")
 
     with pytest.raises(MPIFileTypeError):
-        MPIFileViewNPY("corrupted.dummy", comm=comm_self)
+        NPYFile("corrupted.dummy", comm=comm_self)
 
 
 @pytest.mark.skipif(
@@ -254,7 +254,7 @@ def test_make_mpi_file_view(comm_self, npyfile, mode):
 
     np.save(npyfile, data)
     with open(npyfile, mode=mode) as f:
-        fileview = make_mpi_file_view(f, comm=comm_self)
+        fileview = mpi_open(f, comm=comm_self)
         read_data = fileview.read()
         np.testing.assert_allclose(read_data, data)
 
