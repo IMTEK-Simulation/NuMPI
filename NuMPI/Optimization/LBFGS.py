@@ -213,13 +213,15 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
     alpha = 0  # line search step size
 
     if disp:
-        iteration_title = "iteration"
-        phi_title = "f"
-        phi_change_title = "Δf"
-        max_grad_title = "max ∇ f"
-        abs_grad_title = "|∇ f|"
-        print(f"{iteration_title:<10} {phi_title:<10} {phi_change_title:<10} {max_grad_title:<10} {abs_grad_title:<10}")
-        print(f"---------- ---------- ---------- ---------- ----------")
+        if MPI.COMM_WORLD.rank == 0:
+            iteration_title = "iteration"
+            phi_title = "f"
+            phi_change_title = "Δf"
+            max_grad_title = "max ∇ f"
+            abs_grad_title = "|∇ f|"
+            print(
+                f"{iteration_title:<10} {phi_title:<10} {phi_change_title:<10} {max_grad_title:<10} {abs_grad_title:<10}")
+            print(f"---------- ---------- ---------- ---------- ----------")
 
     # Start loop
     # printdb(k)
@@ -259,11 +261,13 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         callback(x)
 
         max_grad = pnp.max(np.abs(grad))
-        abs_grad = np.linalg.norm(grad)
+        abs_grad = np.linalg.norm(grad)  # TODO[Martin, Lars]: is this parallel ???
+        # abs_grad = np.sqrt(pnp.dot(grad.transpose(), grad))
         phi_change = phi_old - phi
 
         if disp:
-            print(f"{iteration:<10} {phi:<10.7g} {phi_change:<10.7g} {max_grad:<10.7g} {abs_grad:<10.7g}")
+            if MPI.COMM_WORLD.rank == 0:
+                print(f"{iteration:<10} {phi:<10.7g} {phi_change:<10.7g} {max_grad:<10.7g} {abs_grad:<10.7g}")
 
         if (max_grad < gtol):
             print("CONVERGED because gradient tolerance was reached")
@@ -278,7 +282,10 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'message':
                     'CONVERGENCE: '
                     'NORM_OF_GRADIENT_<=_GTOL',
-                'iterates': iterates
+                'iterates': iterates,
+                'max_grad': max_grad,
+                'abs_grad': abs_grad,
+                'phi_change': phi_change
             })
             # if iterates:
             #    result['iterates'] = iterates
@@ -297,7 +304,10 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'message':
                     'CONVERGENCE: '
                     'REL_REDUCTION_OF_F_<=_FACTR*EPSMCH',
-                'iterates': iterates
+                'iterates': iterates,
+                'max_grad': max_grad,
+                'abs_grad': abs_grad,
+                'phi_change': phi_change
             })
             # if iterates:
             #    result['iterates'] = iterates
@@ -313,7 +323,10 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'jac': grad.reshape(
                     original_shape),
                 'nit': iteration,
-                'iterates': iterates
+                'iterates': iterates,
+                'max_grad': max_grad,
+                'abs_grad': abs_grad,
+                'phi_change': phi_change
             })
 
             return result
@@ -406,16 +419,38 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
             **linesearch_options)
 
         printdb("derphi: {}".format(derphi))
-        assert derphi is not None, "line-search did not converge"
+
+        if derphi is None:
+            print("line-search did not converge")
+            result = OptimizeResult({
+                'success': False,
+                'x': x.reshape(
+                    original_shape),
+                'fun': phi,
+                'jac': grad.reshape(
+                    original_shape),
+                'nit': iteration,
+                'iterates': iterates,
+                'message':
+                    'CONVERGENCE: '
+                    'line-search did not converge',
+                'max_grad': max_grad,
+                'abs_grad': abs_grad,
+                'phi_change': phi_change
+            })
+            return result
 
         x = x - Hgrad * alpha
 
-        if store_iterates == 'iterate':
+        if store_iterates:
             iterate = OptimizeResult(
                 {
                     'x': x.copy().reshape(original_shape),
                     'fun': phi,
-                    'jac': grad.reshape(original_shape)
+                    'jac': grad.reshape(original_shape),
+                    'max_grad': max_grad,
+                    'abs_grad': abs_grad,
+                    'phi_change': phi_change
                 })
             iterates.append(iterate)
 
