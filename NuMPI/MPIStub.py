@@ -187,16 +187,16 @@ class Intracomm(object):
             raise ValueError("Root must be zero for MPI stub implementation.")
 
         try:
-            senddata, sendtype = sendbuf
-        except Exception:
             senddata = sendbuf
             sendtype = sendbuf.dtype
+        except AttributeError:
+            senddata, sendtype = sendbuf
 
         try:
-            recvdata, recvtype = recvbuf
-        except Exception:
             recvdata = recvbuf
             recvtype = recvbuf.dtype
+        except AttributeError:
+            recvdata, recvtype = recvbuf
 
         if sendtype != recvtype:
             raise TypeError(
@@ -210,16 +210,16 @@ class Intracomm(object):
 
     def Allgather(self, sendbuf, recvbuf_counts):
         try:
-            senddata, sendtype = sendbuf
-        except Exception:
             senddata = sendbuf
             sendtype = sendbuf.dtype
+        except AttributeError:
+            senddata, sendtype = sendbuf
 
         try:
-            recvdata, counts, recvtype = recvbuf_counts
-        except Exception:
             recvdata, counts = recvbuf_counts
             recvtype = recvdata.dtype
+        except (TypeError, AttributeError):
+            recvdata, counts, recvtype = recvbuf_counts
 
         if sendtype != recvtype:
             raise TypeError(
@@ -274,7 +274,7 @@ class File(object):
             )
         except Exception:
             if not self.already_open:
-                self.Close
+                self.close()
 
     Read_all = Read
 
