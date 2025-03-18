@@ -40,13 +40,15 @@ from io import TextIOBase
 
 # ## Data types
 
+
 class VectorDatatype(object):
     def __init__(self, oldtype, count, blocklength, stride):
         if stride != blocklength:
             raise NotImplementedError(
-                'Only vector datatypes with stride == blocklength are '
-                'presently supported by '
-                'the MPI stub interface.')
+                "Only vector datatypes with stride == blocklength are "
+                "presently supported by "
+                "the MPI stub interface."
+            )
         self._oldtype = oldtype
         self._count = count
         self._blocklength = blocklength
@@ -89,6 +91,7 @@ _typedict = Typedict()
 
 # ## Operations
 
+
 class Operations(Enum):
     MIN = 1
     MAX = 2
@@ -120,6 +123,7 @@ MINLOC = Operations.MINLOC
 
 # ## Opening modes
 
+
 class OpeningMode(Enum):
     MODE_RDONLY = 1
     MODE_WRONLY = 2
@@ -139,10 +143,10 @@ class OpeningMode(Enum):
 
     def std_mode(self):
         if self.MODE_CREATE.value & self.value:
-            return 'wb'
+            return "wb"
         if self.MODE_WRONLY.value & self.value:
-            return 'ab'
-        return 'rb'
+            return "ab"
+        return "rb"
 
 
 MODE_RDONLY = OpeningMode.MODE_RDONLY
@@ -160,6 +164,7 @@ MODE_CREATE = OpeningMode.MODE_CREATE
 
 
 # ## Stub communicator object
+
 
 class Intracomm(object):
     def Barrier(self):
@@ -179,7 +184,7 @@ class Intracomm(object):
 
     def Reduce(self, sendbuf, recvbuf, op=Operations.SUM, root=0):
         if root != 0:
-            raise ValueError('Root must be zero for MPI stub implementation.')
+            raise ValueError("Root must be zero for MPI stub implementation.")
 
         try:
             senddata, sendtype = sendbuf
@@ -195,8 +200,9 @@ class Intracomm(object):
 
         if sendtype != recvtype:
             raise TypeError(
-                'Mismatch in send and receive MPI datatypes in MPI stub '
-                'implementation.')
+                "Mismatch in send and receive MPI data types in MPI stub implementation. "
+                f"Send type is {sendtype} while receive type is {recvtype}."
+            )
 
         recvdata[...] = senddata
 
@@ -217,8 +223,9 @@ class Intracomm(object):
 
         if sendtype != recvtype:
             raise TypeError(
-                'Mismatch in send and receive MPI datatypes in MPI stub '
-                'implementation.')
+                "Mismatch in send and receive MPI data types in MPI stub implementation. "
+                f"Send type is {sendtype} while receive type is {recvtype}."
+            )
 
         recvdata[...] = senddata
 
@@ -226,6 +233,7 @@ class Intracomm(object):
 
 
 # ## Stub file I/O object
+
 
 class File(object):
     @classmethod
@@ -236,10 +244,11 @@ class File(object):
     def __init__(self, comm, filename, amode):
         if not isinstance(comm, Intracomm):
             raise RuntimeError(
-                'Communicator object must be an instance of `Intracomm`.')
+                "Communicator object must be an instance of `Intracomm`."
+            )
 
         self.already_open = False
-        if not hasattr(filename, 'read'):
+        if not hasattr(filename, "read"):
             self._file = open(filename, amode.std_mode())
         else:
             self.already_open = True
@@ -248,7 +257,7 @@ class File(object):
             else:
                 self._file = filename
         self._disp = 0
-        self._etype = _typedict['i1']
+        self._etype = _typedict["i1"]
         self._filetype = None
 
     def Close(self):
@@ -260,8 +269,9 @@ class File(object):
     def Read(self, buf):
         try:
             data = self._file.read(buf.size * buf.itemsize)
-            buf[...] = np.frombuffer(data, count=buf.size,
-                                     dtype=buf.dtype).reshape(buf.shape)
+            buf[...] = np.frombuffer(data, count=buf.size, dtype=buf.dtype).reshape(
+                buf.shape
+            )
         except Exception:
             if not self.already_open:
                 self.Close
