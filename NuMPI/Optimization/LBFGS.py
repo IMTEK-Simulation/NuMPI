@@ -218,9 +218,9 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
             phi_title = "f"
             phi_change_title = "Δf"
             max_grad_title = "max ∇ f"
-            abs_grad_title = "|∇ f|"
+            norm_grad_title = "||∇ f||²"
             print(
-                f"{iteration_title:<10} {phi_title:<10} {phi_change_title:<10} {max_grad_title:<10} {abs_grad_title:<10}")
+                f"{iteration_title:<10} {phi_title:<10} {phi_change_title:<10} {max_grad_title:<10} {norm_grad_title:<10}")
             print(f"---------- ---------- ---------- ---------- ----------")
 
     # Start loop
@@ -261,15 +261,12 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         callback(x)
 
         max_grad = pnp.max(np.abs(grad))
-        abs_grad = np.linalg.norm(grad)  # TODO[Martin, Lars]: is this parallel ??? # What is this?
-        abs_grad = pnp.sum(np.asarray(grad) ** 2) # This is squred norm of gradient
-        # max_grad_title = "max ∇ f"
-        # abs_grad_title = "|∇ f|"
+        norm_grad = grad2
         phi_change = phi_old - phi
 
         if disp:
             if MPI.COMM_WORLD.rank == 0:
-                print(f"{iteration:<10} {phi:<10.7g} {phi_change:<10.7g} {max_grad:<10.7g} {abs_grad:<10.7g}")
+                print(f"{iteration:<10} {phi:<10.7g} {phi_change:<10.7g} {max_grad:<10.7g} {norm_grad:<10.7g}")
 
         if (max_grad < gtol):
             print("CONVERGED because gradient tolerance was reached")
@@ -286,7 +283,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                     'NORM_OF_GRADIENT_<=_GTOL',
                 'iterates': iterates,
                 'max_grad': max_grad,
-                'abs_grad': abs_grad,
+                'norm_grad': norm_grad,
                 'phi_change': phi_change
             })
             return result
@@ -306,7 +303,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                     'REL_REDUCTION_OF_F_<=_FACTR*EPSMCH',
                 'iterates': iterates,
                 'max_grad': max_grad,
-                'abs_grad': abs_grad,
+                'norm_grad': norm_grad,
                 'phi_change': phi_change
             })
 
@@ -324,7 +321,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'nit': iteration,
                 'iterates': iterates,
                 'max_grad': max_grad,
-                'abs_grad': abs_grad,
+                'norm_grad': norm_grad,
                 'phi_change': phi_change
             })
 
@@ -434,7 +431,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                     'CONVERGENCE: '
                     'line-search did not converge',
                 'max_grad': max_grad,
-                'abs_grad': abs_grad,
+                'norm_grad': norm_grad,
                 'phi_change': phi_change
             })
             return result
@@ -448,7 +445,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                     'fun': phi,
                     'jac': grad.reshape(original_shape),
                     'max_grad': max_grad,
-                    'abs_grad': abs_grad,
+                    'norm_grad': norm_grad,
                     'phi_change': phi_change
                 })
             iterates.append(iterate)
