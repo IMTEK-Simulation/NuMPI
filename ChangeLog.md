@@ -1,6 +1,11 @@
 Change log for NuMPI
 ===================
 
+v0.7.1 (18Mar25)
+----------------
+
+- BUG: Fixed reduce operation of arrays with two entries
+
 v0.7.0 (12Mar25)
 ----------------
 

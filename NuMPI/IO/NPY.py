@@ -74,7 +74,7 @@ def _chunked_read_write(
     nb_max_subdomain_grid_pts = np.empty_like(nb_subdomain_grid_pts)
     comm.Allreduce(
         np.array(nb_subdomain_grid_pts, order="C"),
-        nb_max_subdomain_grid_pts,
+        np.array(nb_max_subdomain_grid_pts, order="C"),
         op=MPI.MAX,
     )
 

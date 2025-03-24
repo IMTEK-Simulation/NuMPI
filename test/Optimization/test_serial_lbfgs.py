@@ -165,7 +165,7 @@ def test_3D():
                                beta2=0.9)))
 
     resscipy = scipy.optimize.minimize(ex_fun, np.reshape(x, (-1,)), jac=ex_jac,
-                                       options=dict(gtol=1e-10, ftol=0))
+                                       options=dict(gtol=1e-10))
     my_print("scipy success: {}".format(resscipy.success))
     my_print("scipy nit {}".format(resscipy.nit))
     my_print("scipy result: {}".format(resscipy.x))
