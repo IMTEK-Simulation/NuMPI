@@ -25,10 +25,10 @@ Development Installation
 
 Clone the repository.
 
-To use the code, use the env.sh script to set the environment:
+To use the code, install the current package as editable:
 
 ```
-source /path/to/NuMPI/env.sh
+pip install -e .[test]
 ```
 
 Testing
