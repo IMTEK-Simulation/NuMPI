@@ -261,8 +261,10 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
         callback(x)
 
         max_grad = pnp.max(np.abs(grad))
-        abs_grad = np.linalg.norm(grad)  # TODO[Martin, Lars]: is this parallel ???
-        # abs_grad = np.sqrt(pnp.dot(grad.transpose(), grad))
+        abs_grad = np.linalg.norm(grad)  # TODO[Martin, Lars]: is this parallel ??? # What is this?
+        abs_grad = pnp.sum(np.asarray(grad) ** 2) # This is squred norm of gradient
+        # max_grad_title = "max ∇ f"
+        # abs_grad_title = "|∇ f|"
         phi_change = phi_old - phi
 
         if disp:
@@ -287,8 +289,6 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'abs_grad': abs_grad,
                 'phi_change': phi_change
             })
-            # if iterates:
-            #    result['iterates'] = iterates
             return result
 
         if (phi_change <= ftol * max((1, abs(phi), abs(phi_old)))):
@@ -309,8 +309,7 @@ def l_bfgs(fun, x, args=(), jac=None, x_old=None, maxcor=10, gtol=1e-5, ftol=2.2
                 'abs_grad': abs_grad,
                 'phi_change': phi_change
             })
-            # if iterates:
-            #    result['iterates'] = iterates
+
             return result
 
         if iteration > maxiter:
