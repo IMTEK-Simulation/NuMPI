@@ -258,6 +258,8 @@ def test_parallel_save(comm, datagrid):
         comm=comm,
     )
 
+    comm.barrier()
+
     loaded_data = np.load("test.npy")
 
     assert_one_array_equal(comm, 0, loaded_data, datagrid)
