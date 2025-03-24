@@ -68,8 +68,8 @@ jobs:
           if [ "${{ matrix.mpi }}" == "yes" ]; then
             for nbprocs in 1 2 4 8 10; do
               echo "=== $nbprocs MPI processes ==="
-              mpirun --oversubscribe -n $nbprocs python3 --full-trace
+              mpirun --oversubscribe -n $nbprocs python3 -m pytest --verbose --full-trace
             done
           else
-            python3 -m pytest --full-trace -s
+            python3 -m pytest --verbose --full-trace -s
           fi
