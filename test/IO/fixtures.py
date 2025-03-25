@@ -72,6 +72,8 @@ def globaldata3d(request, comm):
 
 @pytest.fixture(
     params=[
+        ("C", (2, 3)),
+        ("F", (2, 3)),
         ("C", (13, 7)),
         ("F", (13, 7)),
         ("C", (7, 13)),
