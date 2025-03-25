@@ -1,6 +1,13 @@
 Change log for NuMPI
 ===================
 
+v0.7.2 (25Mar25)
+----------------
+
+- BUG: Fixed parallel write into NPY files when a subdomain is only a single
+  grid point in one dimension
+- MAINT: Throw proper errors and report convergence
+
 v0.7.1 (18Mar25)
 ----------------
 

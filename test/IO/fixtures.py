@@ -74,6 +74,8 @@ def globaldata3d(request, comm):
     params=[
         ("C", (13, 7)),
         ("F", (13, 7)),
+        ("C", (7, 13)),
+        ("F", (7, 13)),
         ("C", (13, 11, 27)),
         ("F", (13, 11, 27)),
         ("C", (15, 7, 9, 3)),
@@ -86,9 +88,11 @@ def datagrid(request, comm):
     np.random.seed(2)
     if order == "C":
         data = np.random.random(nb_domain_grid_pts)
+        # data = np.arange(np.prod(nb_domain_grid_pts)).reshape(nb_domain_grid_pts)
         assert data.flags.c_contiguous
     elif order == "F":
         data = np.random.random(nb_domain_grid_pts[::-1]).transpose()
+        # data = np.arange(np.prod(nb_domain_grid_pts)).reshape(nb_domain_grid_pts[::-1]).T
         assert data.flags.f_contiguous
 
     return data
