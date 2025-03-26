@@ -405,7 +405,7 @@ def l_bfgs(
         if iteration > maxcor:
             YTY = np.roll(YTY, (-1, -1), axis=(0, 1))
             YTY[-1, :-1] = YTY[:-1, -1] = (YTgrad[:-1] - YTgrad_prev[1:]).flat
-            YTY[-1, -1] = grad2prev - grad2 + 2 * YTgrad[-1]
+            YTY[-1, -1] = grad2prev - grad2 + 2 * YTgrad[-1, -1]
         else:
             # YTYm = pnp.dot(Y.T, Y)
             YTY = np.array(
