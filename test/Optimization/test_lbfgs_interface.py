@@ -25,7 +25,9 @@
 
 import numpy as np
 import pytest
+
 from NuMPI.Optimization import l_bfgs
+from NuMPI.Testing.Assertions import parallel_assert
 from NuMPI.Tools import Reduction
 
 try:
@@ -44,7 +46,7 @@ def pnp(comm):
     return Reduction(comm)
 
 
-@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
+@pytest.mark.skipif(not _scipy_present, reason="scipy not present")
 @pytest.mark.parametrize("Objectiveclass", [mpi_mp.MPI_Quadratic])
 def test_minimize_call_column(pnp, Objectiveclass):
     """
@@ -70,16 +72,18 @@ def test_minimize_call_column(pnp, Objectiveclass):
         jac=True,
         method=l_bfgs,
         args=(2,),
-        options={
-            "gtol": 1e-8, "ftol": 1e-20, "pnp": pnp
-        })
-    assert result.success
-    assert pnp.max(abs(
-        np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,))
-    )) / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
+        options={"gtol": 1e-8, "ftol": 1e-20, "pnp": pnp},
+    )
+    parallel_assert(comm, result.success)
+    parallel_assert(
+        comm,
+        pnp.max(abs(np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,))))
+        / pnp.max(abs(Objective.startpoint() - Objective.xmin()))
+        < 1e-5,
+    )
 
 
-@pytest.mark.skipif(not _scipy_present, reason='scipy not present')
+@pytest.mark.skipif(not _scipy_present, reason="scipy not present")
 @pytest.mark.parametrize("Objectiveclass", [mpi_mp.MPI_Quadratic])
 def test_minimize_call_row(pnp, Objectiveclass):
     comm = pnp.comm
@@ -91,14 +95,20 @@ def test_minimize_call_row(pnp, Objectiveclass):
         method=l_bfgs,
         jac=True,
         args=(2,),
-        options={"gtol": 1e-8, "ftol": 1e-20, "pnp": pnp})
-    assert result.success, ""
-    assert pnp.max(abs(
-        np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,))
-    )) / pnp.max(abs(Objective.startpoint() - Objective.xmin())) < 1e-5
+        options={"gtol": 1e-8, "ftol": 1e-20, "pnp": pnp},
+    )
+    parallel_assert(comm, result.success, "")
+    parallel_assert(
+        comm,
+        (
+            pnp.max(
+                abs(np.reshape(result.x, (-1,)) - np.reshape(Objective.xmin(), (-1,)))
+            )
+            / pnp.max(abs(Objective.startpoint() - Objective.xmin()))
+            < 1e-5
+        ),
+    )
 
-
-# TODO: test when jac is Bool
 
 @pytest.mark.parametrize("shape", [(10,), (10, 1)])
 def test_shape_unchanged(shape):
@@ -111,41 +121,15 @@ def test_shape_unchanged(shape):
     x0 = Objective.startpoint(size).reshape(shape)
 
     result = l_bfgs(
-        Objective.f_grad,
-        x0,
-        jac=True,
-        args=(2,),
-        gtol=1e-10,
-        ftol=1e-40,
-        pnp=np)
+        Objective.f_grad, x0, jac=True, args=(2,), gtol=1e-10, ftol=1e-40
+    )
 
     assert result.success, ""
-    np.testing.assert_allclose(np.reshape(result.x, (-1,)),
-                               np.reshape(Objective.xmin(size), (-1,)),
-                               rtol=1e-5)
+    np.testing.assert_allclose(
+        np.reshape(result.x, (-1,)),
+        np.reshape(Objective.xmin(size), (-1,)),
+        rtol=1e-5,
+    )
 
-    assert result.x.shape == shape, \
-        "shape of result mismatch shape of startpoint"
-    assert result.jac.shape == shape, \
-        "shape of result jac mismatch shape of startpoint"
-
-
-# FIXME: Implement
-def test_multiple_tol():
-    pass
-
-
-def test_gtol():
-    pass
-
-
-def test_g2tol():
-    pass
-
-
-def test_ftol():
-    pass
-
-
-def test():
-    pass
+    assert result.x.shape == shape, "shape of result mismatch shape of startpoint"
+    assert result.jac.shape == shape, "shape of result jac mismatch shape of startpoint"

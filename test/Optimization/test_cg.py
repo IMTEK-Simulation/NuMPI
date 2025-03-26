@@ -1,5 +1,7 @@
-import pytest
 import numpy as np
+import pytest
+
+from NuMPI.Testing.Assertions import assert_all_allclose, parallel_assert
 
 try:
     import scipy.optimize
@@ -8,10 +10,11 @@ try:
 except ModuleNotFoundError:
     _scipy_present = False
 
-from NuMPI.Tools import Reduction
-from NuMPI.Optimization.CCGWithoutRestart import constrained_conjugate_gradients
-
 from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
+
+from NuMPI.Optimization.CCGWithoutRestart import \
+    constrained_conjugate_gradients
+from NuMPI.Tools import Reduction
 
 
 def test_bugnicourt_cg(comm):
@@ -28,7 +31,7 @@ def test_bugnicourt_cg(comm):
         x0=xstart,
         communicator=comm
     )
-    assert res.success, res.message
+    parallel_assert(comm, res.success, res.message)
     print(res.nit)
 
 
@@ -50,9 +53,9 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
         bounds=bounds,
         gtol=1e-8
     )
-    assert res.success, res.message
+    parallel_assert(comm, res.success, res.message)
 
-    assert (res.x >= bounds).all()
+    parallel_assert(comm, (res.x >= bounds).all())
     print(res.nit)
 
     # TODO: we are not checking yet that the result is the same in parallel.
@@ -67,9 +70,9 @@ def test_bugnicourt_cg_arbitrary_bounds(comm):
             method="L-BFGS-B",
             jac=True,
             options=dict(gtol=1e-8, ftol=0))
-        assert res_ref.success, res_ref.message
+        parallel_assert(comm, res_ref.success, res_ref.message)
 
-        np.testing.assert_allclose(res.x, res_ref.x, atol=1e-6)
+        assert_all_allclose(comm, res.x, res_ref.x, atol=1e-6)
 
 
 def test_bugnicourt_cg_active_bounds(comm):
@@ -86,7 +89,7 @@ def test_bugnicourt_cg_active_bounds(comm):
         x0=xstart,
         communicator=comm
     )
-    assert res.success, res.message
+    parallel_assert(comm, res.success, res.message)
     print(res.nit)
     print(np.count_nonzero(res.x == 0))
 
@@ -106,7 +109,7 @@ def test_bugnicourt_cg_mean_val(comm):
         mean_val=1.,
         communicator=comm
     )
-    assert res.success, res.message
+    parallel_assert(comm, res.success, res.message)
     print(res.nit)
 
 
@@ -125,5 +128,5 @@ def test_bugnicourt_cg_mean_val_active_bounds(comm):
         mean_val=1.,
         communicator=comm
     )
-    assert res.success, res.message
+    parallel_assert(comm, res.success, res.message)
     print(res.nit)

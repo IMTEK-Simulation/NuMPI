@@ -3,6 +3,13 @@ import numpy as np
 from NuMPI import MPI
 
 
+def parallel_assert(comm, condition, message="Assertion failed"):
+    failed_recv = np.ones(1, dtype=int)
+    comm.Allreduce(np.array([not condition], dtype=int), failed_recv, op=MPI.SUM)
+    if failed_recv[0] > 0:
+        raise AssertionError(message)
+
+
 def _assert_one(fun):
     def assert_func(comm, rank, *args, **kwargs):
         exception = None

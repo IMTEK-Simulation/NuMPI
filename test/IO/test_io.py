@@ -23,8 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-
-
+import functools
 import os
 import warnings
 from test.IO.utils import make_2d_slab_x, make_2d_slab_y, subdivide
@@ -39,6 +38,7 @@ from NuMPI.IO.NPY import (MPIFileTypeError, NPYFile, load_npy, mpi_open,
 from NuMPI.Testing.Assertions import (assert_all_allclose,
                                       assert_all_array_equal,
                                       assert_one_array_equal)
+from NuMPI.Tools import Reduction
 
 testdir = os.path.dirname(os.path.realpath(__file__))
 
@@ -248,23 +248,33 @@ def test_make_mpi_file_view(comm_self, npyfile, mode):
 
 
 def test_parallel_save(comm, datagrid):
+    order = "F" if Reduction(comm).any(datagrid.flags.f_contiguous) else "C"
+    fn = (
+        f"test_{comm.size}_{order}_"
+        f"{functools.reduce(lambda x, y: f'{x}x{y}', datagrid.shape)}.npy"
+    )
+
     distdata = subdivide(comm, datagrid)
 
     save_npy(
-        "test.npy",
+        fn,
         distdata.data,
         subdomain_locations=distdata.subdomain_locations,
         nb_grid_pts=distdata.nb_domain_grid_pts,
         comm=comm,
     )
 
-    loaded_data = np.load("test.npy")
+    comm.barrier()
+    # if comm.rank == 0:
+    #     np.save("ref_" + fn, datagrid)
+
+    loaded_data = np.load(fn)
 
     assert_one_array_equal(comm, 0, loaded_data, datagrid)
 
     comm.barrier()
     if comm.rank == 0:
-        os.remove("test.npy")
+        os.remove(fn)
 
 
 def test_parallel_load(comm, datagrid):
