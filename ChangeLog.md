@@ -4,6 +4,7 @@ Change log for NuMPI
 v0.7.2 (26Mar25)
 ----------------
 
+- API: Allow passing communicator directly to `l_bfgs`
 - BUG: Fixed parallel write into NPY files when a subdomain is only a single
   grid point in one dimension
 - MAINT: Return last result when the line search fails

@@ -23,13 +23,14 @@
 # SOFTWARE.
 #
 
+import time
+from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
+
 import numpy as np
 from mpi4py import MPI
-from NuMPI.Tools import Reduction
-from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
-import time
 
 from NuMPI.Optimization import l_bfgs
+from NuMPI.Tools import Reduction
 
 
 def timer(fun, *args, **kwargs):
@@ -95,7 +96,7 @@ def show_parallel_speedup():
 
             res[i], t[i] = timer(l_bfgs, PObjective.f, x0, jac=PObjective.grad,
                                  maxcor=maxcor, maxiter=100000, gtol=(1e-5),
-                                 store_iterates=None, pnp=pnp)
+                                 store_iterates=None, comm=comm)
             msg += "size {}:\n".format(size)
 
             assert res[i].success, "Minimization faild"

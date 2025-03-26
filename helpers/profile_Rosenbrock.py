@@ -22,15 +22,15 @@
 # SOFTWARE.
 #
 
-import numpy as np
-from NuMPI.Tools.Reduction import Reduction
-from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
+import cProfile
 import time
+from test.Optimization.MPIMinimizationProblems import MPI_Quadratic
 
-from NuMPI.Optimization.LBFGS import l_bfgs
+import numpy as np
 
 from NuMPI import MPI
-import cProfile
+from NuMPI.Optimization.LBFGS import l_bfgs
+from NuMPI.Tools.Reduction import Reduction
 
 
 def profile(filename=None, comm=MPI.COMM_WORLD):
@@ -79,7 +79,7 @@ x0 = PObjective.startpoint()
 
 LBFGS = profile("profile_out", comm)(l_bfgs)
 res, t = timer(LBFGS, PObjective.f, x0, jac=PObjective.grad, maxcor=maxcor,
-               maxiter=100000, gtol=(1e-5), pnp=pnp)
+               maxiter=100000, gtol=(1e-5), comm=comm)
 assert res.success
 if MPI.COMM_WORLD.Get_rank() == 0:
     print("elapsed time: {}".format(t))
