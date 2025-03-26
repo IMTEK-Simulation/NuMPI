@@ -1,7 +1,7 @@
 Change log for NuMPI
 ===================
 
-v0.7.2 (25Mar25)
+v0.7.2 (26Mar25)
 ----------------
 
 - BUG: Fixed parallel write into NPY files when a subdomain is only a single
