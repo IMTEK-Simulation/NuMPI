@@ -27,7 +27,6 @@ import logging
 
 import numpy as np
 
-from .. import MPI
 from ..Tools import Reduction
 from .LineSearch import scalar_search_wolfe2
 from .Result import OptimizeResult
@@ -92,7 +91,8 @@ def l_bfgs(
     maxls=20,
     linesearch_options=dict(c1=1e-3, c2=0.9),
     disp=None,
-    comm=MPI.COMM_WORLD,
+    pnp=None,
+    comm=None,
     store_iterates=None,
     callback=None,
     **options,
@@ -133,6 +133,8 @@ def l_bfgs(
         A dictionary with optional settings for the line search parameters.
     disp : int, optional
         If disp is a positive integer, convergence messages will be printed.
+    pnp : Reduction, optional
+        Reduction class (or numpy module).
     comm : MPI.Comm, optional
         MPI communicator.
     store_iterates : bool, optional
@@ -154,7 +156,13 @@ def l_bfgs(
     # but we will work with the shape (-1, 1)
     original_shape = x.shape
 
-    pnp = Reduction(comm)
+    if comm:
+        if pnp:
+            raise RuntimeError("Please specify either `comm` or `pnp`, not both.")
+        pnp = Reduction(comm)
+    else:
+        if not pnp:
+            pnp = np
 
     if callback is None:
         callback = donothing
